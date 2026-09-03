@@ -15,6 +15,7 @@ from evidenceops.domain.errors import (
     UnsupportedSourceError,
 )
 from evidenceops.domain.models import DocumentRecord
+from evidenceops.ingestion.normalizer import normalize_html
 
 
 class SourceLoader(Protocol):
@@ -27,7 +28,13 @@ class SourceLoader(Protocol):
 class LocalTextMarkdownLoader:
     """Load one permitted UTF-8 text or Markdown file without filesystem discovery."""
 
-    _source_types = {".md": "markdown", ".markdown": "markdown", ".txt": "text"}
+    _source_types = {
+        ".md": "markdown",
+        ".markdown": "markdown",
+        ".txt": "text",
+        ".html": "html",
+        ".htm": "html",
+    }
     _heading_pattern = re.compile(r"^\s{0,3}#{1,6}[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$")
 
     def __init__(self, allowed_root: Path, max_source_bytes: int = 10_000_000) -> None:
@@ -65,6 +72,8 @@ class LocalTextMarkdownLoader:
         except OSError as exc:
             raise SourceAccessError("source file could not be read") from exc
         text = text.replace("\r\n", "\n").replace("\r", "\n")
+        if source_type == "html":
+            text = normalize_html(text)
         if not text.strip():
             raise IngestionError("source file must not be empty")
 
@@ -84,6 +93,7 @@ class LocalTextMarkdownLoader:
                 "extension": extension,
                 "relative_path": relative_path,
                 "byte_size": str(stat.st_size),
+                **({"normalized_from": "html"} if source_type == "html" else {}),
             },
         )
 

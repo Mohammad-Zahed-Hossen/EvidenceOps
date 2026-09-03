@@ -49,7 +49,7 @@ class MarkdownChunker:
         )
 
     def chunk(self, document: DocumentRecord) -> list[ChunkRecord]:
-        if document.source_type != "markdown":
+        if document.source_type not in {"markdown", "html"}:
             raise ChunkingError("only markdown documents are supported")
         blocks = self._blocks(document.text)
         if not blocks:

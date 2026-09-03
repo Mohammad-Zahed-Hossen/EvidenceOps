@@ -44,11 +44,12 @@ class Settings(BaseSettings):
     simulated_cloud_output_cost_usd_per_1k: float = Field(default=0.0, ge=0.0)
     raw_data_dir: Path = Path("data/raw")
     max_source_bytes: int = Field(default=10_000_000, gt=0)
-    supported_source_extensions: str = ".md,.markdown,.txt"
+    supported_source_extensions: str = ".md,.markdown,.txt,.html,.htm"
     chunk_target_words: int = Field(default=500, ge=350, le=600)
     chunk_max_words: int = Field(default=600, ge=350, le=600)
     chunk_overlap_words: int = Field(default=60, ge=50, le=80)
     manifest_dir: Path = Path("data/manifests")
+    processed_data_dir: Path = Path("data/processed")
     manifest_schema_version: str = "1.0"
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")

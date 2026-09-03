@@ -1,10 +1,10 @@
 # Project Status
 
-## Current Status: Phase 1B.3 (Ingestion Manifest Contract and Atomic Local Persistence) Complete
+## Current Status: Phase 1B (Local Ingestion Vertical Slice) Complete
 
-Phase 0, Phase 1A, Phase 1B.1, Phase 1B.2, and Phase 1B.3 are complete. Phase 1B.3 adds a pure, typed ingestion manifest contract and safe atomic local JSON persistence boundary. No pipeline orchestration, indexing, model execution, Docker Compose, API, dashboard, MCP, or evaluation behavior has been implemented.
+Phase 0, Phase 1A, and Phase 1B are complete. Phase 1B delivers a complete, locally runnable ingestion vertical slice covering document loading (Markdown, plain text, HTML), deterministic chunking, processed document artifact storage, atomic run manifests, and the `evidenceops-ingest` CLI entry point. No retrieval engine, vector database, embedding weights, LLM generation, API routes, or dashboard components have been initialized.
 
-The preflight evidence is recorded in [docs/implementation-readiness.md](docs/implementation-readiness.md) and [docs/setup/initial-setup-report.md](docs/setup/initial-setup-report.md).
+The preflight evidence is recorded in [docs/implementation-readiness.md](docs/implementation-readiness.md) and the Phase 1B milestone is documented in [docs/status/phase-1b-handoff.md](docs/status/phase-1b-handoff.md).
 
 ## Phase Roadmap & Status
 
@@ -18,30 +18,20 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
   - Structured error types and basic structured logging interface (`src/evidenceops/logging.py`).
   - Focused unit tests for domain/state, settings, errors, and logging.
   - Verified on 2026-09-04: 17 pytest tests passed; `ruff check src tests`, `ruff format --check src tests`, and `mypy src/evidenceops` passed.
-- [x] **Phase 1B.1: Single-file local text and Markdown loader** (Completed)
-  - Supports exactly one `.md`, `.markdown`, or `.txt` file per call within an injected allowed root.
-  - Enforces path containment, regular-file, size, extension, UTF-8, and non-empty-content validation.
-  - Produces deterministic `DocumentRecord` IDs, project-relative URIs, normalized LF text, hashes, and safe metadata.
-  - Verified on 2026-09-04: 13 focused loader tests passed and 1 symlink-escape test was skipped because Windows symlink creation lacks the required privilege; full suite: 30 passed, 1 skipped. Ruff, formatting, and mypy passed.
-- [x] **Phase 1B.2: Structure-aware Markdown chunking** (Completed)
-  - Heading-aware chunking with deterministic chunk IDs and no code-fence splits.
-  - Defaults: 500 target words, 600 maximum prose words, and 60-word prose overlap.
-  - Preserves heading paths, atomic fenced code, normalized source offsets, deterministic IDs, and structural metadata.
-  - Verified on 2026-09-04: 9 focused chunker tests passed; full suite: 39 passed, 1 Windows symlink-capability skip. Ruff, formatting, and mypy passed.
-- [x] **Phase 1B.3: Ingestion manifest contract and atomic local persistence** (Completed)
-  - Pure, typed Pydantic v2 manifest models: `IngestionManifest`, `ManifestSource`, `ManifestIssue`, `ChunkerConfigSnapshot`, `IndexingConfigSnapshot`.
-  - Schema version `1.0`; filename convention: `<manifest_root>/<run_id>.json`.
-  - Strict run ID validation (`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`) with path traversal and separator rejection.
-  - Deterministic JSON format: UTF-8, no BOM, sorted keys, 2-space indentation, trailing newline, ISO 8601 timestamps, lowercase hex checksums.
-  - Atomic persistence via `JsonManifestStore`: temporary file in same directory, flushed, `os.fsync`, and atomic `os.replace`.
-  - Default overwrite refusal: `overwrite=False` raises `ManifestConflictError`.
-  - Verified on 2026-09-04: 26 focused manifest tests passed; full suite: 65 passed, 1 skipped. Ruff, formatting, and mypy passed.
-  - Known limitations: Assumes single-process local writer; multi-process file locking is out of scope.
-- [ ] **Phase 1B.4: Single-file ingestion pipeline** (Pending next action)
-  - Connect loader, Markdown chunker, and manifest store into an end-to-end single-file ingestion pipeline.
-- [ ] **Phase 1B: Ingestion and chunking (remaining work)**
-  - Bulk ingestion / directory crawling after single-file pipeline is verified.
-- [ ] **Phase 1C: BM25 and dense indexes**
+- [x] **Phase 1B: Ingestion and chunking** (Completed in full)
+  - **Formats supported**: `.md`, `.markdown`, `.txt`, `.html`, `.htm`.
+  - **Single-file local loader** (`src/evidenceops/ingestion/loaders.py`) with path traversal prevention, UTF-8 normalization, and size validation.
+  - **HTML normalizer** (`src/evidenceops/ingestion/normalizer.py`) converting headings, lists, paragraphs, and pre/code into clean Markdown.
+  - **Structure-aware Markdown chunker** (`src/evidenceops/ingestion/chunker.py`) with heading paths and atomic code-fence preservation.
+  - **Paragraph-aware plain-text chunker** (`src/evidenceops/ingestion/text_chunker.py`) with configurable target/max/overlap words.
+  - **Processed document artifacts** (`src/evidenceops/ingestion/artifacts.py`) stored atomically under `data/processed/<doc_id>.json`.
+  - **Ingestion run manifests** (`src/evidenceops/ingestion/manifest.py`) stored atomically under `data/manifests/<run_id>.json`.
+  - **Sequential local pipeline** (`src/evidenceops/ingestion/pipeline.py`) orchestrating loaders, chunkers, artifacts, and manifests.
+  - **CLI command** (`src/evidenceops/cli/ingest.py` / `evidenceops-ingest`) with `--source-root`, `--run-id`, `--recursive`, `--overwrite-artifacts`.
+  - **Idempotency**: Byte-identical existing artifacts are detected and reported as unchanged without rewrite or chunk duplication.
+  - **Test totals**: 80 passed, 1 skipped (Windows symlink privilege check handled gracefully).
+  - **Quality gates**: Ruff linting clean, Ruff formatting clean (33 files formatted), mypy strict typing clean (18 source files).
+- [ ] **Phase 1C: BM25 and dense indexes** (Pending next action)
   - In-process `rank-bm25` sparse index builder and search.
   - FastEmbed dense vector embeddings.
   - Local Qdrant integration and storage.
@@ -71,4 +61,4 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
 
 ## Next Smallest Action
 
-- On explicit authorization, proceed to Phase 1B.4 to implement the single-file ingestion pipeline connecting `LocalTextMarkdownLoader`, `MarkdownChunker`, and `JsonManifestStore`.
+- Pause implementation safely per milestone instructions. On resume, begin Phase 1C by designing contract interfaces and tests for the in-process `rank-bm25` index builder.

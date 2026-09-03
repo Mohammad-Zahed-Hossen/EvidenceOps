@@ -64,6 +64,22 @@ class ChunkingError(IngestionError):
     default_code = "chunking_error"
 
 
+class ArtifactError(IngestionError):
+    default_code = "artifact_error"
+
+
+class ArtifactConflictError(ArtifactError):
+    default_code = "artifact_conflict"
+
+
+class ArtifactNotFoundError(ArtifactError):
+    default_code = "artifact_not_found"
+
+
+class ArtifactValidationError(ArtifactError):
+    default_code = "artifact_validation_error"
+
+
 class ManifestError(IngestionError):
     default_code = "manifest_error"
 

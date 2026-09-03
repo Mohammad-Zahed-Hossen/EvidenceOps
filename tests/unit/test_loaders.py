@@ -68,7 +68,7 @@ def test_accepts_utf8_bom_and_is_deterministic(source_root: Path) -> None:
     assert changed.document_id != first.document_id
 
 
-@pytest.mark.parametrize("name", ["missing.md", "folder", "report.pdf", "page.html", "image.png"])
+@pytest.mark.parametrize("name", ["missing.md", "folder", "report.pdf", "image.png"])
 def test_rejects_missing_directories_and_unsupported_sources(source_root: Path, name: str) -> None:
     if name == "folder":
         (source_root / name).mkdir()

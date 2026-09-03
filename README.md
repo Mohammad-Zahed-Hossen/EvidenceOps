@@ -48,4 +48,20 @@ uv sync --group dev
 Copy-Item .env.example .env
 ```
 
-Refer to [docs/setup/local-development.md](file:///d:/Code/Assignment/EvidenceOps/docs/setup/local-development.md) for full setup instructions.
+### 3. Local Corpus Ingestion (Phase 1B)
+
+EvidenceOps includes a deterministic local ingestion pipeline supporting `.md`, `.markdown`, `.txt`, `.html`, and `.htm` documents:
+
+```powershell
+# Ingest local corpus
+uv run evidenceops-ingest `
+  --source-root data/raw `
+  --run-id local-ingest-v1 `
+  --recursive
+```
+
+**Output Locations**:
+- Processed Document Artifacts: `data/processed/<document_id>.json`
+- Ingestion Run Manifests: `data/manifests/<run_id>.json`
+
+Refer to [docs/setup/local-development.md](file:///d:/Code/Assignment/EvidenceOps/docs/setup/local-development.md) for full setup instructions and [docs/status/phase-1b-handoff.md](file:///d:/Code/Assignment/EvidenceOps/docs/status/phase-1b-handoff.md) for the Phase 1B technical summary.
