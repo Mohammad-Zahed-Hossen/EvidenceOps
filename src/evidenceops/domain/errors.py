@@ -58,3 +58,7 @@ class SourceAccessError(IngestionError):
 
 class SourceEncodingError(IngestionError):
     default_code = "source_encoding_error"
+
+
+class ChunkingError(IngestionError):
+    default_code = "chunking_error"

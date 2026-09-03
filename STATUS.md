@@ -1,8 +1,8 @@
 # Project Status
 
-## Current Status: Phase 1B.1 (Single-File Local Loader) Complete
+## Current Status: Phase 1B.2 (Structure-Aware Markdown Chunking) Complete
 
-Phase 0, Phase 1A, and Phase 1B.1 are complete. Phase 1B.1 adds only a deterministic, single-file local UTF-8 text/Markdown loader with an allowed-root validation boundary. No chunking, index, model, Docker Compose, API, dashboard, MCP, or evaluation behavior has been implemented.
+Phase 0, Phase 1A, Phase 1B.1, and Phase 1B.2 are complete. Phase 1B.2 adds only deterministic, structure-aware Markdown chunking; no index, model, Docker Compose, API, dashboard, MCP, or evaluation behavior has been implemented.
 
 The preflight evidence is recorded in [docs/implementation-readiness.md](docs/implementation-readiness.md) and [docs/setup/initial-setup-report.md](docs/setup/initial-setup-report.md).
 
@@ -23,8 +23,12 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
   - Enforces path containment, regular-file, size, extension, UTF-8, and non-empty-content validation.
   - Produces deterministic `DocumentRecord` IDs, project-relative URIs, normalized LF text, hashes, and safe metadata.
   - Verified on 2026-09-04: 13 focused loader tests passed and 1 symlink-escape test was skipped because Windows symlink creation lacks the required privilege; full suite: 30 passed, 1 skipped. Ruff, formatting, and mypy passed.
-- [ ] **Phase 1B.2: Structure-aware Markdown chunking**
+- [x] **Phase 1B.2: Structure-aware Markdown chunking** (Completed)
   - Heading-aware chunking with deterministic chunk IDs and no code-fence splits.
+  - Defaults: 500 target words, 600 maximum prose words, and 60-word prose overlap.
+  - Preserves heading paths, atomic fenced code, normalized source offsets, deterministic IDs, and structural metadata.
+  - Verified on 2026-09-04: 9 focused chunker tests passed; full suite: 39 passed, 1 Windows symlink-capability skip. Ruff, formatting, and mypy passed.
+- [ ] **Phase 1B.3: Ingestion manifest and normalization boundary**
 - [ ] **Phase 1B: Ingestion and chunking (remaining work)**
   - Text and markdown document loaders.
   - Document normalizer and manifests after explicit authorization.
@@ -59,4 +63,4 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
 
 ## Next Smallest Action
 
-- On explicit authorization, begin Phase 1B.2 by writing failing tests for structure-aware Markdown chunking, including heading preservation and fenced-code boundaries; do not add BM25 or Qdrant work.
+- On explicit authorization, begin Phase 1B.3 with a narrowly scoped normalization or manifest contract; do not add BM25, embeddings, or Qdrant.
