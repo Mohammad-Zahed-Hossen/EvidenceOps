@@ -33,3 +33,7 @@
 ### ADR-008: Hardware Profile for 8 GB RAM / CPU-First Execution
 - **Context**: Host development system has an AMD Ryzen 5 5600G with 8 GB RAM and no discrete CUDA GPU.
 - **Decision**: The default local profile is strictly 1.5B to 3B models (`qwen2.5:3b-instruct`). 7B models are strictly optional and must not be configured as default to avoid out-of-memory crashes.
+
+### ADR-009: Ingestion Manifest Contract & Atomic Local Persistence
+- **Context**: Ingestion runs require auditability, deterministic traceability, and collision safety without database overhead.
+- **Decision**: Persist ingestion manifests as immutable, standalone JSON files named `<manifest_root>/<run_id>.json`. The caller supplies run IDs and timestamps to ensure pure, deterministic serialization (sorted keys, UTF-8, no BOM, trailing newline). Local writes are made atomic via same-directory temporary file writes, `fsync`, and atomic `os.replace`, with default refusal to overwrite existing manifests. Text normalization remains strictly owned by the source loaders, avoiding a redundant normalization subsystem.

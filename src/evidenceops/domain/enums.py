@@ -48,4 +48,12 @@ class EvidenceStatus(StrEnum):
     CONFLICTING = "conflicting"
 
 
+class IngestionRunStatus(StrEnum):
+    CREATED = "created"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    COMPLETED_WITH_WARNINGS = "completed_with_warnings"
+    FAILED = "failed"
+
+
 SufficiencyLabel = EvidenceStatus

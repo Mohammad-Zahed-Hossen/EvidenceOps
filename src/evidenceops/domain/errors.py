@@ -62,3 +62,23 @@ class SourceEncodingError(IngestionError):
 
 class ChunkingError(IngestionError):
     default_code = "chunking_error"
+
+
+class ManifestError(IngestionError):
+    default_code = "manifest_error"
+
+
+class ManifestNotFoundError(ManifestError):
+    default_code = "manifest_not_found"
+
+
+class ManifestConflictError(ManifestError):
+    default_code = "manifest_conflict"
+
+
+class ManifestSerializationError(ManifestError):
+    default_code = "manifest_serialization_error"
+
+
+class ManifestValidationError(ManifestError):
+    default_code = "manifest_validation_error"

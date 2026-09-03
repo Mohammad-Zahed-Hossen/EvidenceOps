@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     chunk_target_words: int = Field(default=500, ge=350, le=600)
     chunk_max_words: int = Field(default=600, ge=350, le=600)
     chunk_overlap_words: int = Field(default=60, ge=50, le=80)
+    manifest_dir: Path = Path("data/manifests")
+    manifest_schema_version: str = "1.0"
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod
