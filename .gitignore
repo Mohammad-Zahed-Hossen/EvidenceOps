@@ -1,0 +1,60 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Local models and caches
+.ollama/
+models/
+.cache/
+.huggingface/
+*.safetensors
+*.gguf
+*.onnx
+
+# Local data
+data/raw/*
+data/processed/*
+data/bm25/*
+data/manifests/*
+data/eval/*
+
+# Qdrant and local services
+qdrant_storage/
+docker/qdrant_storage/
+jaeger/
+traces/
+*.wal
+
+# Evaluation outputs
+eval/results/
+eval/reports/
+eval/generated/
+*.jsonl
+*.parquet
+
+# Node and dashboard
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+dashboard/.env*
+!dashboard/.env.example
+
+# Operating system
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
