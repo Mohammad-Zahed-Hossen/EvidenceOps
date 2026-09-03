@@ -1,8 +1,8 @@
 # Project Status
 
-## Current Status: Phase 0 (Environment and Repository Preflight) Complete
+## Current Status: Phase 1A (Domain Contracts and Configuration) Complete
 
-Repository and local-environment readiness have been verified for Phase 0 preflight. No application features, model weights, Docker Compose stack, ingestion, retrieval, orchestration, API, dashboard, MCP behavior, or evaluation logic has been initiated.
+Phase 0 preflight and the Phase 1A production foundation layer are complete. Phase 1A added only framework-independent domain contracts, typed local settings, structured errors, basic standard-library logging, and focused unit tests. No ingestion, retrieval engine, model execution, Docker Compose, API, dashboard, MCP, or evaluation behavior has been implemented.
 
 The preflight evidence is recorded in [docs/implementation-readiness.md](docs/implementation-readiness.md) and [docs/setup/initial-setup-report.md](docs/setup/initial-setup-report.md).
 
@@ -12,11 +12,12 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
   - Preflight checks for tools, Git, virtual environment, and directory layout.
   - Root `EvidenceOps_SSOT.md` verified as canonical single source of truth.
   - Initial configuration templates, `.gitignore`, and documentation created.
-- [ ] **Phase 1A: Domain contracts and configuration** (Pending next action)
+- [x] **Phase 1A: Domain contracts and configuration** (Completed)
   - Domain enums and Pydantic v2 data models (`DocumentRecord`, `ChunkRecord`, `RetrievalAction`, `QueryIntent`, `EvidenceRecord`, `AnswerRecord`, `RunTrace`).
   - Configuration loader (`src/evidenceops/settings.py` via `pydantic-settings`).
   - Structured error types and basic structured logging interface (`src/evidenceops/logging.py`).
-  - Focused unit tests for domain contracts (`tests/unit/test_domain_models.py`).
+  - Focused unit tests for domain/state, settings, errors, and logging.
+  - Verified on 2026-09-04: 17 pytest tests passed; `ruff check src tests`, `ruff format --check src tests`, and `mypy src/evidenceops` passed.
 - [ ] **Phase 1B: Ingestion and chunking**
   - Text and markdown document loaders.
   - Document normalizer and chunker with deterministic chunk ID generation.
@@ -51,6 +52,4 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
 
 ## Next Smallest Action
 
-- Audit ECC skills (`python-testing` and `verification-loop`) against Superpowers workflow.
-- Execute baseline Git commit.
-- Dispatch Phase 1A scope to Codex for domain contracts and configuration implementation.
+- On explicit authorization, begin Phase 1B with failing tests for a narrowly scoped text/Markdown document loader contract, then implement only the loader and its validation boundary before chunking or index work.
