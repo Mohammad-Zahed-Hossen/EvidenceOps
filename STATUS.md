@@ -1,8 +1,8 @@
 # Project Status
 
-## Current Status: Phase 1A (Domain Contracts and Configuration) Complete
+## Current Status: Phase 1B.1 (Single-File Local Loader) Complete
 
-Phase 0 preflight and the Phase 1A production foundation layer are complete. Phase 1A added only framework-independent domain contracts, typed local settings, structured errors, basic standard-library logging, and focused unit tests. No ingestion, retrieval engine, model execution, Docker Compose, API, dashboard, MCP, or evaluation behavior has been implemented.
+Phase 0, Phase 1A, and Phase 1B.1 are complete. Phase 1B.1 adds only a deterministic, single-file local UTF-8 text/Markdown loader with an allowed-root validation boundary. No chunking, index, model, Docker Compose, API, dashboard, MCP, or evaluation behavior has been implemented.
 
 The preflight evidence is recorded in [docs/implementation-readiness.md](docs/implementation-readiness.md) and [docs/setup/initial-setup-report.md](docs/setup/initial-setup-report.md).
 
@@ -18,9 +18,16 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
   - Structured error types and basic structured logging interface (`src/evidenceops/logging.py`).
   - Focused unit tests for domain/state, settings, errors, and logging.
   - Verified on 2026-09-04: 17 pytest tests passed; `ruff check src tests`, `ruff format --check src tests`, and `mypy src/evidenceops` passed.
-- [ ] **Phase 1B: Ingestion and chunking**
+- [x] **Phase 1B.1: Single-file local text and Markdown loader** (Completed)
+  - Supports exactly one `.md`, `.markdown`, or `.txt` file per call within an injected allowed root.
+  - Enforces path containment, regular-file, size, extension, UTF-8, and non-empty-content validation.
+  - Produces deterministic `DocumentRecord` IDs, project-relative URIs, normalized LF text, hashes, and safe metadata.
+  - Verified on 2026-09-04: 13 focused loader tests passed and 1 symlink-escape test was skipped because Windows symlink creation lacks the required privilege; full suite: 30 passed, 1 skipped. Ruff, formatting, and mypy passed.
+- [ ] **Phase 1B.2: Structure-aware Markdown chunking**
+  - Heading-aware chunking with deterministic chunk IDs and no code-fence splits.
+- [ ] **Phase 1B: Ingestion and chunking (remaining work)**
   - Text and markdown document loaders.
-  - Document normalizer and chunker with deterministic chunk ID generation.
+  - Document normalizer and manifests after explicit authorization.
   - Ingestion pipeline and document manifests.
 - [ ] **Phase 1C: BM25 and dense indexes**
   - In-process `rank-bm25` sparse index builder and search.
@@ -52,4 +59,4 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
 
 ## Next Smallest Action
 
-- On explicit authorization, begin Phase 1B with failing tests for a narrowly scoped text/Markdown document loader contract, then implement only the loader and its validation boundary before chunking or index work.
+- On explicit authorization, begin Phase 1B.2 by writing failing tests for structure-aware Markdown chunking, including heading preservation and fenced-code boundaries; do not add BM25 or Qdrant work.

@@ -1,6 +1,7 @@
 """Typed local configuration for EvidenceOps."""
 
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import urlparse
 
 from pydantic import Field, field_validator
@@ -41,6 +42,9 @@ class Settings(BaseSettings):
     otel_exporter_otlp_endpoint: str = "http://localhost:4318"
     simulated_cloud_input_cost_usd_per_1k: float = Field(default=0.0, ge=0.0)
     simulated_cloud_output_cost_usd_per_1k: float = Field(default=0.0, ge=0.0)
+    raw_data_dir: Path = Path("data/raw")
+    max_source_bytes: int = Field(default=10_000_000, gt=0)
+    supported_source_extensions: str = ".md,.markdown,.txt"
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod

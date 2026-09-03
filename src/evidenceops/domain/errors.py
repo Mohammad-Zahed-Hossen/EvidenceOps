@@ -42,3 +42,19 @@ class GenerationError(EvidenceOpsError):
 
 class AbstentionError(EvidenceOpsError):
     default_code = "abstention_error"
+
+
+class IngestionError(EvidenceOpsError):
+    default_code = "ingestion_error"
+
+
+class UnsupportedSourceError(IngestionError):
+    default_code = "unsupported_source"
+
+
+class SourceAccessError(IngestionError):
+    default_code = "source_access_error"
+
+
+class SourceEncodingError(IngestionError):
+    default_code = "source_encoding_error"
