@@ -29,6 +29,8 @@ dependencies = [
 
 [project.scripts]
 evidenceops-ingest = "evidenceops.cli.ingest:main"
+evidenceops-index = "evidenceops.cli.retrieval:index_main"
+evidenceops-search = "evidenceops.cli.retrieval:search_main"
 
 [dependency-groups]
 dev = [
@@ -65,3 +67,7 @@ minversion = "8.0"
 addopts = "-ra -q --import-mode=importlib"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "qdrant: Live Qdrant integration tests",
+    "real_model: Real FastEmbed or FlashRank model smoke tests",
+]

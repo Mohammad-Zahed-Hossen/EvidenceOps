@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Status: Phase 1B (Local Ingestion Vertical Slice) Complete
+## Current Status: Phase 1C (Local Retrieval) Implemented; Live Verification Pending
 
 Phase 0, Phase 1A, and Phase 1B are complete. Phase 1B delivers a complete, locally runnable ingestion vertical slice covering document loading (Markdown, plain text, HTML), deterministic chunking, processed document artifact storage, atomic run manifests, and the `evidenceops-ingest` CLI entry point. No retrieval engine, vector database, embedding weights, LLM generation, API routes, or dashboard components have been initialized.
 
@@ -8,17 +8,17 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
 
 ## Phase Roadmap & Status
 
-- [x] **Phase 0: Environment and repository preflight** (Completed)
+- [X] **Phase 0: Environment and repository preflight** (Completed)
   - Preflight checks for tools, Git, virtual environment, and directory layout.
   - Root `EvidenceOps_SSOT.md` verified as canonical single source of truth.
   - Initial configuration templates, `.gitignore`, and documentation created.
-- [x] **Phase 1A: Domain contracts and configuration** (Completed)
+- [X] **Phase 1A: Domain contracts and configuration** (Completed)
   - Domain enums and Pydantic v2 data models (`DocumentRecord`, `ChunkRecord`, `RetrievalAction`, `QueryIntent`, `EvidenceRecord`, `AnswerRecord`, `RunTrace`).
   - Configuration loader (`src/evidenceops/settings.py` via `pydantic-settings`).
   - Structured error types and basic structured logging interface (`src/evidenceops/logging.py`).
   - Focused unit tests for domain/state, settings, errors, and logging.
   - Verified on 2026-09-04: 17 pytest tests passed; `ruff check src tests`, `ruff format --check src tests`, and `mypy src/evidenceops` passed.
-- [x] **Phase 1B: Ingestion and chunking** (Completed in full)
+- [X] **Phase 1B: Ingestion and chunking** (Completed in full)
   - **Formats supported**: `.md`, `.markdown`, `.txt`, `.html`, `.htm`.
   - **Single-file local loader** (`src/evidenceops/ingestion/loaders.py`) with path traversal prevention, UTF-8 normalization, and size validation.
   - **HTML normalizer** (`src/evidenceops/ingestion/normalizer.py`) converting headings, lists, paragraphs, and pre/code into clean Markdown.
@@ -31,11 +31,13 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
   - **Idempotency**: Byte-identical existing artifacts are detected and reported as unchanged without rewrite or chunk duplication.
   - **Test totals**: 80 passed, 1 skipped (Windows symlink privilege check handled gracefully).
   - **Quality gates**: Ruff linting clean, Ruff formatting clean (33 files formatted), mypy strict typing clean (18 source files).
-- [ ] **Phase 1C: BM25 and dense indexes** (Pending next action)
-  - In-process `rank-bm25` sparse index builder and search.
-  - FastEmbed dense vector embeddings.
-  - Local Qdrant integration and storage.
-  - Reciprocal Rank Fusion (RRF) hybrid search and FlashRank reranking.
+- [X] **Phase 1C: Local retrieval subsystem** (Automated sub-slices 1C.1–1C.5 complete; 30-question manual inspection gate blocked)
+  - **1C.1 (Sparse BM25)**: In-process `rank-bm25` builder, deterministic tokenizer (code & symbol preserving), atomic transparent JSON snapshots (`data/bm25/<id>.json`), deterministic tie-breaking.
+  - **1C.2 (Dense & Qdrant)**: Lazy FastEmbed adapter (`BAAI/bge-small-en-v1.5`, verified 384 dimensions, 4 CPU threads), local Qdrant collection lifecycle (Cosine distance & dimension assertion), deterministic UUIDv5 point ID mapping, `DenseIndexer` batch upserting, controlled filtering. Live Qdrant integration verified.
+  - **1C.3 (Hybrid RRF)**: Reciprocal Rank Fusion ($k=60$) over 1-based ranks, deterministic tie-breaking (-score, best component rank, chunk_id), `HybridRetriever` service preserving provenance.
+  - **1C.4 (FlashRank Reranking)**: Bounded lazy FlashRank wrapper (`ms-marco-TinyBERT-L-2-v2`), top 20 candidate cap, top 6 retained results, uncalibrated score attribution. Real model smoke test verified.
+  - **1C.5 (CLI & Integration)**: `evidenceops-index` and `evidenceops-search` command-line entry points. End-to-end integration test passes.
+  - **Pending Exit Gate**: 30-question manual retrieval inspection gate blocked pending approved corpus documents in `data/raw/` and evaluation questions in `eval/datasets/`.
 - [ ] **Phase 2: LangGraph orchestration**
   - State definition, nodes, transitions, and bounded retrieval cycles (max 3 iterations / calls).
 - [ ] **Phase 3: Heuristic controller**
@@ -61,4 +63,4 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
 
 ## Next Smallest Action
 
-- Pause implementation safely per milestone instructions. On resume, begin Phase 1C by designing contract interfaces and tests for the in-process `rank-bm25` index builder.
+- Run the explicitly marked Qdrant/FastEmbed/FlashRank smoke tests against approved local resources, then manually inspect 30 approved corpus questions before Phase 2.

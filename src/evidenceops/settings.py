@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
     qdrant_url: str = "http://localhost:6333"
-    qdrant_collection: str = "evidenceops_chunks"
+    qdrant_collection: str = "evidenceops_chunks_bge_small_v1"
     qdrant_timeout_seconds: int = Field(default=10, gt=0)
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_model: str = "qwen2.5:3b-instruct"
@@ -29,10 +29,10 @@ class Settings(BaseSettings):
     embedding_distance: str = "Cosine"
     flashrank_model: str = "ms-marco-TinyBERT-L-2-v2"
     rrf_k: int = Field(default=60, gt=0)
-    top_k_sparse: int = Field(default=20, gt=0)
-    top_k_dense: int = Field(default=20, gt=0)
-    top_k_hybrid: int = Field(default=20, gt=0)
-    top_k_context: int = Field(default=6, gt=0)
+    top_k_sparse: int = Field(default=20, gt=0, le=100)
+    top_k_dense: int = Field(default=20, gt=0, le=100)
+    top_k_hybrid: int = Field(default=20, gt=0, le=100)
+    top_k_context: int = Field(default=6, gt=0, le=100)
     max_iterations: int = Field(default=3, ge=1, le=3)
     max_retrieval_calls: int = Field(default=3, ge=1, le=3)
     max_context_chars: int = Field(default=24000, gt=0)
@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     chunk_overlap_words: int = Field(default=60, ge=50, le=80)
     manifest_dir: Path = Path("data/manifests")
     processed_data_dir: Path = Path("data/processed")
+    bm25_data_dir: Path = Path("data/bm25")
+    bm25_index_id: str = "evidenceops-bm25-v1"
+    embedding_threads: int = Field(default=4, ge=1, le=4)
+    embedding_batch_size: int = Field(default=8, ge=1, le=64)
     manifest_schema_version: str = "1.0"
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")

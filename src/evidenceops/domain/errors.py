@@ -98,3 +98,23 @@ class ManifestSerializationError(ManifestError):
 
 class ManifestValidationError(ManifestError):
     default_code = "manifest_validation_error"
+
+
+class RetrievalQueryError(RetrievalError):
+    default_code = "retrieval_query_error"
+
+
+class SparseIndexError(RetrievalError):
+    default_code = "sparse_index_error"
+
+
+class EmbeddingError(RetrievalError):
+    default_code = "embedding_error"
+
+
+class VectorStoreError(RetrievalError):
+    default_code = "vector_store_error"
+
+
+class RerankingError(RetrievalError):
+    default_code = "reranking_error"

@@ -1,5 +1,54 @@
 # EvidenceOps
 
+## Retrieval Subsystem (Phase 1C)
+
+Phase 1C provides deterministic, local-first retrieval built strictly from persisted Phase 1B processed artifacts (`data/processed/*.json`). No raw documents are re-read or re-chunked.
+
+### 1. Start Qdrant (Docker)
+```powershell
+docker compose up -d qdrant
+docker compose ps
+```
+Qdrant binds strictly to `127.0.0.1:6333`.
+
+### 2. Build Indexes
+```powershell
+# Build sparse BM25 snapshot (JSON under data/bm25/)
+uv run evidenceops-index --processed-root data/processed --bm25-root data/bm25 --build-sparse
+
+# Build dense Qdrant collection using FastEmbed (bge-small-en-v1.5)
+uv run evidenceops-index --processed-root data/processed --build-dense
+
+# Build both simultaneously
+uv run evidenceops-index --processed-root data/processed --bm25-root data/bm25 --build-sparse --build-dense
+```
+
+### 3. Search
+```powershell
+# Sparse BM25 search (does not require Docker or models)
+uv run evidenceops-search --query "Qdrant payload filtering" --method sparse --top-k 5
+
+# Dense vector search (requires Qdrant)
+uv run evidenceops-search --query "vector similarity search" --method dense --top-k 5
+
+# Hybrid search with Reciprocal Rank Fusion (RRF, k=60)
+uv run evidenceops-search --query "vector indexing in python" --method hybrid --top-k 6
+
+# FlashRank cross-encoder reranked search (TinyBERT-L-2-v2)
+uv run evidenceops-search --query "vector indexing in python" --method reranked --top-k 6
+```
+
+### 4. Stop Qdrant
+```powershell
+docker compose stop qdrant
+```
+
+### Model Caching & Troubleshooting
+- **FastEmbed**: `BAAI/bge-small-en-v1.5` downloads into OS temp / Hugging Face cache on first dense embedding invocation (~130 MB ONNX). Expected dimension is 384.
+- **FlashRank**: `ms-marco-TinyBERT-L-2-v2` downloads into cache on first reranking invocation (~17 MB ONNX).
+- **Qdrant Unavailable**: If Qdrant is stopped, `dense` and `hybrid` retrieval return an explicit `VectorStoreError` without silent fallback. Run `docker compose up -d qdrant`.
+- **Dimension Mismatch**: If an existing Qdrant collection was created with a different embedding dimension, `VectorStoreError` is raised immediately to prevent corrupt queries.
+
 > **Cost-Aware Retrieval and Evaluation Platform**
 
 EvidenceOps is an AI engineering platform designed to investigate and demonstrate cost-aware, evidence-grounded information retrieval and synthesis. Rather than blindly executing fixed-top-k retrieval for every query or executing unbounded multi-agent tool loops, EvidenceOps leverages a lightweight controller to adaptively determine retrieval routing (sparse, dense, hybrid, or abstain), rerank candidate passages, verify evidence sufficiency, and synthesize verifiable answers with explicit citations while rigorously measuring latency, token consumption, and compute cost.

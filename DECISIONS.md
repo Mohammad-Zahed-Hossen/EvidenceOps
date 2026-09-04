@@ -41,3 +41,13 @@
 ### ADR-010: Processed Document Artifacts, Idempotency, and HTML Normalization
 - **Context**: Phase 1C indexing needs self-contained access to documents and their pre-computed chunks without re-parsing raw sources. Re-ingesting unchanged sources must avoid redundant writes or duplicate chunk IDs. HTML sources must be supported per SSOT Section 1.2.
 - **Decision**: Persist normalized documents and ordered chunks together in atomic, immutable JSON artifacts at `data/processed/<document_id>.json`. `JsonProcessedDocumentStore` checks existing bytes on write; identical files return an `"unchanged"` disposition without writing, while modified contents with the same ID raise `ArtifactConflictError` unless explicit overwrite is enabled. HTML ingestion is handled through standard-library `html.parser.HTMLParser` inside `normalizer.py`, stripping non-content elements and converting headings, paragraphs, lists, and pre/code into clean Markdown-like text for chunking by `MarkdownChunker`.
+
+### ADR-011: Transparent Sparse Index Persistence and Stable Retrieval Ties
+- **Decision**: Persist BM25 rebuild inputs, not opaque runtime objects, as deterministic JSON under `data/bm25/`. The snapshot stores canonical chunk/token order plus corpus/configuration SHA-256 fingerprints. Sparse ties use canonical corpus order; RRF ties use best component rank then chunk ID.
+
+### ADR-012: Local Vector Compatibility and Stable Point IDs
+- **Decision**: Qdrant points use UUIDv5 derived from `chunk_id`, while payload retains the original ID and allowlisted source metadata. Existing incompatible collections fail rather than being deleted or silently recreated; historical points remain until an explicit future synchronization operation is designed.
+
+### ADR-013: Lazy Model Loading and Non-Calibrated Reranker Scores
+- **Context**: In local 8 GB RAM environments, loading FastEmbed and FlashRank ONNX models during import or CLI `--help` consumes memory and adds latency to sparse operations. Additionally, cross-encoder scores must not be conflated with calibrated probabilities or evidence sufficiency.
+- **Decision**: FastEmbed and FlashRank providers instantiate model runtimes lazily on first embedding/reranking invocation. CLI commands and sparse searches do not trigger model loading. FlashRank scores are attached to `RetrievalResult.score` and `metadata["rerank_score"]` preserving provenance, and are explicitly documented as uncalibrated query-relative ranking signals rather than sufficiency probabilities.
