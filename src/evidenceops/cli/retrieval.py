@@ -11,6 +11,7 @@ from evidenceops.domain.errors import EvidenceOpsError
 from evidenceops.ingestion.artifacts import JsonProcessedDocumentStore
 from evidenceops.retrieval.bm25 import Bm25IndexBuilder
 from evidenceops.retrieval.contracts import RetrievalResult
+from evidenceops.retrieval.service import SearchDocumentationRequest, build_documentation_service
 from evidenceops.retrieval.sparse_store import JsonSparseIndexStore
 from evidenceops.settings import get_settings
 
@@ -207,15 +208,19 @@ def search_main(argv: list[str] | None = None) -> int:
     try:
         results: tuple[RetrievalResult, ...] = ()
         if args.method == "sparse":
-            artifact_store = JsonProcessedDocumentStore(args.processed_root)
-            sparse_store = JsonSparseIndexStore(args.bm25_root)
-            snapshot_path = args.bm25_root / f"{args.index_id}.json"
-            if snapshot_path.exists():
-                snapshot = sparse_store.load(args.index_id)
-                index = Bm25IndexBuilder.from_snapshot(snapshot, artifact_store)
-            else:
-                index = Bm25IndexBuilder(artifact_store).build()
-            results = index.search(args.query, limit=top_k)
+            service_settings = settings.model_copy(
+                update={
+                    "processed_data_dir": args.processed_root,
+                    "bm25_data_dir": args.bm25_root,
+                    "bm25_index_id": args.index_id,
+                    "qdrant_url": args.qdrant_url,
+                    "qdrant_collection": args.collection,
+                }
+            )
+            service = build_documentation_service(service_settings)
+            results = service.search_results(
+                SearchDocumentationRequest(query=args.query, mode="sparse", top_k=top_k)
+            )
 
         elif args.method == "dense":
             from evidenceops.retrieval.dense import DenseRetrieverService

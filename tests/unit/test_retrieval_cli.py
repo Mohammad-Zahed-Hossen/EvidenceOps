@@ -3,9 +3,11 @@ from pathlib import Path
 
 import pytest
 
+from evidenceops.cli import retrieval as retrieval_cli
 from evidenceops.cli.retrieval import index_main, search_main
 from evidenceops.domain.models import ChunkRecord, DocumentRecord
 from evidenceops.ingestion.artifacts import JsonProcessedDocumentStore, ProcessedDocumentArtifact
+from evidenceops.retrieval.contracts import RetrievalResult
 
 
 def make_test_artifact(root: Path) -> None:
@@ -109,3 +111,55 @@ def test_cli_help_exits_cleanly() -> None:
     with pytest.raises(SystemExit) as exc_info:
         search_main(["--help"])
     assert exc_info.value.code == 0
+
+
+def test_sparse_cli_uses_shared_documentation_service(tmp_path, capsys, monkeypatch) -> None:
+    processed_root = tmp_path / "processed"
+    make_test_artifact(processed_root)
+    artifact = JsonProcessedDocumentStore(processed_root).read("doc-cli-1")
+    chunk = artifact.chunks[0]
+
+    class FakeDocumentationService:
+        def __init__(self) -> None:
+            self.requests = []
+
+        def search_results(self, request):
+            self.requests.append(request)
+            return (
+                RetrievalResult(
+                    chunk=chunk,
+                    retrieval_method="sparse",
+                    rank=1,
+                    score=3.0,
+                    sparse_rank=1,
+                    sparse_score=3.0,
+                    metadata={"source_type": "markdown"},
+                ),
+            )
+
+    fake_service = FakeDocumentationService()
+    monkeypatch.setattr(
+        retrieval_cli,
+        "build_documentation_service",
+        lambda _settings: fake_service,
+        raising=False,
+    )
+
+    exit_code = search_main(
+        [
+            "--query",
+            "CLI indexing",
+            "--method",
+            "sparse",
+            "--processed-root",
+            str(processed_root),
+            "--bm25-root",
+            str(tmp_path / "bm25"),
+            "--top-k",
+            "1",
+        ]
+    )
+
+    assert exit_code == 0
+    assert fake_service.requests[0].query == "CLI indexing"
+    assert json.loads(capsys.readouterr().out)[0]["score"] == 3.0
