@@ -1,0 +1,508 @@
+[
+  {
+    "document_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
+    "source_uri": "file://data/raw/qdrant_payload_filtering.md",
+    "filename": "qdrant_payload_filtering.md",
+    "title": "Filtering",
+    "chunk_count": 5,
+    "chunks": [
+      {
+        "chunk_id": "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563",
+        "ordinal": 0,
+        "title": "Filtering",
+        "heading_path": "",
+        "token_estimate": 592,
+        "snippet": "---\ntitle: Filtering\nshort_description: \"Combine vector similarity with payload filters in Qdrant to enforce business rules and refine search results.\"\ndescription: \"Filter Qdrant search results with payload conditions on metadata and IDs, combining database-style clauses with vector similarity for "
+      },
+      {
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
+        "ordinal": 1,
+        "title": "Filtering",
+        "heading_path": "Filtering > Filtering conditions",
+        "token_estimate": 808,
+        "snippet": "# Filtering\n\n## Filtering conditions\n\n\nWhen using `must_not`, the clause becomes `true` if none of the conditions listed inside `must_not` is satisfied.\nIn this sense, `must_not` is equivalent to the expression `(NOT A) AND (NOT B) AND (NOT C)`.\n\nExample:\n\n{{< code-snippet path=\"/documentation/headl"
+      },
+      {
+        "chunk_id": "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa",
+        "ordinal": 2,
+        "title": "Filtering",
+        "heading_path": "Filtering > Filtering conditions > Nested object filter",
+        "token_estimate": 724,
+        "snippet": "# Filtering\n\n## Filtering conditions\n\n### Nested object filter\n\n\nAnd the leaf nested field can also be an array.\n\n{{< code-snippet path=\"/documentation/headless/snippets/scroll-points/with-filter-on-nested-array-match/\" >}}\n\nThis query would only output the point with id 2 as only Japan has a city w"
+      },
+      {
+        "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579",
+        "ordinal": 3,
+        "title": "Filtering",
+        "heading_path": "Filtering > Filtering conditions > Phrase Match",
+        "token_estimate": 723,
+        "snippet": "# Filtering\n\n## Filtering conditions\n\n### Phrase Match\n\n\nThe `text_any` full-text match condition is similar to the `text` condition, but with a key difference: while `text` only matches text fields that contain *all* the query terms, `text_any` matches fields that contain *any* of the query terms. "
+      },
+      {
+        "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d",
+        "ordinal": 4,
+        "title": "Filtering",
+        "heading_path": "Filtering > Filtering conditions > Is Empty",
+        "token_estimate": 647,
+        "snippet": "# Filtering\n\n## Filtering conditions\n\n### Is Empty\n\n\nIn addition to the direct value comparison, it is also possible to filter by the amount of values.\n\nFor example, given the data:\n\n```json\n[\n  { \"id\": 1, \"name\": \"product A\", \"comments\": [\"Very good!\", \"Excellent\"] },\n  { \"id\": 2, \"name\": \"product "
+      }
+    ]
+  },
+  {
+    "document_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
+    "source_uri": "file://data/raw/flashrank_docs.md",
+    "filename": "flashrank_docs.md",
+    "title": "Table of Contents",
+    "chunk_count": 3,
+    "chunks": [
+      {
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed",
+        "ordinal": 0,
+        "title": "Table of Contents",
+        "heading_path": "",
+        "token_estimate": 654,
+        "snippet": "<p align =\"center\">\n<img width=200 src = \"./images/fr_logo.png\">\n</p>\n\n\n\n\n<div align=\"center\">\n\n[![Downloads](https://static.pepy.tech/badge/flashrank)](https://pepy.tech/project/flashrank)\n[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)]()\n[![license]( https://img.shield"
+      },
+      {
+        "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9",
+        "ordinal": 1,
+        "title": "Table of Contents",
+        "heading_path": "Table of Contents > Making ranking faster:",
+        "token_estimate": 634,
+        "snippet": "# Table of Contents\n\n## Making ranking faster:\n\n\n   - Models in roadmap:\n      * InRanker\n   - Why sleeker models are preferred ? Reranking is the final leg of larger retrieval pipelines, idea is to avoid any extra overhead especially for user-facing scenarios. To that end models with really small f"
+      },
+      {
+        "chunk_id": "a0e885687cd005b1dbfe5d5612b0f17f2c909ad5bd939f6d5dec634b89af017a",
+        "ordinal": 2,
+        "title": "Table of Contents",
+        "heading_path": "Reranked output from default reranker",
+        "token_estimate": 711,
+        "snippet": "# Reranked output from default reranker\n\n\n   },\n   {\n      \"id\":4,\n      \"text\":\"Ever want to make your LLM inference go brrrrr but got stuck at implementing speculative decoding and finding the suitable draft model? No more pain! Thrilled to unveil Medusa, a simple framework that removes the annoyi"
+      }
+    ]
+  },
+  {
+    "document_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
+    "source_uri": "file://data/raw/langgraph_persistence.md",
+    "filename": "langgraph_persistence.md",
+    "title": "LangGraph Checkpoint",
+    "chunk_count": 2,
+    "chunks": [
+      {
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be",
+        "ordinal": 0,
+        "title": "LangGraph Checkpoint",
+        "heading_path": "LangGraph Checkpoint",
+        "token_estimate": 629,
+        "snippet": "# LangGraph Checkpoint\n\n\n[![PyPI - Version](https://img.shields.io/pypi/v/langgraph-checkpoint?label=%20)](https://pypi.org/project/langgraph-checkpoint/#history)\n[![PyPI - License](https://img.shields.io/pypi/l/langgraph-checkpoint)](https://opensource.org/licenses/MIT)\n[![PyPI - Downloads](https:/"
+      },
+      {
+        "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582",
+        "ordinal": 1,
+        "title": "LangGraph Checkpoint",
+        "heading_path": "LangGraph Checkpoint > \ud83d\udcd5 Releases & Versioning",
+        "token_estimate": 198,
+        "snippet": "# LangGraph Checkpoint\n\n## \ud83d\udcd5 Releases & Versioning\n\n\nIf the checkpointer will be used with asynchronous graph execution (i.e. executing the graph via `.ainvoke`, `.astream`, `.abatch`), checkpointer must implement asynchronous versions of the above methods (`.aput`, `.aput_writes`, `.aget_tuple`, `."
+      }
+    ]
+  },
+  {
+    "document_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
+    "source_uri": "file://data/raw/fastapi_dependencies.md",
+    "filename": "fastapi_dependencies.md",
+    "title": "Dependencies { #dependencies }",
+    "chunk_count": 3,
+    "chunks": [
+      {
+        "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc",
+        "ordinal": 0,
+        "title": "Dependencies { #dependencies }",
+        "heading_path": "Dependencies { #dependencies }",
+        "token_estimate": 634,
+        "snippet": "# Dependencies { #dependencies }\n\n\n**FastAPI** has a very powerful but intuitive **<dfn title=\"also known as components, resources, providers, services, injectables\">Dependency Injection</dfn>** system.\n\nIt is designed to be very simple to use, and to make it very easy for any developer to integrate"
+      },
+      {
+        "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539",
+        "ordinal": 1,
+        "title": "Dependencies { #dependencies }",
+        "heading_path": "Dependencies { #dependencies } > Share `Annotated` dependencies { #share-annotated-dependencies }",
+        "token_estimate": 702,
+        "snippet": "# Dependencies { #dependencies }\n\n## Share `Annotated` dependencies { #share-annotated-dependencies }\n\n\nThis way you write shared code once and **FastAPI** takes care of calling it for your *path operations*.\n\n/// tip\n\nNotice that you don't have to create a special class and pass it somewhere to **F"
+      },
+      {
+        "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db",
+        "ordinal": 2,
+        "title": "Dependencies { #dependencies }",
+        "heading_path": "Dependencies { #dependencies } > Simple and Powerful { #simple-and-powerful }",
+        "token_estimate": 225,
+        "snippet": "# Dependencies { #dependencies }\n\n## Simple and Powerful { #simple-and-powerful }\n\n\nThe simplicity of the dependency injection system makes **FastAPI** compatible with:\n\n* all the relational databases\n* NoSQL databases\n* external packages\n* external APIs\n* authentication and authorization systems\n* "
+      }
+    ]
+  },
+  {
+    "document_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
+    "source_uri": "file://data/raw/fastembed_quickstart.md",
+    "filename": "fastembed_quickstart.md",
+    "title": "\u26a1\ufe0f What is FastEmbed?",
+    "chunk_count": 2,
+    "chunks": [
+      {
+        "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2",
+        "ordinal": 0,
+        "title": "\u26a1\ufe0f What is FastEmbed?",
+        "heading_path": "\u26a1\ufe0f What is FastEmbed?",
+        "token_estimate": 715,
+        "snippet": "# \u26a1\ufe0f What is FastEmbed?\n\n\nFastEmbed is a lightweight, fast, Python library built for embedding generation. We [support popular text models](https://qdrant.github.io/fastembed/examples/Supported_Models/). Please [open a GitHub issue](https://github.com/qdrant/fastembed/issues/new) if you want us to a"
+      },
+      {
+        "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2",
+        "ordinal": 1,
+        "title": "\u26a1\ufe0f What is FastEmbed?",
+        "heading_path": "\u26a1\ufe0f What is FastEmbed? > \ud83d\udcd6 Quickstart > \ud83d\udd04 Rerankers",
+        "token_estimate": 783,
+        "snippet": "# \u26a1\ufe0f What is FastEmbed?\n\n## \ud83d\udcd6 Quickstart\n\n### \ud83d\udd04 Rerankers\n\n\nTo install the FastEmbed library, pip works best. You can install it with or without GPU support:\n\n```bash\npip install fastembed\n\n# or with GPU support\n\npip install fastembed-gpu\n```\n\n## \ud83d\udcd6 Quickstart\n\n```python\nfrom fastembed import TextEmb"
+      }
+    ]
+  },
+  {
+    "document_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
+    "source_uri": "file://data/raw/ollama_api_reference.md",
+    "filename": "ollama_api_reference.md",
+    "title": "API",
+    "chunk_count": 9,
+    "chunks": [
+      {
+        "chunk_id": "5100b3ff18fe488c121eee5a2806b80642af095ffeed356fcf9c6e0d766784ed",
+        "ordinal": 0,
+        "title": "API",
+        "heading_path": "API",
+        "token_estimate": 538,
+        "snippet": "# API\n\n\n> Note: Ollama's API docs are moving to https://docs.ollama.com/api\n\n## Endpoints\n\n- [Generate a completion](#generate-a-completion)\n- [Generate a chat completion](#generate-a-chat-completion)\n- [Create a Model](#create-a-model)\n- [List Local Models](#list-local-models)\n- [Show Model Informa"
+      },
+      {
+        "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79",
+        "ordinal": 1,
+        "title": "API",
+        "heading_path": "API > Generate a completion > Examples > Generate request (Streaming) > Response",
+        "token_estimate": 741,
+        "snippet": "# API\n\n## Generate a completion\n\n### Examples\n\n#### Generate request (Streaming)\n\n##### Response\n\n\nEnable JSON mode by setting the `format` parameter to `json`. This will structure the response as a valid JSON object. See the JSON mode [example](#request-json-mode) below.\n\n> [!IMPORTANT]\n> It's impo"
+      },
+      {
+        "chunk_id": "ece61b5be455fea5c3eaa10dccb96c5b5f612e5597c55f39a711021fa8f000e8",
+        "ordinal": 2,
+        "title": "API",
+        "heading_path": "API > Generate a completion > Examples > Request (Raw Mode)",
+        "token_estimate": 1061,
+        "snippet": "# API\n\n## Generate a completion\n\n### Examples\n\n#### Request (Raw Mode)\n\n\nIf `stream` is set to `false`, the response will be a single JSON object:\n\n```json\n{\n  \"model\": \"llama3.2\",\n  \"created_at\": \"2023-08-04T19:22:45.499127Z\",\n  \"response\": \"The sky is blue because it is the color of the sky.\",\n  \""
+      },
+      {
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
+        "ordinal": 3,
+        "title": "API",
+        "heading_path": "API > Generate a chat completion > Parameters",
+        "token_estimate": 803,
+        "snippet": "# API\n\n## Generate a chat completion\n\n### Parameters\n\n\n- `role`: the role of the message, either `system`, `user`, `assistant`, or `tool`\n- `content`: the content of the message\n- `thinking`: (for thinking models) the model's thinking process\n- `images` (optional): a list of images to include in the"
+      },
+      {
+        "chunk_id": "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50",
+        "ordinal": 4,
+        "title": "API",
+        "heading_path": "API > Generate a chat completion > Examples > Chat request (With History)",
+        "token_estimate": 1267,
+        "snippet": "# API\n\n## Generate a chat completion\n\n### Examples\n\n#### Chat request (With History)\n\n\n[See models with tool calling capabilities](https://ollama.com/search?c=tool).\n\n### Structured outputs\n\nStructured outputs are supported by providing a JSON schema in the `format` parameter. The model will generat"
+      },
+      {
+        "chunk_id": "f8c8677c95dc3a5a159c579d9c409d953aefddc8cffeff690e963145a514866e",
+        "ordinal": 5,
+        "title": "API",
+        "heading_path": "API > Generate a chat completion > Examples > Unload a model",
+        "token_estimate": 1339,
+        "snippet": "# API\n\n## Generate a chat completion\n\n### Examples\n\n#### Unload a model\n\n\nSend a chat message with a conversation history. You can use this same approach to start the conversation using multi-shot or chain-of-thought prompting.\n\n##### Request\n\n```shell\ncurl http://localhost:11434/api/chat -d '{\n  \"m"
+      },
+      {
+        "chunk_id": "9c0407284b071190092a7782e1008d20b907cf5a86d6ec002f24bccbe3bd4785",
+        "ordinal": 6,
+        "title": "API",
+        "heading_path": "API > Create a Model > Examples > Create a model from a Safetensors directory > Response",
+        "token_estimate": 835,
+        "snippet": "# API\n\n## Create a Model\n\n### Examples\n\n#### Create a model from a Safetensors directory\n\n##### Response\n\n\nCreate a model from a GGUF file. The `files` parameter should be filled out with the file name and SHA256 digest of the GGUF file you wish to use. Use [/api/blobs/:digest](#push-a-blob) to push"
+      },
+      {
+        "chunk_id": "a8aecac3480a43e14e7914f1c5a2c790dae839c045cc617f3233c275259ec4e3",
+        "ordinal": 7,
+        "title": "API",
+        "heading_path": "API > Pull a Model > Examples > Response",
+        "token_estimate": 729,
+        "snippet": "# API\n\n## Pull a Model\n\n### Examples\n\n#### Response\n\n\nDownload a model from the ollama library. Cancelled pulls are resumed from where they left off, and multiple calls will share the same download progress.\n\n### Parameters\n\n- `model`: name of the model to pull\n- `insecure`: (optional) allow insecur"
+      },
+      {
+        "chunk_id": "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8",
+        "ordinal": 8,
+        "title": "API",
+        "heading_path": "API > Generate Embedding > Parameters",
+        "token_estimate": 379,
+        "snippet": "# API\n\n## Generate Embedding\n\n### Parameters\n\n\n- `truncate`: truncates the end of each input to fit within context length. Returns error if `false` and context length is exceeded. Defaults to `true`\n- `options`: additional model parameters listed in the documentation for the [Modelfile](./modelfile."
+      }
+    ]
+  },
+  {
+    "document_id": "c1ec403f4e652fbb6f22e6c370f87f331cc8f3d48f2f929b9ee6c118bac0a947",
+    "source_uri": "file://data/raw/fastapi_status_codes.md",
+    "filename": "fastapi_status_codes.md",
+    "title": "Response Status Code { #response-status-code }",
+    "chunk_count": 1,
+    "chunks": [
+      {
+        "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1",
+        "ordinal": 0,
+        "title": "Response Status Code { #response-status-code }",
+        "heading_path": "Response Status Code { #response-status-code }",
+        "token_estimate": 593,
+        "snippet": "# Response Status Code { #response-status-code }\n\n\nThe same way you can specify a response model, you can also declare the HTTP status code used for the response with the parameter `status_code` in any of the *path operations*:\n\n* `@app.get()`\n* `@app.post()`\n* `@app.put()`\n* `@app.delete()`\n* etc.\n"
+      }
+    ]
+  },
+  {
+    "document_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
+    "source_uri": "file://data/raw/qdrant_collections.md",
+    "filename": "qdrant_collections.md",
+    "title": "Collections",
+    "chunk_count": 4,
+    "chunks": [
+      {
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0",
+        "ordinal": 0,
+        "title": "Collections",
+        "heading_path": "",
+        "token_estimate": 602,
+        "snippet": "---\ntitle: Collections\nshort_description: \"Create and configure Qdrant collections \u2014 named sets of points sharing vector dimensions and a distance metric.\"\ndescription: \"Configure Qdrant collections, define named vectors with configurable distance metrics, and manage the building blocks of vector se"
+      },
+      {
+        "chunk_id": "24a60aecee7ee74a8bebb625663631f2313bea45363eb79fa151ac9ec66154f8",
+        "ordinal": 1,
+        "title": "Collections",
+        "heading_path": "Collections > Create a Collection > Collection with Multiple Vectors",
+        "token_estimate": 722,
+        "snippet": "# Collections\n\n## Create a Collection\n\n### Collection with Multiple Vectors\n\n\nIt is possible to have multiple vectors per record.\nThis feature allows for multiple vector storages per collection. \nTo distinguish vectors in one record, they should have a unique [name](/documentation/manage-data/vector"
+      },
+      {
+        "chunk_id": "3a4a710ce2506876619c58568befda9d9e9051342170d7175a0daa3d8cd09be2",
+        "ordinal": 2,
+        "title": "Collections",
+        "heading_path": "Collections > Update Collection > Update Vector Schema",
+        "token_estimate": 665,
+        "snippet": "# Collections\n\n## Update Collection\n\n### Update Vector Schema\n\n\nNamed vectors can be added to or removed from an existing collection without having to recreate the collection. This is useful for [embedding model migration](/documentation/tutorials-operations/embedding-model-migration/): you can add "
+      },
+      {
+        "chunk_id": "d365293363b7fd826606649c992387df2f6bf168e14153ca4a0a343e9207a13c",
+        "ordinal": 3,
+        "title": "Collections",
+        "heading_path": "Collections > Collection Info > Approximate Point and Vector Counts",
+        "token_estimate": 683,
+        "snippet": "# Collections\n\n## Collection Info\n\n### Approximate Point and Vector Counts\n\n\nIt means the collection has optimizations pending, but they are paused. You must\nsend any update operation to trigger and start the optimizations again.\n\nFor example:\n\n{{< code-snippet path=\"/documentation/headless/snippets"
+      }
+    ]
+  },
+  {
+    "document_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
+    "source_uri": "file://data/raw/langgraph_thinking_in_graphs.md",
+    "filename": "langgraph_thinking_in_graphs.md",
+    "title": "\ud83e\udd9c\ud83d\udd78\ufe0f LangGraph",
+    "chunk_count": 1,
+    "chunks": [
+      {
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
+        "ordinal": 0,
+        "title": "\ud83e\udd9c\ud83d\udd78\ufe0f LangGraph",
+        "heading_path": "\ud83e\udd9c\ud83d\udd78\ufe0f LangGraph",
+        "token_estimate": 304,
+        "snippet": "# \ud83e\udd9c\ud83d\udd78\ufe0f LangGraph\n\n\n[![PyPI - Version](https://img.shields.io/pypi/v/langgraph?label=%20)](https://pypi.org/project/langgraph/#history)\n[![PyPI - License](https://img.shields.io/pypi/l/langgraph)](https://opensource.org/licenses/MIT)\n[![PyPI - Downloads](https://img.shields.io/pepy/dt/langgraph)](http"
+      }
+    ]
+  },
+  {
+    "document_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
+    "source_uri": "file://data/raw/pydantic_settings.md",
+    "filename": "pydantic_settings.md",
+    "title": "Installation",
+    "chunk_count": 22,
+    "chunks": [
+      {
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
+        "ordinal": 0,
+        "title": "Installation",
+        "heading_path": "Installation",
+        "token_estimate": 599,
+        "snippet": "## Installation\n\n\nInstallation is as simple as:\n\n```bash\npip install pydantic-settings\n```\n\n## Usage\n\nIf you create a model that inherits from `BaseSettings`, the model initialiser will attempt to determine\nthe values of any fields not passed as keyword arguments by reading from the environment. (De"
+      },
+      {
+        "chunk_id": "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f",
+        "ordinal": 1,
+        "title": "Installation",
+        "heading_path": "Environment variable names",
+        "token_estimate": 705,
+        "snippet": "## Environment variable names\n\n\n!!! note\n    The default `env_prefix` is `''` (empty string). `env_prefix` is not only for env settings but also for\n    dotenv files, secrets, and other sources.\n\nIf you want to change the environment variable name for a single field, you can use an alias.\n\nThere are"
+      },
+      {
+        "chunk_id": "1ec73786982549710a639bf75b5afc70c16ec9cb052a9c9c9b86fa07ba363c26",
+        "ordinal": 2,
+        "title": "Installation",
+        "heading_path": "Environment variable names",
+        "token_estimate": 870,
+        "snippet": "## Environment variable names\n\n\nTo apply `env_prefix` not only to variable names but also to aliases, set `env_prefix_target='all'`.\nTo apply `env_prefix` only to aliases and not to variable names, set `env_prefix_target='alias'`.\nTo apply `env_prefix` only to variable names (the default behavior), "
+      },
+      {
+        "chunk_id": "fbb059d04c896ad72ccac1ff61fd3afbc9632c3653cccf10712581a25390aee6",
+        "ordinal": 3,
+        "title": "Installation",
+        "heading_path": "Parsing environment variable values",
+        "token_estimate": 698,
+        "snippet": "## Parsing environment variable values\n\n\n!!! note\n    Sub model has to inherit from `pydantic.BaseModel`, Otherwise `pydantic-settings` will initialize sub model,\n    collects values for sub model fields separately, and you may get unexpected results.\n\n!!! note\n    The `env_nested_delimiter` option "
+      },
+      {
+        "chunk_id": "85e602503596f55973641da237c583479cf64fedfa091244210c612bb6e299c4",
+        "ordinal": 4,
+        "title": "Installation",
+        "heading_path": "Parsing environment variable values > Disabling JSON parsing",
+        "token_estimate": 795,
+        "snippet": "## Parsing environment variable values\n\n### Disabling JSON parsing\n\n\nIf you want to disable this behavior for a field and parse the value in your own validator, you can annotate the\nfield with [`NoDecode`](../api/pydantic_settings.md#pydantic_settings.NoDecode):\n\n```py\nimport os\nfrom typing import A"
+      },
+      {
+        "chunk_id": "c810cab062f1f3c9939db9c154bc287024e9aaa70ffbb768a0a4492065b8035a",
+        "ordinal": 5,
+        "title": "Installation",
+        "heading_path": "Dotenv (.env) support",
+        "token_estimate": 659,
+        "snippet": "## Dotenv (.env) support\n\n\n!!! note\n    If a filename is specified for `env_file`, Pydantic will only check the current working directory and\n    won't check any parent directories for the `.env` file. Set `env_file_depth` to the number of\n    directory levels **up** from the current working directo"
+      },
+      {
+        "chunk_id": "176d9f2943f894265f4008f8d90087f6798133b87f38ea86ce385af8efbd1996",
+        "ordinal": 6,
+        "title": "Installation",
+        "heading_path": "Command Line Support",
+        "token_estimate": 731,
+        "snippet": "## Command Line Support\n\n\n    There is one exception to this. When `env_prefix` is set, an *unprefixed* dotenv entry whose name matches a\n    field name is silently skipped rather than treated as an extra value. For example, with `env_prefix='app_'`\n    and a `debug` field, a `debug=...` line in the"
+      },
+      {
+        "chunk_id": "405408cd887b45ecbcbb6d3c62b66f2ba504dd6118e48e22f0ba6b927ed34d3e",
+        "ordinal": 7,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Variadic named options",
+        "token_estimate": 851,
+        "snippet": "## Command Line Support\n\n### Variadic named options\n\n\n  * `--field k1=1,k2=2 --field k3=3 --field '{\"k4\": 4}'` etc.\n\n```py\nimport sys\n\nfrom pydantic_settings import BaseSettings\n\n\nclass Settings(BaseSettings, cli_parse_args=True):\n    my_dict: dict[str, int]\n\n\nsys.argv = ['example.py', '--my_dict', "
+      },
+      {
+        "chunk_id": "50cb3c0465ed6aea3e2ff9c0a17d3f4dcc2bec3f8501efc654123594ae0b05cb",
+        "ordinal": 8,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Creating CLI Applications",
+        "token_estimate": 796,
+        "snippet": "## Command Line Support\n\n### Creating CLI Applications\n\n\nWhen assigning aliases to `CliSubCommand` or `CliPositionalArg` fields, only a single alias can be assigned. For\nnon-union subcommands, aliasing will change the displayed help text and subcommand name. Conversely, for union\nsubcommands, aliasi"
+      },
+      {
+        "chunk_id": "453b2bf3e58b118b87ae0b5a7f189c58e83915a0ccfa444848c8ce729776f186",
+        "ordinal": 9,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Creating CLI Applications > Printing Help",
+        "token_estimate": 785,
+        "snippet": "## Command Line Support\n\n### Creating CLI Applications\n\n#### Printing Help\n\n\nAs mentioned above, you can also define subcommands as async. However, only do so for the leaf (lowest-level) subcommand to avoid spawning new threads and event loops unnecessarily in parent commands:\n\n```py\nfrom pydantic i"
+      },
+      {
+        "chunk_id": "487218f13c39db3a9afa79b4cdeb5078d39759bbe845af3a6d24031806dc581a",
+        "ordinal": 10,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Customizing the CLI Experience > CLI Boolean Flags",
+        "token_estimate": 792,
+        "snippet": "## Command Line Support\n\n### Customizing the CLI Experience\n\n#### CLI Boolean Flags\n\n\nChange whether boolean fields should be explicit or implicit by default using the `cli_implicit_flags` setting. By\ndefault, boolean fields are \"explicit\", meaning a boolean value must be explicitly provided on the "
+      },
+      {
+        "chunk_id": "68e40887f05cbd7fdead7b8fbd94d8974393af561ecbef7f3b64ad2e1a8c8365",
+        "ordinal": 11,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Customizing the CLI Experience > Change the None Type Parse String",
+        "token_estimate": 747,
+        "snippet": "## Command Line Support\n\n### Customizing the CLI Experience\n\n#### Change the None Type Parse String\n\n\nPydantic settings is designed to pull values in from various sources when instantiating a model. This means a field that\nis required is not strictly required from any single source (e.g. the CLI). I"
+      },
+      {
+        "chunk_id": "d15c6027a90d05c144edb5e767ffea165878e5003de33aba599677a1bb96dc96",
+        "ordinal": 12,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Customizing the CLI Experience > Show Environment Variables in CLI Help",
+        "token_estimate": 699,
+        "snippet": "## Command Line Support\n\n### Customizing the CLI Experience\n\n#### Show Environment Variables in CLI Help\n\n\nEnable `cli_show_env_vars` to append the resolved environment variable name for each CLI option in help text. This is\nuseful for ops runbooks, configuration discovery, and 12-factor apps where "
+      },
+      {
+        "chunk_id": "bba28d0e39ece34b1955690916088eeab5eb6460d3cfdc6f4992235b300eed49",
+        "ordinal": 13,
+        "title": "Installation",
+        "heading_path": "Command Line Support > Integrating with Existing Parsers",
+        "token_estimate": 922,
+        "snippet": "## Command Line Support\n\n### Integrating with Existing Parsers\n\n\nThe `cli_shortcuts` option takes a dictionary mapping the target field name (using dot notation for nested fields) to one or more shortcut names. If multiple fields share the same shortcut, the first matching field will take precedence"
+      },
+      {
+        "chunk_id": "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838",
+        "ordinal": 14,
+        "title": "Installation",
+        "heading_path": "Secrets > Use Case: Docker Secrets",
+        "token_estimate": 743,
+        "snippet": "## Secrets\n\n### Use Case: Docker Secrets\n\n\nDocker Secrets can be used to provide sensitive configuration to an application running in a Docker container.\nTo use these secrets in a *pydantic* application the process is simple. More information regarding creating, managing\nand using secrets in Docker "
+      },
+      {
+        "chunk_id": "f80408425da4103721ad21c2033a219dfee1951c67dcfbe735d51149de82ca11",
+        "ordinal": 15,
+        "title": "Installation",
+        "heading_path": "Nested Secrets > Configuration Options > secrets_case_sensitive",
+        "token_estimate": 679,
+        "snippet": "## Nested Secrets\n\n### Configuration Options\n\n#### secrets_case_sensitive\n\n\nIf multiple `secrets_dir` passed, the same `secrets_dir_missing` action applies to each of them.\n\n#### secrets_dir_max_size\n\nLimit the size of `secrets_dir` for security reasons, defaults to `SECRETS_DIR_MAX_SIZE` equal to 1"
+      },
+      {
+        "chunk_id": "56fa810d726a5348b8c33f9047fbe0a6cd7072570842ae662c307a130b965c51",
+        "ordinal": 16,
+        "title": "Installation",
+        "heading_path": "Azure Key Vault > Snake case conversion",
+        "token_estimate": 753,
+        "snippet": "## Azure Key Vault\n\n### Snake case conversion\n\n\nYou must have the same naming convention in the field name as in the Key Vault secret name. For example, if the secret is named `SqlServerPassword`, the field name must be the same. You can use an alias too.\n\nIn Key Vault, nested models are supported w"
+      },
+      {
+        "chunk_id": "5d6770af464264d1aac0ba6cce5c9a7a0c82db60ba3563aa2417ceb026270d88",
+        "ordinal": 17,
+        "title": "Installation",
+        "heading_path": "Google Cloud Secret Manager > Project ID resolution",
+        "token_estimate": 696,
+        "snippet": "## Google Cloud Secret Manager\n\n### Project ID resolution\n\n\n1. the explicit `project_id` argument if it was passed\n2. the value resolved by a previous (higher priority) settings source - by default the `project_id` field, configurable via the `project_id_field` argument\n3. [`google.auth.default()`]("
+      },
+      {
+        "chunk_id": "babc4fbee3d91522be2c4dfb534b4cdad8c5a9a7c8ba93d111949a614c274036",
+        "ordinal": 18,
+        "title": "Installation",
+        "heading_path": "Other settings source",
+        "token_estimate": 882,
+        "snippet": "## Other settings source\n\n\n- `JsonConfigSettingsSource` using `json_file` and `json_file_encoding` arguments\n- `PyprojectTomlConfigSettingsSource` using *(optional)* `pyproject_toml_depth` and *(optional)* `pyproject_toml_table_header` arguments\n- `TomlConfigSettingsSource` using `toml_file` argumen"
+      },
+      {
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018",
+        "ordinal": 19,
+        "title": "Installation",
+        "heading_path": "Field value priority",
+        "token_estimate": 860,
+        "snippet": "## Field value priority\n\n\n* `SettingsConfigDict(pyproject_toml_depth=<int>)` can be provided to check `<int>` number of directories **up** in the directory tree for a \"pyproject.toml\" if one is not found in the current working directory.\n  By default, no parent directories are checked.\n* An explicit"
+      },
+      {
+        "chunk_id": "5830c90208d5098f0acc4ae22623d4914e24cd2cd9b29d54b9fb494e3a7753bf",
+        "ordinal": 20,
+        "title": "Installation",
+        "heading_path": "Customise settings sources > Adding sources > Accessing the result of previous sources",
+        "token_estimate": 956,
+        "snippet": "## Customise settings sources\n\n### Adding sources\n\n#### Accessing the result of previous sources\n\n\nEach callable should take an instance of the settings class as its sole argument and return a `dict`.\n\n### Changing Priority\n\nThe order of the returned callables decides the priority of inputs; first i"
+      },
+      {
+        "chunk_id": "f2bef41f9f396c9dbc2d93b0a1e66611b943ace57ffa285287c18bea4e153374",
+        "ordinal": 21,
+        "title": "Installation",
+        "heading_path": "Async environments",
+        "token_estimate": 260,
+        "snippet": "## Async environments\n\n\nSince `settings_cached` and `settings_clear_cache` are added to `protected_namespaces`, defining a field whose name\nstarts with either of those raises a `UserWarning`. If you already have such a field, rename it or override\n`protected_namespaces` in your model config.\n\n\n## As"
+      }
+    ]
+  }
+]

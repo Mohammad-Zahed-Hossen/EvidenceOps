@@ -1,0 +1,423 @@
+[
+  {
+    "question_id": "q001",
+    "question": "What parameter in FastAPI path operation decorators is used to declare the HTTP response status code?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["fastapi-status-codes"],
+    "gold_answer_facts": [
+      "The status_code parameter in FastAPI path operation decorators declares the HTTP response status code.",
+      "Shortcut constants from fastapi.status like status.HTTP_201_CREATED can be passed to status_code."
+    ],
+    "gold_supporting_chunk_ids": ["c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact keyword status_code in FastAPI decorators."
+  },
+  {
+    "question_id": "q002",
+    "question": "Which function does FastAPI use to declare a dependency in path operation function parameters?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["fastapi-dependencies"],
+    "gold_answer_facts": [
+      "FastAPI uses the Depends function imported from fastapi to declare dependencies in function signatures."
+    ],
+    "gold_supporting_chunk_ids": ["993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact identifier Depends in FastAPI."
+  },
+  {
+    "question_id": "q003",
+    "question": "In Qdrant payload filtering, which condition matches if none of the listed conditions are satisfied, equivalent to (NOT A) AND (NOT B)?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-payload-filtering"],
+    "gold_answer_facts": [
+      "The must_not clause in Qdrant becomes true if none of the conditions inside must_not are satisfied, equivalent to (NOT A) AND (NOT B)."
+    ],
+    "gold_supporting_chunk_ids": ["9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact boolean filter keyword must_not."
+  },
+  {
+    "question_id": "q004",
+    "question": "What full-text match condition in Qdrant matches fields containing any of the query terms instead of requiring all terms?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-payload-filtering"],
+    "gold_answer_facts": [
+      "The text_any full-text match condition in Qdrant matches fields containing any of the query terms, whereas text requires all terms."
+    ],
+    "gold_supporting_chunk_ids": ["b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact match filter condition text_any."
+  },
+  {
+    "question_id": "q005",
+    "question": "Which base class in pydantic-settings attempts to populate model fields from environment variables when not passed as keyword arguments?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["pydantic-settings"],
+    "gold_answer_facts": [
+      "BaseSettings in pydantic-settings automatically determines field values from the environment when not passed as keyword arguments."
+    ],
+    "gold_supporting_chunk_ids": ["62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact class name BaseSettings."
+  },
+  {
+    "question_id": "q006",
+    "question": "What is the endpoint in the Ollama REST API used to generate a chat completion with conversational messages?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["ollama-api-reference"],
+    "gold_answer_facts": [
+      "The /api/chat endpoint in Ollama is used to generate chat completions with structured messages."
+    ],
+    "gold_supporting_chunk_ids": ["a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact REST API endpoint path /api/chat."
+  },
+  {
+    "question_id": "q007",
+    "question": "What class in the FlashRank library is initialized to perform candidate reranking?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["flashrank-docs"],
+    "gold_answer_facts": [
+      "The Ranker class in FlashRank is initialized to perform candidate reranking."
+    ],
+    "gold_supporting_chunk_ids": ["c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact class identifier Ranker in FlashRank."
+  },
+  {
+    "question_id": "q008",
+    "question": "In LangGraph checkpointing, what methods must an asynchronous checkpointer implement?",
+    "category": "exact_identifier",
+    "answerable": true,
+    "expected_source_ids": ["langgraph-persistence"],
+    "gold_answer_facts": [
+      "Asynchronous checkpointers in LangGraph must implement .aput, .aput_writes, .aget_tuple, and .alist."
+    ],
+    "gold_supporting_chunk_ids": ["84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests exact method identifiers for async checkpointers in LangGraph."
+  },
+  {
+    "question_id": "q009",
+    "question": "How does FastAPI resolve and share dependencies when using Annotated type annotations across path operations?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["fastapi-dependencies"],
+    "gold_answer_facts": [
+      "Annotated dependencies allow developers to define shared dependency types once so FastAPI automatically calls and injects them without boilerplate."
+    ],
+    "gold_supporting_chunk_ids": ["7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests natural-language conceptual query on Annotated dependency sharing."
+  },
+  {
+    "question_id": "q010",
+    "question": "Why are lightweight reranker models preferred in retrieval-augmented generation pipelines according to FlashRank?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["flashrank-docs"],
+    "gold_answer_facts": [
+      "Reranking is the final leg of larger retrieval pipelines, so sleeker models with small footprints avoid adding latency overhead in user-facing scenarios."
+    ],
+    "gold_supporting_chunk_ids": ["027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual query about reranking latency and pipeline position."
+  },
+  {
+    "question_id": "q011",
+    "question": "Can multiple vector representations with different distance metrics and dimensions exist in a single Qdrant collection?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-collections"],
+    "gold_answer_facts": [
+      "Qdrant supports multiple named vectors per record within a collection, allowing distinct vector storages and distance configurations."
+    ],
+    "gold_supporting_chunk_ids": ["24a60aecee7ee74a8bebb625663631f2313bea45363eb79fa151ac9ec66154f8"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual multi-vector collection architecture in Qdrant."
+  },
+  {
+    "question_id": "q012",
+    "question": "How does FastEmbed achieve high embedding throughput on CPU environments without heavy PyTorch dependencies?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["fastembed-quickstart"],
+    "gold_answer_facts": [
+      "FastEmbed uses lightweight ONNX runtime execution for embedding generation rather than bulky PyTorch runtimes, making it fast and efficient on CPU."
+    ],
+    "gold_supporting_chunk_ids": ["c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual CPU embedding design."
+  },
+  {
+    "question_id": "q013",
+    "question": "What happens in Ollama when a streaming request is completed and what final timing statistics are returned?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["ollama-api-reference"],
+    "gold_answer_facts": [
+      "When generation completes, Ollama returns done=true along with total_duration, load_duration, prompt_eval_count, and eval_count performance metrics."
+    ],
+    "gold_supporting_chunk_ids": ["ece61b5be455fea5c3eaa10dccb96c5b5f612e5597c55f39a711021fa8f000e8"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual streaming response metrics in Ollama."
+  },
+  {
+    "question_id": "q014",
+    "question": "How does pydantic-settings determine the precedence of environment variables versus default model values?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["pydantic-settings"],
+    "gold_answer_facts": [
+      "BaseSettings populates any field not explicitly provided as keyword arguments by reading from environment variables before falling back to default values."
+    ],
+    "gold_supporting_chunk_ids": ["62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual configuration priority order."
+  },
+  {
+    "question_id": "q015",
+    "question": "What is the purpose of checkpointing state in LangGraph workflows?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["langgraph-persistence"],
+    "gold_answer_facts": [
+      "Checkpointers in LangGraph persist state at each step, enabling human-in-the-loop inspection, state recovery, and multi-turn conversational persistence."
+    ],
+    "gold_supporting_chunk_ids": ["c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual workflow persistence in LangGraph."
+  },
+  {
+    "question_id": "q016",
+    "question": "How can named vectors be modified in an existing Qdrant collection without recreating the entire collection?",
+    "category": "natural_language_concept",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-collections"],
+    "gold_answer_facts": [
+      "Named vectors can be added or deleted from an existing Qdrant collection using the update vector schema API, facilitating model migrations without re-creating collections."
+    ],
+    "gold_supporting_chunk_ids": ["3a4a710ce2506876619c58568befda9d9e9051342170d7175a0daa3d8cd09be2"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests conceptual schema migration in Qdrant."
+  },
+  {
+    "question_id": "q017",
+    "question": "How do you define a custom response status code such as 201 Created on a FastAPI POST endpoint?",
+    "category": "mixed_code_concept",
+    "answerable": true,
+    "expected_source_ids": ["fastapi-status-codes"],
+    "gold_answer_facts": [
+      "Use @app.post('/items/', status_code=status.HTTP_201_CREATED) or status_code=201 to set the created HTTP status."
+    ],
+    "gold_supporting_chunk_ids": ["c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests code syntax combined with conceptual response status definition."
+  },
+  {
+    "question_id": "q018",
+    "question": "How do you filter points in Qdrant where a payload array field is empty or contains values?",
+    "category": "mixed_code_concept",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-payload-filtering"],
+    "gold_answer_facts": [
+      "Use the is_empty clause with key='comments' to filter points where an array or field has no values."
+    ],
+    "gold_supporting_chunk_ids": ["a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests code filter payload syntax combined with empty condition concept."
+  },
+  {
+    "question_id": "q019",
+    "question": "How do you specify a nested object filter in Qdrant when querying structured JSON payloads?",
+    "category": "mixed_code_concept",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-payload-filtering"],
+    "gold_answer_facts": [
+      "Use nested filter objects with key identifying the path and filter containing inner match conditions."
+    ],
+    "gold_supporting_chunk_ids": ["ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests nested payload filtering syntax and schema."
+  },
+  {
+    "question_id": "q020",
+    "question": "How do you configure pydantic-settings to read from a specific .env file and search parent directories?",
+    "category": "mixed_code_concept",
+    "answerable": true,
+    "expected_source_ids": ["pydantic-settings"],
+    "gold_answer_facts": [
+      "Set env_file in SettingsConfigDict to specify the filename and env_file_depth to search parent directory levels."
+    ],
+    "gold_supporting_chunk_ids": ["c810cab062f1f3c9939db9c154bc287024e9aaa70ffbb768a0a4492065b8035a"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests code configuration for .env search depth."
+  },
+  {
+    "question_id": "q021",
+    "question": "How do you request structured JSON schema output from the Ollama chat completions API?",
+    "category": "mixed_code_concept",
+    "answerable": true,
+    "expected_source_ids": ["ollama-api-reference"],
+    "gold_answer_facts": [
+      "Pass a JSON schema in the format parameter of the request payload to force Ollama to generate conforming structured outputs."
+    ],
+    "gold_supporting_chunk_ids": ["b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"],
+    "human_judgment": "pending_human_review",
+    "notes": "Tests structured JSON schema parameter in Ollama API call."
+  },
+  {
+    "question_id": "q022",
+    "question": "How does Qdrant vector collection distance configuration compare to FastEmbed embedding output requirements for Cosine similarity?",
+    "category": "cross_document_comparison",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-collections", "fastembed-quickstart"],
+    "gold_answer_facts": [
+      "Qdrant collections require specifying vector dimension and distance metric such as Distance.COSINE.",
+      "FastEmbed models like BAAI/bge-small-en-v1.5 output fixed-dimension dense vectors compatible with Cosine distance."
+    ],
+    "gold_supporting_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0",
+      "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
+    ],
+    "human_judgment": "pending_human_review",
+    "notes": "Multi-source comparison requiring one chunk from qdrant_collections and one from fastembed_quickstart."
+  },
+  {
+    "question_id": "q023",
+    "question": "How does FlashRank's cross-encoder reranking stage complement initial vector and payload-filtered candidate retrieval in Qdrant?",
+    "category": "cross_document_comparison",
+    "answerable": true,
+    "expected_source_ids": ["flashrank-docs", "qdrant-payload-filtering"],
+    "gold_answer_facts": [
+      "Vector search in Qdrant retrieves candidates based on embedding similarity and metadata filters.",
+      "FlashRank operates as the final leg of the pipeline using cross-encoders to rerank the retrieved candidates with high precision."
+    ],
+    "gold_supporting_chunk_ids": [
+      "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9",
+      "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
+    ],
+    "human_judgment": "pending_human_review",
+    "notes": "Multi-source comparison requiring one chunk from flashrank_docs and one from qdrant_payload_filtering."
+  },
+  {
+    "question_id": "q024",
+    "question": "How does LangGraph checkpointing enable stateful multi-turn interactions with an Ollama chat completion backend?",
+    "category": "cross_document_comparison",
+    "answerable": true,
+    "expected_source_ids": ["langgraph-persistence", "ollama-api-reference"],
+    "gold_answer_facts": [
+      "LangGraph checkpointers save graph execution state per thread across steps.",
+      "Ollama /api/chat expects historical conversation messages to maintain conversational context across turns."
+    ],
+    "gold_supporting_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be",
+      "f8c8677c95dc3a5a159c579d9c409d953aefddc8cffeff690e963145a514866e"
+    ],
+    "human_judgment": "pending_human_review",
+    "notes": "Multi-source comparison requiring one chunk from langgraph_persistence and one from ollama_api_reference."
+  },
+  {
+    "question_id": "q025",
+    "question": "How do FastAPI dependency injection and pydantic-settings collaborate to provide application configuration in API routes?",
+    "category": "cross_document_comparison",
+    "answerable": true,
+    "expected_source_ids": ["fastapi-dependencies", "pydantic-settings"],
+    "gold_answer_facts": [
+      "pydantic-settings encapsulates configuration loaded from environment variables via BaseSettings.",
+      "FastAPI injects settings instances into path operations using Depends without manual instantiation."
+    ],
+    "gold_supporting_chunk_ids": [
+      "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc",
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+    ],
+    "human_judgment": "pending_human_review",
+    "notes": "Multi-source comparison requiring one chunk from fastapi_dependencies and one from pydantic_settings."
+  },
+  {
+    "question_id": "q026",
+    "question": "How do you configure timeout settings?",
+    "category": "ambiguous",
+    "answerable": true,
+    "expected_source_ids": ["pydantic-settings", "ollama-api-reference"],
+    "gold_answer_facts": [
+      "Query is ambiguous: can refer to environment-configured timeouts via BaseSettings or model execution parameters in Ollama."
+    ],
+    "gold_supporting_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+    ],
+    "acceptable_alternatives": [
+      ["62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"],
+      ["a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49", "5100b3ff18fe488c121eee5a2806b80642af095ffeed356fcf9c6e0d766784ed"]
+    ],
+    "human_judgment": "pending_human_review",
+    "notes": "Ambiguous query intentionally testing underspecified terms across multiple configuration domains."
+  },
+  {
+    "question_id": "q027",
+    "question": "How do you filter results by tags or categories?",
+    "category": "ambiguous",
+    "answerable": true,
+    "expected_source_ids": ["qdrant-payload-filtering"],
+    "gold_answer_facts": [
+      "Query is underspecified: can refer to exact MatchValue payload filtering or full-text text_any matching."
+    ],
+    "gold_supporting_chunk_ids": [
+      "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563",
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+    ],
+    "acceptable_alternatives": [
+      ["a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563", "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"],
+      ["b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"]
+    ],
+    "human_judgment": "pending_human_review",
+    "notes": "Ambiguous query testing generic filtering concepts against specific payload filter implementations."
+  },
+  {
+    "question_id": "q028",
+    "question": "How do you deploy a Kubernetes Helm chart for distributed Elasticsearch clusters?",
+    "category": "unanswerable",
+    "answerable": false,
+    "expected_source_ids": [],
+    "gold_answer_facts": [
+      "The indexed corpus contains no documentation on Kubernetes Helm charts or distributed Elasticsearch deployment."
+    ],
+    "gold_supporting_chunk_ids": [],
+    "human_judgment": "pending_human_review",
+    "notes": "Unanswerable query outside the domain of the indexed AI engineering documents."
+  },
+  {
+    "question_id": "q029",
+    "question": "What are the configuration parameters for fine-tuning Whisper speech recognition models with LoRA?",
+    "category": "unanswerable",
+    "answerable": false,
+    "expected_source_ids": [],
+    "gold_answer_facts": [
+      "The indexed corpus contains no material on Whisper audio transcription or LoRA audio fine-tuning."
+    ],
+    "gold_supporting_chunk_ids": [],
+    "human_judgment": "pending_human_review",
+    "notes": "Unanswerable query regarding speech recognition models and PEFT tuning not present in the indexed corpus."
+  },
+  {
+    "question_id": "q030",
+    "question": "How do you configure PostgreSQL pgvector IVFFlat index lists for billion-scale search?",
+    "category": "unanswerable",
+    "answerable": false,
+    "expected_source_ids": [],
+    "gold_answer_facts": [
+      "The indexed corpus does not contain PostgreSQL pgvector IVFFlat indexing documentation."
+    ],
+    "gold_supporting_chunk_ids": [],
+    "human_judgment": "pending_human_review",
+    "notes": "Unanswerable query regarding external pgvector index tuning."
+  }
+]

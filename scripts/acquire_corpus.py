@@ -1,0 +1,255 @@
+"""Deterministic corpus acquisition script for EvidenceOps Phase 1C.
+
+Downloads the 10 provisionally approved primary-source documentation files
+using commit-pinned raw URLs, verifies expected SHA-256 hashes, and records
+provenance in eval/datasets/corpus_sources.json.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import httpx
+
+PINNED_SOURCES = [
+    {
+        "source_id": "fastapi-dependencies",
+        "title": "Dependencies - First Steps",
+        "canonical_url": "https://fastapi.tiangolo.com/tutorial/dependencies/",
+        "raw_pinned_url": "https://raw.githubusercontent.com/fastapi/fastapi/50113da16fec53b66b80d75e80a89296de4fa5a5/docs/en/docs/tutorial/dependencies/index.md",
+        "publisher": "Sebastián Ramírez",
+        "source_type": "markdown",
+        "commit_sha": "50113da16fec53b66b80d75e80a89296de4fa5a5",
+        "version_spec": "repository snapshot at commit 50113da16fec53b66b80d75e80a89296de4fa5a5",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "MIT",
+        "license_url": "https://github.com/fastapi/fastapi/blob/50113da16fec53b66b80d75e80a89296de4fa5a5/LICENSE",
+        "license_verified": True,
+        "local_filename": "fastapi_dependencies.md",
+        "expected_sha256": "83319cc87297bb0959c5721a112133e6a3cd19900163c348a8ee6cf4818cd21f",
+        "byte_size": 9771,
+    },
+    {
+        "source_id": "fastapi-status-codes",
+        "title": "Response Status Code",
+        "canonical_url": "https://fastapi.tiangolo.com/tutorial/response-status-code/",
+        "raw_pinned_url": "https://raw.githubusercontent.com/fastapi/fastapi/50113da16fec53b66b80d75e80a89296de4fa5a5/docs/en/docs/tutorial/response-status-code.md",
+        "publisher": "Sebastián Ramírez",
+        "source_type": "markdown",
+        "commit_sha": "50113da16fec53b66b80d75e80a89296de4fa5a5",
+        "version_spec": "repository snapshot at commit 50113da16fec53b66b80d75e80a89296de4fa5a5",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "MIT",
+        "license_url": "https://github.com/fastapi/fastapi/blob/50113da16fec53b66b80d75e80a89296de4fa5a5/LICENSE",
+        "license_verified": True,
+        "local_filename": "fastapi_status_codes.md",
+        "expected_sha256": "44c62f134437997178668480503cc1cdfc55b45367ce8a66beff89c839aa896a",
+        "byte_size": 3994,
+    },
+    {
+        "source_id": "qdrant-payload-filtering",
+        "title": "Payload and Filtering",
+        "canonical_url": "https://qdrant.tech/documentation/concepts/filtering/",
+        "raw_pinned_url": "https://raw.githubusercontent.com/qdrant/landing_page/141e6439f8bef3438816b942a65264f2e990e861/qdrant-landing/content/documentation/search/filtering.md",
+        "publisher": "Qdrant Solutions GmbH",
+        "source_type": "markdown",
+        "commit_sha": "141e6439f8bef3438816b942a65264f2e990e861",
+        "version_spec": "repository snapshot at commit 141e6439f8bef3438816b942a65264f2e990e861",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "Apache 2.0",
+        "license_url": "https://github.com/qdrant/landing_page/blob/141e6439f8bef3438816b942a65264f2e990e861/LICENSE",
+        "license_verified": True,
+        "local_filename": "qdrant_payload_filtering.md",
+        "expected_sha256": "46c3c1b2c11aa12ddca409ff7208db00eb78a545bd20298595bd3cfd5f4773e6",
+        "byte_size": 22312,
+    },
+    {
+        "source_id": "qdrant-collections",
+        "title": "Collections and Vectors",
+        "canonical_url": "https://qdrant.tech/documentation/concepts/collections/",
+        "raw_pinned_url": "https://raw.githubusercontent.com/qdrant/landing_page/141e6439f8bef3438816b942a65264f2e990e861/qdrant-landing/content/documentation/manage-data/collections.md",
+        "publisher": "Qdrant Solutions GmbH",
+        "source_type": "markdown",
+        "commit_sha": "141e6439f8bef3438816b942a65264f2e990e861",
+        "version_spec": "repository snapshot at commit 141e6439f8bef3438816b942a65264f2e990e861",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "Apache 2.0",
+        "license_url": "https://github.com/qdrant/landing_page/blob/141e6439f8bef3438816b942a65264f2e990e861/LICENSE",
+        "license_verified": True,
+        "local_filename": "qdrant_collections.md",
+        "expected_sha256": "90de7f1e9d0d52bbc46947bf4e5842258a7aa581aacbac8aa0289d709a1444fb",
+        "byte_size": 21178,
+    },
+    {
+        "source_id": "langgraph-thinking-in-graphs",
+        "title": "LangGraph Core Concepts",
+        "canonical_url": "https://github.com/langchain-ai/langgraph/tree/main/libs/langgraph",
+        "raw_pinned_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1/libs/langgraph/README.md",
+        "publisher": "LangChain, Inc.",
+        "source_type": "markdown",
+        "commit_sha": "81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1",
+        "version_spec": "repository snapshot at commit 81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "MIT",
+        "license_url": "https://github.com/langchain-ai/langgraph/blob/81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1/LICENSE",
+        "license_verified": True,
+        "local_filename": "langgraph_thinking_in_graphs.md",
+        "expected_sha256": "53f07ad40471df77ddd3b5afd24a75e3f5c64ee0d2c979241c316687f443eab3",
+        "byte_size": 3364,
+    },
+    {
+        "source_id": "langgraph-persistence",
+        "title": "Persistence and Checkpointers",
+        "canonical_url": "https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint",
+        "raw_pinned_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1/libs/checkpoint/README.md",
+        "publisher": "LangChain, Inc.",
+        "source_type": "markdown",
+        "commit_sha": "81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1",
+        "version_spec": "repository snapshot at commit 81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "MIT",
+        "license_url": "https://github.com/langchain-ai/langgraph/blob/81bf17b23123e4ef8b9d5f49fa09a0122fc2edd1/LICENSE",
+        "license_verified": True,
+        "local_filename": "langgraph_persistence.md",
+        "expected_sha256": "efedc0a489d4ab9147d69c8575a9cfd2344d01040322ec6330302887c65aa80e",
+        "byte_size": 6100,
+    },
+    {
+        "source_id": "fastembed-quickstart",
+        "title": "FastEmbed Text Embeddings",
+        "canonical_url": "https://qdrant.github.io/fastembed/",
+        "raw_pinned_url": "https://raw.githubusercontent.com/qdrant/fastembed/a34e7bcc42306937dc94c9fef6facd41c327989f/README.md",
+        "publisher": "Qdrant Solutions GmbH",
+        "source_type": "markdown",
+        "commit_sha": "a34e7bcc42306937dc94c9fef6facd41c327989f",
+        "version_spec": "repository snapshot at commit a34e7bcc42306937dc94c9fef6facd41c327989f",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "Apache 2.0",
+        "license_url": "https://github.com/qdrant/fastembed/blob/a34e7bcc42306937dc94c9fef6facd41c327989f/LICENSE",
+        "license_verified": True,
+        "local_filename": "fastembed_quickstart.md",
+        "expected_sha256": "34772dc9c94c1accabf07b6496e38f42934b7a4cf392ad6bc1c82884635257e4",
+        "byte_size": 8962,
+    },
+    {
+        "source_id": "flashrank-docs",
+        "title": "FlashRank Cross-Encoder Reranking",
+        "canonical_url": "https://github.com/PrithivirajDamodaran/FlashRank",
+        "raw_pinned_url": "https://raw.githubusercontent.com/PrithivirajDamodaran/FlashRank/11f7a40d625f2de047c371c81c6f477386c18bb1/README.md",
+        "publisher": "Prithiviraj Damodaran",
+        "source_type": "markdown",
+        "commit_sha": "11f7a40d625f2de047c371c81c6f477386c18bb1",
+        "version_spec": "repository snapshot at commit 11f7a40d625f2de047c371c81c6f477386c18bb1",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "Apache 2.0",
+        "license_url": "https://github.com/PrithivirajDamodaran/FlashRank/blob/11f7a40d625f2de047c371c81c6f477386c18bb1/LICENSE",
+        "license_verified": True,
+        "local_filename": "flashrank_docs.md",
+        "expected_sha256": "8fbef16932d29d36ea93a1f5bdbfd68c7deb4c12e4c3b82fa6d3f27ffba50d8d",
+        "byte_size": 14042,
+    },
+    {
+        "source_id": "ollama-api-reference",
+        "title": "Ollama REST API Reference",
+        "canonical_url": "https://github.com/ollama/ollama/blob/main/docs/api.md",
+        "raw_pinned_url": "https://raw.githubusercontent.com/ollama/ollama/b68365a0a4e2546f23cb3e87280b4cde6c2d117f/docs/api.md",
+        "publisher": "Ollama",
+        "source_type": "markdown",
+        "commit_sha": "b68365a0a4e2546f23cb3e87280b4cde6c2d117f",
+        "version_spec": "repository snapshot at commit b68365a0a4e2546f23cb3e87280b4cde6c2d117f",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "MIT",
+        "license_url": "https://github.com/ollama/ollama/blob/b68365a0a4e2546f23cb3e87280b4cde6c2d117f/LICENSE",
+        "license_verified": True,
+        "local_filename": "ollama_api_reference.md",
+        "expected_sha256": "469b874b7c32e407114cc4024d48eb607e3c6793e70edf98d35b294acffe4878",
+        "byte_size": 54958,
+    },
+    {
+        "source_id": "pydantic-settings",
+        "title": "Pydantic Settings Management",
+        "canonical_url": "https://docs.pydantic.dev/latest/concepts/pydantic_settings/",
+        "raw_pinned_url": "https://raw.githubusercontent.com/pydantic/pydantic-settings/12cdb0a3d25bd19210b5cd4a5ba3a14439069cea/docs/index.md",
+        "publisher": "Pydantic Services Inc.",
+        "source_type": "markdown",
+        "commit_sha": "12cdb0a3d25bd19210b5cd4a5ba3a14439069cea",
+        "version_spec": "repository snapshot at commit 12cdb0a3d25bd19210b5cd4a5ba3a14439069cea",
+        "access_date": "2026-09-04",
+        "acquisition_timestamp": "2026-09-04T16:23:30Z",
+        "license_name": "MIT",
+        "license_url": "https://github.com/pydantic/pydantic-settings/blob/12cdb0a3d25bd19210b5cd4a5ba3a14439069cea/LICENSE",
+        "license_verified": True,
+        "local_filename": "pydantic_settings.md",
+        "expected_sha256": "1c835455c02f76bb79c412a6d4c4bad84efc0d69e7d9f9fed82d9b3bebf752a1",
+        "byte_size": 119467,
+    },
+]
+
+
+def acquire(force_download: bool = False) -> None:
+    repo_root = Path(__file__).resolve().parent.parent
+    raw_dir = repo_root / "data" / "raw"
+    datasets_dir = repo_root / "eval" / "datasets"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    datasets_dir.mkdir(parents=True, exist_ok=True)
+
+    verified_sources = []
+    with httpx.Client(timeout=20.0, follow_redirects=True) as client:
+        for item in PINNED_SOURCES:
+            dest = raw_dir / item["local_filename"]
+            if dest.exists() and not force_download:
+                content = dest.read_bytes().replace(b"\r\n", b"\n")
+                actual_hash = hashlib.sha256(content).hexdigest()
+                if actual_hash == item["expected_sha256"]:
+                    print(f"Verified existing local file: {dest.name} (SHA-256 matches)")
+                    verified_sources.append(item)
+                    continue
+
+            print(f"Downloading {item['source_id']} from {item['raw_pinned_url']}...")
+            resp = client.get(item["raw_pinned_url"])
+            resp.raise_for_status()
+            content = resp.content.replace(b"\r\n", b"\n")
+            actual_hash = hashlib.sha256(content).hexdigest()
+            if actual_hash != item["expected_sha256"]:
+                raise ValueError(
+                    f"SHA-256 hash mismatch for {item['source_id']}: "
+                    f"expected {item['expected_sha256']}, got {actual_hash}"
+                )
+            dest.write_bytes(content)
+            verified_sources.append(item)
+
+    manifest_path = datasets_dir / "corpus_sources.json"
+    notes_text = (
+        "Corpus scope provisionally approved after acquisition; "
+        "provenance and reproducibility corrections required before final acceptance."
+    )
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "corpus_id": "evidenceops-ai-eng-v1",
+                "status": "provisionally_approved_post_acquisition",
+                "notes": notes_text,
+                "document_count": len(verified_sources),
+                "sources": verified_sources,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"Corpus acquisition & hash verification complete! Manifest: {manifest_path}")
+
+
+if __name__ == "__main__":
+    acquire()

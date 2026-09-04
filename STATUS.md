@@ -31,13 +31,15 @@ The preflight evidence is recorded in [docs/implementation-readiness.md](docs/im
   - **Idempotency**: Byte-identical existing artifacts are detected and reported as unchanged without rewrite or chunk duplication.
   - **Test totals**: 80 passed, 1 skipped (Windows symlink privilege check handled gracefully).
   - **Quality gates**: Ruff linting clean, Ruff formatting clean (33 files formatted), mypy strict typing clean (18 source files).
-- [X] **Phase 1C: Local retrieval subsystem** (Automated sub-slices 1C.1–1C.5 complete; 30-question manual inspection gate blocked)
+- [ ] **Phase 1C: Local retrieval subsystem** (Implementation & automated 30-question inspection complete; manual human-judgment gate pending)
   - **1C.1 (Sparse BM25)**: In-process `rank-bm25` builder, deterministic tokenizer (code & symbol preserving), atomic transparent JSON snapshots (`data/bm25/<id>.json`), deterministic tie-breaking.
   - **1C.2 (Dense & Qdrant)**: Lazy FastEmbed adapter (`BAAI/bge-small-en-v1.5`, verified 384 dimensions, 4 CPU threads), local Qdrant collection lifecycle (Cosine distance & dimension assertion), deterministic UUIDv5 point ID mapping, `DenseIndexer` batch upserting, controlled filtering. Live Qdrant integration verified.
   - **1C.3 (Hybrid RRF)**: Reciprocal Rank Fusion ($k=60$) over 1-based ranks, deterministic tie-breaking (-score, best component rank, chunk_id), `HybridRetriever` service preserving provenance.
   - **1C.4 (FlashRank Reranking)**: Bounded lazy FlashRank wrapper (`ms-marco-TinyBERT-L-2-v2`), top 20 candidate cap, top 6 retained results, uncalibrated score attribution. Real model smoke test verified.
   - **1C.5 (CLI & Integration)**: `evidenceops-index` and `evidenceops-search` command-line entry points. End-to-end integration test passes.
-  - **Pending Exit Gate**: 30-question manual retrieval inspection gate blocked pending approved corpus documents in `data/raw/` and evaluation questions in `eval/datasets/`.
+  - **Corpus State**: Corpus scope provisionally approved after acquisition; provenance and reproducibility corrections required before final acceptance. 10 primary-source documents pinned to exact commit SHAs and verified SHA-256 hashes (`eval/datasets/corpus_sources.json`).
+  - **Retrieval Inspection**: 30-question dataset evaluated across sparse, dense, hybrid, and reranked modes (`eval/datasets/retrieval_inspection_30.json`). Diagnostic metrics and provenance stability (100.0%) computed.
+  - **Pending Exit Gate**: Phase 1C implementation and automated retrieval inspection are complete, but the manual human-judgment gate remains pending review of `retrieval_inspection_review.md`.
 - [ ] **Phase 2: LangGraph orchestration**
   - State definition, nodes, transitions, and bounded retrieval cycles (max 3 iterations / calls).
 - [ ] **Phase 3: Heuristic controller**

@@ -173,15 +173,32 @@ Evaluated against the default low-resource hardware baseline (Ryzen 5 5600G, 8 G
 ### Automated Verification: Complete (PASS)
 All unit tests, integration tests, lint checks, formatting checks, and type checks pass with 0 errors and >= 75% coverage.
 
-### Manual 30-Question Inspection Gate: Blocked (Pending Input)
-- **Status**: **BLOCKED**
-- **Reason**: The repository currently contains no approved Phase 1C evaluation dataset (`eval/datasets/` is empty) and no approved raw corpus (`data/raw/` is empty). Synthetic mock corpora were used to mathematically verify the pipeline, but the qualitative 30-question diagnostic inspection requires domain-approved data.
-- **Action Required Before Production Use**:
-  1. Populate `data/raw/` with approved documentation and run `evidenceops-ingest`.
-  2. Run `evidenceops-index --input-dir data/processed --target all`.
-  3. Formulate the 30 canonical evaluation queries across syntax, architectural concepts, error codes, and configuration.
-  4. Run `evidenceops-search` across all 4 retrieval modes for each query.
-  5. Inspect top-5 results for token collisions, semantic drift, and ranking inversion.
+### Manual 30-Question Inspection Gate: Automated Inspection Complete; Human Review Pending
+- **Status**: **PENDING HUMAN REVIEW**
+- **Corpus State**: *Corpus scope provisionally approved after acquisition; provenance and reproducibility corrections required before final acceptance.*
+- **Corpus Metadata**:
+  - Name & Version: `evidenceops-ai-eng-v1` (10 documents, 52 chunks).
+  - Source Manifest: `eval/datasets/corpus_sources.json` (all sources commit-pinned with verified SHA-256 hashes and license verification).
+  - Corpus Fingerprint: `e0b2c2a8e38ca70eacfef0bade0f5b44a5136c89df24a1286ac0009330a72662`
+  - Configuration Fingerprint: `ef3abe61adbbca454ec678b9c043220a2efb08d6bc75837f7d98bfbbf03f9f18`
+- **30-Question Dataset**: `eval/datasets/retrieval_inspection_30.json` (8 exact identifier, 8 concept, 5 mixed, 4 cross-document comparison, 2 ambiguous, 3 unanswerable).
+- **Inspection Run Output**: `data/eval/retrieval_inspection_run.json`.
+- **Human Review Artifact**: `C:\Users\Admin\.gemini\antigravity-ide\brain\578142dc-18fe-42ff-b9b3-fe45d1d8fef9\retrieval_inspection_review.md`.
+- **Diagnostic Metrics (Answerable N=27)**:
+  - Sparse (BM25): Recall@1: 38.89% (10.5/27), Recall@5: 92.59% (25.0/27), Recall@10: 96.30% (26.0/27), MRR@10: 0.6710
+  - Dense (FastEmbed): Recall@1: 50.00% (13.5/27), Recall@5: 96.30% (26.0/27), Recall@10: 98.15% (26.5/27), MRR@10: 0.7572
+  - Hybrid (RRF k=60): Recall@1: 50.00% (13.5/27), Recall@5: 96.30% (26.0/27), Recall@10: 98.15% (26.5/27), MRR@10: 0.7623
+  - Reranked (FlashRank): Recall@1: 59.26% (16.0/27), Recall@5: 90.74% (24.5/27), Recall@10 (top 6): 94.44% (25.5/27), MRR@10: 0.7728
+- **Multi-Source Metrics (N=4 cross-document questions)**:
+  - Reranked: Any-Support Hit@5 = 4/4 (100.0%), Complete-Support Hit@5 = 3/4 (75.0%), Recall@5 = 7.0/8 (87.5%).
+  - Dense: Complete-Support Hit@5 = 4/4 (100.0%), Recall@5 = 8.0/8 (100.0%).
+- **Unanswerable Query Diagnostics (N=3)**:
+  - Queries `q028–q030` returned nearest candidates (abstention rate 0.0%).
+  - Status: `unanswerable_incorrectly_retrieved`.
+  - Clarification: *The Phase 1C retrieval layer always returns nearest candidates when available. These results show that retrieval alone does not detect unsupported questions. Abstention and evidence-sufficiency decisions belong to later phases, so this is a diagnostic limitation rather than proof of a Phase 1C implementation defect.*
+- **Provenance Stability**: 100.0% across all 1,080 evaluated candidates.
+- **Current Exit Gate Verdict**:
+  `Phase 1C implementation and automated retrieval inspection are complete, but the manual human-judgment gate remains pending.`
 
 ---
 
