@@ -74,7 +74,8 @@ identifiers fail safely.
 
 ## Transport and execution
 
-The first transport is MCP STDIO only. `evidenceops-mcp` is a project script
+The first transport is MCP STDIO only, using the SSOT-approved MCP 1.x SDK.
+`evidenceops-mcp` is a project script
 that starts the server without binding a network socket. Localhost HTTP is
 explicitly deferred until these contracts have stable tests, as required by
 SSOT section 9.3.

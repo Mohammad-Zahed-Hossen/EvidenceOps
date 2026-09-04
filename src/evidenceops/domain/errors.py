@@ -118,3 +118,31 @@ class VectorStoreError(RetrievalError):
 
 class RerankingError(RetrievalError):
     default_code = "reranking_error"
+
+
+class StateValidationError(DomainValidationError):
+    default_code = "state_validation_error"
+
+
+class GuardrailViolationError(EvidenceOpsError):
+    default_code = "guardrail_violation"
+
+
+class ContextPackingError(EvidenceOpsError):
+    default_code = "context_packing_error"
+
+
+class OllamaTimeoutError(GenerationError):
+    default_code = "ollama_timeout"
+
+
+class OllamaUnavailableError(GenerationError):
+    default_code = "ollama_unavailable"
+
+
+class CitationValidationError(EvidenceOpsError):
+    default_code = "citation_validation_error"
+
+
+class WorkflowExecutionError(EvidenceOpsError):
+    default_code = "workflow_execution_error"

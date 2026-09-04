@@ -51,3 +51,17 @@
 ### ADR-013: Lazy Model Loading and Non-Calibrated Reranker Scores
 - **Context**: In local 8 GB RAM environments, loading FastEmbed and FlashRank ONNX models during import or CLI `--help` consumes memory and adds latency to sparse operations. Additionally, cross-encoder scores must not be conflated with calibrated probabilities or evidence sufficiency.
 - **Decision**: FastEmbed and FlashRank providers instantiate model runtimes lazily on first embedding/reranking invocation. CLI commands and sparse searches do not trigger model loading. FlashRank scores are attached to `RetrievalResult.score` and `metadata["rerank_score"]` preserving provenance, and are explicitly documented as uncalibrated query-relative ranking signals rather than sufficiency probabilities.
+
+### ADR-014: STDIO-First Transport and Strict MCP Allowlist
+- **Context**: MCP clients (Claude Desktop, IDEs) can communicate over STDIO or network transports. Network transports introduce authentication, port binding, CORS, and remote attack surfaces. Exposing raw filesystem paths or arbitrary internal retrieval parameters introduces prompt-injection and path-traversal vulnerabilities.
+- **Decision**: Expose retrieval solely through local STDIO using FastMCP (`evidenceops-mcp`). Reject network transports (SSE/HTTP) in Phase 2. Expose exactly three allowlisted tools (`search_documentation`, `get_document_chunk`, `get_source_metadata`). Validate all inputs with strict Pydantic models forbidding extra fields (`extra="forbid"`). Sanitize IDs against path traversal before disk access. Reuse `DocumentationService` across CLI and MCP to guarantee identical retrieval semantics.
+
+### ADR-015: Bounded LangGraph Orchestration and Grounded Generation (Early Implementation)
+- **Context**: Autonomous multi-hop agents can loop indefinitely, hallucinate non-existent citation references, or overwhelm CPU/RAM budgets without explicit resource boundaries.
+- **Decision**: Orchestration is compiled into a bounded LangGraph `StateGraph` with strict mathematical convergence guarantees:
+  1. Maximum 3 retrieval calls and maximum 3 reformulation iterations per query run.
+  2. Maximum 24,000 characters packed context and maximum 6 chunks passed to generator.
+  3. Strict deterministic heuristic routing: code identifiers -> sparse, complex multi-hop -> hybrid, semantic concepts -> dense.
+  4. Non-LLM composite sufficiency ($S = 0.45R + 0.25C + 0.15D + 0.15A$) and conservative pairwise conflict detection before generation.
+  5. Deterministic sequential citation assignment (`[C1]`, `[C2]`, ...) with verification: answers citing hallucinated or malformed IDs trigger at most one structured correction retry before explicit abstention (`AbstentionReason.INVALID_CITATIONS`).
+  6. Zero paid APIs: local Ollama running `qwen2.5:3b-instruct` (or compatible small models) at `temperature=0.0`.

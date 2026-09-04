@@ -38,7 +38,42 @@ uv run evidenceops-search --query "vector indexing in python" --method hybrid --
 uv run evidenceops-search --query "vector indexing in python" --method reranked --top-k 6
 ```
 
-### 4. Stop Qdrant
+### 4. Model Context Protocol (MCP) Server (Phase 2)
+
+EvidenceOps exposes its local documentation retrieval corpus to MCP-compliant AI assistants (such as Claude Desktop or IDE MCP extensions) through a strictly local STDIO transport (`evidenceops-mcp`).
+
+#### Allowlisted Tools
+1. `search_documentation`: Query the corpus using `sparse`, `dense`, or `hybrid` retrieval with reranking. Enforces bounded `top_k` (1..20).
+2. `get_document_chunk`: Fetch the full text and heading hierarchy for a specific `chunk_id`.
+3. `get_source_metadata`: Retrieve provenance, license, content SHA-256, and origin metadata for a `document_id`.
+
+#### Client Configuration (e.g. Claude Desktop / Cline / Roo Code)
+Add this block to your MCP client configuration (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "evidenceops": {
+      "command": "uv",
+      "args": ["run", "evidenceops-mcp"],
+      "cwd": "D:\\Code\\Assignment\\EvidenceOps"
+    }
+  }
+}
+```
+
+### 5. Grounded Question Answering (Phase 3 Early Implementation)
+```powershell
+# Ask question with grounded synthesis, citation verification, and budget limits
+uv run evidenceops-query "How do I declare status codes in FastAPI?"
+
+# Emit response as structured JSON
+uv run evidenceops-query "What is FastEmbed?" --json
+
+# Set explicit limits (max 3 retrieval calls, max 3 iterations)
+uv run evidenceops-query "Compare Qdrant vs Chroma" --max-retrieval-calls 2 --max-iterations 2
+```
+
+### 6. Stop Qdrant
 ```powershell
 docker compose stop qdrant
 ```
@@ -70,10 +105,7 @@ EvidenceOps operates under a strict **local-first and zero-cost policy**:
 
 ## Current Implementation Status
 
-> [!WARNING]
-> **Foundation Phase**: Application features, ingestion pipelines, and model weights are **not yet implemented**. The repository is currently initialized at the clean environment and dependency baseline.
-
-See [STATUS.md](file:///d:/Code/Assignment/EvidenceOps/STATUS.md) for current progress and [DECISIONS.md](file:///d:/Code/Assignment/EvidenceOps/DECISIONS.md) for architectural decision records.
+Phase 0, Phase 1A, Phase 1B, Phase 1C, and Phase 2 (MCP Foundation) are complete and verified. Phase 3 (LangGraph Orchestration & Generation) has been implemented early and preserved. See [STATUS.md](file:///d:/Code/Assignment/EvidenceOps/STATUS.md) for current progress and [DECISIONS.md](file:///d:/Code/Assignment/EvidenceOps/DECISIONS.md) for architectural decision records.
 
 ## Quickstart & Setup
 

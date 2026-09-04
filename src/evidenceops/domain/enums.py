@@ -56,4 +56,18 @@ class IngestionRunStatus(StrEnum):
     FAILED = "failed"
 
 
+class AbstentionReason(StrEnum):
+    EVIDENCE_BELOW_THRESHOLD = "evidence_below_threshold"
+    CONFLICTING_EVIDENCE = "conflicting_evidence"
+    RETRIEVAL_BUDGET_EXHAUSTED = "retrieval_budget_exhausted"
+    ITERATION_BUDGET_EXHAUSTED = "iteration_budget_exhausted"
+    DUPLICATE_REFORMULATION = "duplicate_reformulation"
+    UNCHANGED_EVIDENCE = "unchanged_evidence"
+    CONTEXT_BUDGET_EXCEEDED = "context_budget_exceeded"
+    RETRIEVAL_UNAVAILABLE = "retrieval_unavailable"
+    GENERATOR_UNAVAILABLE = "generator_unavailable"
+    GENERATOR_TIMEOUT = "generator_timeout"
+    INVALID_CITATIONS = "invalid_citations"
+
+
 SufficiencyLabel = EvidenceStatus

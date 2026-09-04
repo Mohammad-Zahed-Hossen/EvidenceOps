@@ -6,7 +6,7 @@
 
 **Architecture:** A framework-independent documentation service composes the existing sparse, dense, and hybrid retrievers and validated processed artifacts. A thin MCP 2.x adapter validates its typed inputs and exposes only the approved service operations over STDIO. The existing retrieval CLI will reuse the same composition helper so both entry points retain identical search behavior.
 
-**Tech Stack:** Python 3.12, Pydantic v2, MCP SDK 2.1.1 (`MCPServer`), rank-bm25, FastEmbed, local Qdrant, pytest, Ruff, mypy.
+**Tech Stack:** Python 3.12, Pydantic v2, MCP SDK 1.x (`FastMCP`), rank-bm25, FastEmbed, local Qdrant, pytest, Ruff, mypy.
 
 **Spec:** `docs/superpowers/specs/2026-09-04-phase-2-mcp-foundation-design.md`
 
@@ -183,8 +183,8 @@ git commit -m "feat(retrieval): share local documentation service"
 - Test: `tests/contract/test_mcp_server.py`
 
 **Interfaces:**
-- Consumes: Task 1 `DocumentationService` and request/response models; MCP SDK `from mcp.server.mcpserver import MCPServer`.
-- Produces: `create_server(service: DocumentationService) -> MCPServer`, `main() -> int`, and the `evidenceops-mcp` project script.
+- Consumes: Task 1 `DocumentationService` and request/response models; MCP SDK `from mcp.server.fastmcp import FastMCP`.
+- Produces: `create_server(service: DocumentationService) -> FastMCP`, `main() -> int`, and the `evidenceops-mcp` project script.
 
 - [ ] **Step 1: Write failing MCP contract tests**
 
@@ -220,8 +220,8 @@ Expected: FAIL during collection because `evidenceops.mcp_server` does not exist
 - [ ] **Step 3: Implement the thin MCP adapter and script**
 
 ```python
-def create_server(service: DocumentationService) -> MCPServer:
-    server = MCPServer(name="evidenceops", title="EvidenceOps local documentation")
+def create_server(service: DocumentationService) -> FastMCP:
+    server = FastMCP(name="evidenceops")
 
     @server.tool(name="search_documentation", description="Search local indexed technical documents.")
     def search_documentation(request: SearchDocumentationRequest) -> list[dict[str, object]]:
@@ -361,4 +361,4 @@ Expected: no whitespace errors and no unintended generated/runtime files. If the
 
 - **Spec coverage:** Tasks 1-3 implement the service boundary, three tool contracts, typed bounds, STDIO-only transport, and no unrestricted access. Task 4 documents the exact operational boundary and corrects the roadmap drift. Task 5 produces fresh evidence.
 - **Placeholder scan:** No deferred implementation steps or unspecified error handling remain; each task identifies exact files, commands, tests, and public interfaces.
-- **Type consistency:** `SearchDocumentationRequest`, `DocumentationService`, `LocalDocumentationService`, `build_documentation_service`, and `create_server` are defined before later tasks consume them. The MCP SDK import uses the installed 2.x `MCPServer`, not the removed v1 `FastMCP` API.
+- **Type consistency:** `SearchDocumentationRequest`, `DocumentationService`, `LocalDocumentationService`, `build_documentation_service`, and `create_server` are defined before later tasks consume them. The MCP SDK import uses SSOT-approved MCP 1.x `FastMCP`.
