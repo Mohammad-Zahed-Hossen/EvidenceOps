@@ -130,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const payload = {
       query: query,
-      retrieval_strategy: strategySelect.value,
       max_iterations: parseInt(iterationsInput.value, 10) || 3,
       debug: debugToggle.checked,
     };
@@ -145,7 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await resp.json();
 
       if (!resp.ok) {
-        const errorMsg = data?.error?.message || "Query request failed.";
+        let errorMsg = data?.error?.message || "Query request failed.";
+        if (Array.isArray(data?.error?.details) && data.error.details.length > 0) {
+          const detailMsgs = data.error.details
+            .map((d) => `${(d.loc || []).join(".")}: ${d.msg}`)
+            .join("; ");
+          errorMsg = `${errorMsg} (${detailMsgs})`;
+        }
         answerStatusTag.className = "badge badge-danger";
         answerStatusTag.textContent = "Error";
         answerPlaceholder.classList.remove("hidden");

@@ -75,6 +75,7 @@ class ApiQueryRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     query: str = Field(min_length=2, max_length=2000)
+    retrieval_strategy: str | None = Field(default=None)
     require_citations: bool = True
     max_iterations: int = Field(default=3, ge=1, le=3)
     debug: bool = False
