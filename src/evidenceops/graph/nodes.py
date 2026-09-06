@@ -26,6 +26,7 @@ from evidenceops.generation.prompts import (
     build_grounded_prompt,
 )
 from evidenceops.generation.reformulator import LocalQueryReformulator
+from evidenceops.observability.tracing import extract_node_span_attributes, trace_span
 from evidenceops.retrieval.contracts import Reranker, RetrievalResult, SparseRetriever
 
 
@@ -35,7 +36,9 @@ def validated_node(function: Callable[..., dict[str, Any]]) -> Callable[..., dic
     @wraps(function)
     def boundary(state: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
         validated = EvidenceOpsState.from_langgraph_dict(state).to_langgraph_dict()
-        result = function(validated, *args, **kwargs)
+        span_attrs = extract_node_span_attributes(validated, function.__name__)
+        with trace_span(f"node.{function.__name__}", attributes=span_attrs):
+            result = function(validated, *args, **kwargs)
         return EvidenceOpsState.from_langgraph_dict(result).to_langgraph_dict()
 
     return boundary

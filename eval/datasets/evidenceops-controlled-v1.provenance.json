@@ -1,0 +1,21 @@
+{
+  "dataset_id": "evidenceops-controlled-v1",
+  "dataset_version": "1.0.0",
+  "corpus_hash": "42a085622bd2304ba9b85a948476a9666de0f1a39f852e490e3c9ead0b94b097",
+  "license_notes": "Technical documentation under Apache-2.0, MIT, and BSD open source licenses.",
+  "sources": [
+    "fastapi_status_codes.md",
+    "fastapi_dependencies.md",
+    "qdrant_payload_filtering.md",
+    "qdrant_collections.md",
+    "flashrank_docs.md",
+    "fastembed_quickstart.md",
+    "ollama_api_reference.md",
+    "langgraph_thinking_in_graphs.md",
+    "langgraph_persistence.md",
+    "pydantic_settings.md"
+  ],
+  "human_review_status": "reviewed",
+  "generator_model": "qwen2.5:1.5b",
+  "embedding_model": "bge-small-en-v1.5"
+}

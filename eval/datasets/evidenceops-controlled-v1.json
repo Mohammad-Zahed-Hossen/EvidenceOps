@@ -1,0 +1,3028 @@
+[
+  {
+    "id": "q001",
+    "question": "What parameter in FastAPI path operation decorators is used to declare the HTTP response status code?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_status_codes.md",
+        "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The status_code parameter in FastAPI path operation decorators declares the HTTP response status code.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Shortcut constants from fastapi.status like status.HTTP_201_CREATED can be passed to status_code.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The status_code parameter in FastAPI path operation decorators declares the HTTP status code, accepting integers or constants like status.HTTP_201_CREATED [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_status_codes.md"
+    ],
+    "provenance_notes": "Tests exact parameter status_code in FastAPI decorators."
+  },
+  {
+    "id": "q002",
+    "question": "Which function does FastAPI use to declare a dependency in path operation function parameters?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FastAPI uses the Depends function imported from fastapi to declare dependencies in function parameters.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastAPI uses the Depends function from fastapi to declare dependencies in endpoint parameters [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Tests exact identifier Depends in FastAPI."
+  },
+  {
+    "id": "q003",
+    "question": "In Qdrant payload filtering, which condition matches if none of the listed conditions are satisfied, equivalent to (NOT A) AND (NOT B)?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The must_not clause in Qdrant becomes true if none of the conditions inside must_not are satisfied.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The must_not clause in Qdrant becomes true if none of the conditions are satisfied, equivalent to (NOT A) AND (NOT B) [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Tests exact boolean filter keyword must_not."
+  },
+  {
+    "id": "q004",
+    "question": "What full-text match condition in Qdrant matches fields containing any of the query terms instead of requiring all terms?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The text_any full-text match condition matches fields containing any of the query terms.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The text_any full-text match condition in Qdrant matches fields containing any query terms, whereas text matches all terms [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Tests exact match filter condition text_any."
+  },
+  {
+    "id": "q005",
+    "question": "Which base class in pydantic-settings attempts to populate model fields from environment variables when not passed as keyword arguments?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "BaseSettings in pydantic-settings attempts to populate model fields from environment variables.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "BaseSettings in pydantic-settings populates model fields from environment variables when not provided as keyword arguments [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Tests exact base class BaseSettings in pydantic-settings."
+  },
+  {
+    "id": "q006",
+    "question": "What is the endpoint in the Ollama REST API used to generate a text response for a given prompt?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The /api/generate endpoint in Ollama is used to generate a completion for a given prompt.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The /api/generate endpoint in the Ollama REST API generates completions for a specified model and prompt [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Tests exact API route /api/generate."
+  },
+  {
+    "id": "q007",
+    "question": "What class in the FlashRank library is initialized to perform document reranking?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The Ranker class in FlashRank is initialized to perform document reranking.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The Ranker class in FlashRank is initialized to execute document reranking with a specified model [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Tests exact class name Ranker in FlashRank."
+  },
+  {
+    "id": "q008",
+    "question": "In LangGraph checkpointing, what methods must an asynchronous checkpointer implement?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Asynchronous checkpointers in LangGraph implement aget, aput, and alist methods.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In LangGraph, asynchronous checkpointers implement the aget, aput, and alist methods [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Tests exact async interface methods for LangGraph checkpointers."
+  },
+  {
+    "id": "q009",
+    "question": "How does FastAPI resolve and share dependencies when using sub-dependencies across a single request?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FastAPI caches dependency results per request by default using use_cache=True so the dependency is executed only once per request.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastAPI caches dependency results during a request by default (use_cache=True), sharing the return value across all sub-dependencies [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Tests sub-dependency caching behavior."
+  },
+  {
+    "id": "q010",
+    "question": "Why are lightweight reranker models like TinyBERT preferred in FlashRank for local search systems?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Lightweight models like TinyBERT have smaller memory footprints and lower CPU latency while retaining high reranking quality.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FlashRank recommends lightweight models like ms-marco-TinyBERT-L-2-v2 because they offer ultra-low latency and small memory footprints on CPU [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Tests FlashRank model trade-offs."
+  },
+  {
+    "id": "q011",
+    "question": "What parameter in Qdrant VectorParams defines the distance metric used for similarity search?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The distance parameter in VectorParams specifies the distance metric such as Cosine, Dot, or Euclidean.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The distance parameter in Qdrant VectorParams specifies the distance metric, such as Cosine, Dot, or Euclidean [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Tests exact parameter distance in VectorParams."
+  },
+  {
+    "id": "q012",
+    "question": "Which class in FastEmbed is used to generate dense passage embeddings?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FastEmbed uses the TextEmbedding class to generate dense vector embeddings.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastEmbed uses the TextEmbedding class to compute dense vector embeddings for documents and queries [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md"
+    ],
+    "provenance_notes": "Tests exact class TextEmbedding in FastEmbed."
+  },
+  {
+    "id": "q013",
+    "question": "In Ollama, what parameter in the options dictionary sets the random seed for deterministic generation?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The seed option in Ollama sets the random number seed for deterministic generations.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In Ollama, passing the seed parameter in options specifies the random seed for deterministic output generation [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Tests exact option seed in Ollama."
+  },
+  {
+    "id": "q014",
+    "question": "How does FastAPI support database session cleanup in dependencies?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Dependencies that yield a value execute code after yield for cleanup after sending the response.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastAPI allows dependencies to yield a value, executing cleanup code after yield once the response is sent [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Tests yield dependencies in FastAPI."
+  },
+  {
+    "id": "q015",
+    "question": "What is the default embedding model used by FastEmbed when no model_name is provided?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The default embedding model in FastEmbed is BAAI/bge-small-en-v1.5.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastEmbed defaults to the BAAI/bge-small-en-v1.5 model for dense text embeddings [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md"
+    ],
+    "provenance_notes": "Tests default embedding model in FastEmbed."
+  },
+  {
+    "id": "q016",
+    "question": "What configuration class in pydantic-settings is used to specify env_file and env_prefix?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "SettingsConfigDict in pydantic-settings configures model behavior including env_file and env_prefix.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "SettingsConfigDict is used in pydantic-settings as model_config to define env_file, env_prefix, and parsing rules [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Tests SettingsConfigDict in pydantic-settings."
+  },
+  {
+    "id": "q017",
+    "question": "In LangGraph, which in-memory checkpointer class provides temporary state persistence across graph execution turns?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "MemorySaver in LangGraph provides in-memory state checkpointing.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "MemorySaver provides in-memory state checkpointing in LangGraph across graph execution turns [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Tests exact class MemorySaver in LangGraph persistence."
+  },
+  {
+    "id": "q018",
+    "question": "What condition in Qdrant payload filtering tests whether an array or string field is empty or not set?",
+    "type": "single_fact",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The is_empty condition in Qdrant filters points where the specified key is empty or null.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Qdrant provides the is_empty payload filter condition to match points where a field is empty or missing [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Tests exact filter is_empty in Qdrant."
+  },
+  {
+    "id": "q019",
+    "question": "What is the endpoint in Ollama used for multi-turn chat completions?",
+    "type": "single_fact",
+    "split": "val",
+    "gold_chunk_ids": [
+      "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The /api/chat endpoint in Ollama is used for chat completions with message history.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The /api/chat endpoint in Ollama processes multi-turn conversations with structured messages [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Tests /api/chat endpoint in Ollama."
+  },
+  {
+    "id": "q020",
+    "question": "In pydantic-settings, what config parameter adds a common string prefix to all environment variable lookups?",
+    "type": "single_fact",
+    "split": "val",
+    "gold_chunk_ids": [
+      "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The env_prefix parameter in SettingsConfigDict adds a prefix to environment variable lookups.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The env_prefix parameter in SettingsConfigDict prefixes environment variables mapped to settings fields [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Tests env_prefix in pydantic-settings."
+  },
+  {
+    "id": "q021",
+    "question": "What special constant represents the termination node in a LangGraph StateGraph?",
+    "type": "single_fact",
+    "split": "val",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The END constant in LangGraph marks the graph termination node.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In LangGraph, the END constant designates the terminating node where execution halts [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md"
+    ],
+    "provenance_notes": "Tests END constant in LangGraph."
+  },
+  {
+    "id": "q022",
+    "question": "What parameter in Qdrant VectorParams defines the vector dimensionality for collection points?",
+    "type": "single_fact",
+    "split": "val",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The size parameter in VectorParams specifies the dimension size of the vectors.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The size parameter in Qdrant VectorParams specifies the embedding vector dimensionality [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Tests size parameter in Qdrant collections."
+  },
+  {
+    "id": "q023",
+    "question": "What request parameter in Ollama /api/generate forces JSON structured output?",
+    "type": "single_fact",
+    "split": "val",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Setting format='json' in Ollama requests forces JSON structured output.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Setting the format parameter to 'json' in Ollama requests guarantees JSON-formatted generation [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Tests format='json' parameter in Ollama."
+  },
+  {
+    "id": "q024",
+    "question": "What class in FlashRank encapsulates a batch reranking request with query and passages?",
+    "type": "single_fact",
+    "split": "val",
+    "gold_chunk_ids": [
+      "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "RerankRequest in FlashRank encapsulates the query and passage candidates for reranking.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FlashRank uses the RerankRequest class to hold the query string and passages list for reranking [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Tests RerankRequest in FlashRank."
+  },
+  {
+    "id": "q025",
+    "question": "What parameter in FastAPI dependencies disables automatic per-request dependency result caching?",
+    "type": "single_fact",
+    "split": "test",
+    "gold_chunk_ids": [
+      "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Setting use_cache=False in Depends disables per-request dependency caching.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Setting use_cache=False inside Depends() instructs FastAPI to execute the dependency fresh for every call rather than caching [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Tests use_cache parameter in FastAPI Depends."
+  },
+  {
+    "id": "q026",
+    "question": "What Ollama endpoint is called to compute vector embeddings from text?",
+    "type": "single_fact",
+    "split": "test",
+    "gold_chunk_ids": [
+      "ece61b5be455fea5c3eaa10dccb96c5b5f612e5597c55f39a711021fa8f000e8"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "ece61b5be455fea5c3eaa10dccb96c5b5f612e5597c55f39a711021fa8f000e8"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The /api/embeddings endpoint in Ollama computes vector embeddings for a given prompt.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The /api/embeddings endpoint in Ollama takes a model and prompt to return an embedding vector [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Tests /api/embeddings endpoint in Ollama."
+  },
+  {
+    "id": "q027",
+    "question": "In Qdrant collections, what configuration object specifies HNSW graph indexing parameters?",
+    "type": "single_fact",
+    "split": "test",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "hnsw_config in Qdrant collection parameters configures HNSW index settings like m and ef_construct.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In Qdrant, hnsw_config specifies the HNSW index parameters such as m and ef_construct [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Tests hnsw_config in Qdrant."
+  },
+  {
+    "id": "q028",
+    "question": "What class in pydantic-settings or pydantic is used to mask sensitive values in logs and string outputs?",
+    "type": "single_fact",
+    "split": "test",
+    "gold_chunk_ids": [
+      "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "SecretStr in pydantic masks sensitive string values when printed or serialized.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "SecretStr masks sensitive configuration values such as tokens and passwords when displayed or printed [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Tests SecretStr in pydantic-settings."
+  },
+  {
+    "id": "q029",
+    "question": "In LangGraph, what parameter identifies the specific conversation session when saving or retrieving state checkpoints?",
+    "type": "single_fact",
+    "split": "test",
+    "gold_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The thread_id in the configurable dictionary identifies the conversation session in LangGraph checkpoints.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In LangGraph, thread_id specified under configurable identifies the execution thread for state persistence [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Tests thread_id in LangGraph persistence."
+  },
+  {
+    "id": "q030",
+    "question": "What Qdrant filter condition is used to match points satisfying at least one condition from a list (OR logic)?",
+    "type": "single_fact",
+    "split": "test",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The should clause in Qdrant matches points that satisfy at least one condition, implementing OR logic.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The should clause in Qdrant payload filtering implements logical OR, matching points meeting at least one clause [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Tests should clause in Qdrant filtering."
+  },
+  {
+    "id": "q031",
+    "question": "When using FastAPI dependencies to validate resources, how can an endpoint return an HTTP 201 Created response with an injected service dependency?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1",
+      "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_status_codes.md",
+        "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+      },
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The decorator uses status_code=status.HTTP_201_CREATED to declare the response code.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The endpoint function uses Depends(Service) in its parameters to inject the service dependency.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The path operation decorator sets status_code=status.HTTP_201_CREATED [C1], while the endpoint function receives the service via Depends() [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_status_codes.md",
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Multi-hop combining FastAPI status codes and Depends."
+  },
+  {
+    "id": "q032",
+    "question": "How do Qdrant collection vector settings and payload filters combine when searching for points matching negative criteria?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0",
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "VectorParams specifies vector dimensionality and distance metric like Cosine.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The search request applies a must_not filter to exclude points matching specific payload conditions.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Vectors are indexed using VectorParams specifying distance and size [C1], and queries filter the results using must_not clauses to enforce negative constraints [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md",
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Multi-hop across Qdrant collection setup and filtering conditions."
+  },
+  {
+    "id": "q033",
+    "question": "How does FastEmbed generate embeddings for indexing into a Qdrant collection with cosine distance?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2",
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+      },
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FastEmbed generates 384-dimensional embeddings using BAAI/bge-small-en-v1.5 by default.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Qdrant collection VectorParams must be configured with size=384 and distance=Distance.COSINE.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastEmbed's default model BAAI/bge-small-en-v1.5 produces 384-dimension vectors [C1], requiring Qdrant VectorParams with matching size and Cosine distance [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md",
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Multi-hop across FastEmbed model size and Qdrant collection vector params."
+  },
+  {
+    "id": "q034",
+    "question": "How do LangGraph StateGraph execution nodes pass updated state to be saved by a Checkpointer?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      },
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "StateGraph nodes return state updates that are merged into the graph state.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The checkpointer automatically persists the updated state snapshot for the thread_id after each node.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Nodes in a StateGraph return updated state attributes [C1], which the checkpointer records under the thread_id after step execution [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md",
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Multi-hop across LangGraph graph topology and persistence checkpointing."
+  },
+  {
+    "id": "q035",
+    "question": "How does pydantic-settings load environment variables to configure Ollama connection settings and timeouts?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
+      "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+      },
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "BaseSettings maps environment variables to defined fields on the settings class.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "SettingsConfigDict configures env_file and env_prefix to read .env files safely.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "BaseSettings loads environment variables into typed fields [C1], controlled by SettingsConfigDict defining the env_file and optional prefix [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Multi-hop across BaseSettings and SettingsConfigDict."
+  },
+  {
+    "id": "q036",
+    "question": "In a two-stage retrieval pipeline, how do Qdrant candidate results get passed to FlashRank for reranking?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed",
+      "a0e885687cd005b1dbfe5d5612b0f17f2c909ad5bd939f6d5dec634b89af017a"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+      },
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "a0e885687cd005b1dbfe5d5612b0f17f2c909ad5bd939f6d5dec634b89af017a"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Passages retrieved from Qdrant are formatted as dictionaries into a FlashRank RerankRequest.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Ranker.rerank scores each passage and returns the list sorted in descending order of relevance.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Initial candidates are wrapped into RerankRequest passages [C1], and the Ranker evaluates them to output reranked documents with scores [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Multi-hop across FlashRank request construction and reranking output."
+  },
+  {
+    "id": "q037",
+    "question": "How does FastAPI manage clean resource tear-down when a dependency yields a database session shared by multiple endpoints?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539",
+      "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+      },
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "use_cache=True ensures the dependency generator is only invoked once per request.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The code after yield executes after the response is delivered, ensuring cleanup occurs exactly once.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastAPI caches the yielded dependency instance per request [C1] and runs the code after yield for clean teardown after the response [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Multi-hop across FastAPI dependency caching and yield cleanup."
+  },
+  {
+    "id": "q038",
+    "question": "How does Ollama stream generation chunks and provide completion statistics at the end of a generation?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
+      "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      },
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The /api/generate endpoint sends a stream of JSON objects with response fragments.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The final JSON object includes done=true along with total_duration, eval_count, and prompt_eval_count.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Calling /api/generate produces incremental token fragments [C1], concluding with a final message where done=true and performance metrics are provided [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Multi-hop across Ollama generate request and streaming termination metrics."
+  },
+  {
+    "id": "q039",
+    "question": "How does Qdrant handle nested object filters combined with top-level must clauses?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
+      "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "A must clause enforces that all nested and scalar conditions must evaluate to true.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "A nested filter navigates arrays of objects to match attributes within individual elements.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The must clause requires all listed criteria to be met [C1], including nested filters that verify properties within child objects or arrays [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Multi-hop across Qdrant boolean clauses and nested payload filters."
+  },
+  {
+    "id": "q040",
+    "question": "How do LangGraph conditional edges route state to either a follow-up node or END based on state evaluation?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      },
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Conditional edges use a routing function that returns the next node name or END.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "State preserved in the checkpointer reflects the terminal state when END is reached.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Conditional edges inspect the current state to return the target node name or END [C1], and the checkpointer records the final state reached [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md",
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Multi-hop across LangGraph conditional edge routing and checkpointer finalization."
+  },
+  {
+    "id": "q041",
+    "question": "How do temperature and seed options in Ollama interact to produce reproducible outputs?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
+      "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      },
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The options field in /api/generate accepts generation parameters.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Setting temperature=0.0 and a fixed seed removes sampling stochasticity for reproducible outputs.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The /api/generate endpoint accepts an options dictionary [C1] where setting temperature=0 and a constant seed guarantees deterministic generation [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Multi-hop across Ollama generate options and reproducibility controls."
+  },
+  {
+    "id": "q042",
+    "question": "How does pydantic-settings prioritize values when a setting is defined in both a .env file and environment variables?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
+      "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+      },
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "pydantic-settings reads values from multiple sources including init kwargs, env vars, and .env files.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Real environment variables take precedence over values loaded from .env files.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "pydantic-settings inspects multiple sources [C1], prioritizing explicit environment variables over values defined in .env files [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Multi-hop across pydantic-settings data sources and precedence hierarchy."
+  },
+  {
+    "id": "q043",
+    "question": "How can Qdrant combine full-text keyword search using text_any with vector distance ranking?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563",
+      "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Qdrant allows filtering query results by combining vector similarity search with payload filter criteria.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The text_any condition matches points containing any query terms before or during vector ranking.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Qdrant combines vector similarity searches with payload filters [C1], enabling text_any clauses to restrict candidates based on keyword presence [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Multi-hop across Qdrant vector search integration and text_any full-text filtering."
+  },
+  {
+    "id": "q044",
+    "question": "How do FlashRank model weights and ONNX runtime optimizations minimize inference memory?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed",
+      "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+      },
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FlashRank initializes lightweight reranking models without heavy PyTorch dependencies.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "It uses quantized ONNX models to achieve ~4MB to ~40MB footprints on CPU.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FlashRank avoids heavy dependencies by using ONNX runtime [C1], and quantized models like TinyBERT keep memory consumption under 40MB on CPU [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Multi-hop across FlashRank architecture and ONNX quantization benefits."
+  },
+  {
+    "id": "q045",
+    "question": "How does LangGraph checkpointing enable state inspection and history replay across multiple graph steps?",
+    "type": "multi_hop",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be",
+      "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      },
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The checkpointer saves a checkpoint after each step under a given thread_id.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The alist or get_state_history methods allow developers to retrieve prior checkpoints and inspect historical state.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "LangGraph persists checkpoints for every execution step under thread_id [C1], allowing developers to replay or view state history via checkpointer methods [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Multi-hop across LangGraph checkpoint creation and historical inspection."
+  },
+  {
+    "id": "q046",
+    "question": "How do FastEmbed embeddings integrate into Qdrant collection creation with Euclidean distance?",
+    "type": "multi_hop",
+    "split": "val",
+    "gold_chunk_ids": [
+      "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2",
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
+      },
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "TextEmbedding generates dense vectors with specific dimensions for input text.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Qdrant collection VectorParams must be initialized with matching size and Distance.EUCLID.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastEmbed generates embedding vectors of fixed size [C1], which Qdrant configures in VectorParams with matching dimension and Euclidean distance [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md",
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Multi-hop across FastEmbed generation and Qdrant Euclidean vector params."
+  },
+  {
+    "id": "q047",
+    "question": "How does FastAPI handle dependency injection when combining sub-dependencies with custom response status codes?",
+    "type": "multi_hop",
+    "split": "val",
+    "gold_chunk_ids": [
+      "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1",
+      "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_status_codes.md",
+        "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+      },
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The route decorator defines status_code=201 or other HTTP status codes.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Sub-dependencies declared via Depends resolve hierarchical dependencies before returning the response.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastAPI sets the HTTP code on the route decorator [C1] while resolving all nested sub-dependencies before invoking the handler [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_status_codes.md",
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Multi-hop across FastAPI status_code decorator and hierarchical sub-dependencies."
+  },
+  {
+    "id": "q048",
+    "question": "How do Qdrant must and must_not clauses combine to filter products by category while excluding discontinued items?",
+    "type": "multi_hop",
+    "split": "val",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
+      "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The must clause requires the category field to match the target category.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The must_not clause ensures that discontinued or empty inventory items are excluded.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Qdrant uses must to enforce the desired category match [C1], while must_not excludes points meeting negative criteria like empty inventory [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Multi-hop across Qdrant positive and negative filter clauses."
+  },
+  {
+    "id": "q049",
+    "question": "How does Ollama /api/chat accept system instructions and multi-turn messages to control output format?",
+    "type": "multi_hop",
+    "split": "val",
+    "gold_chunk_ids": [
+      "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79",
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
+      },
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The /api/chat endpoint accepts an array of messages with role and content.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "A message with role='system' sets the behavior, and format='json' enforces structured responses.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Ollama /api/chat passes system and user message roles [C1], and parameters like format='json' constrain the output structure [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Multi-hop across Ollama chat message roles and structured formatting."
+  },
+  {
+    "id": "q050",
+    "question": "How does LangGraph persist execution checkpoints across conditional branch routing?",
+    "type": "multi_hop",
+    "split": "val",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      },
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Conditional edges dynamically branch the execution flow depending on state contents.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The checkpointer saves state at each branch point, preserving intermediate outcomes.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Conditional edges route state dynamically between candidate nodes [C1], and checkpoints capture the state at each transition point [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md",
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Multi-hop across LangGraph conditional edges and checkpoint captures."
+  },
+  {
+    "id": "q051",
+    "question": "How can a FastAPI route with yield dependencies ensure database rollbacks occur when an exception is raised in the endpoint?",
+    "type": "multi_hop",
+    "split": "test",
+    "gold_chunk_ids": [
+      "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc",
+      "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
+      },
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The dependency is injected into the route using Depends().",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "A try...finally or try...except block around yield handles exceptions and executes rollback in the except block.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The dependency is bound to the route via Depends [C1], and placing try...except around the yield enables rollback when endpoint errors occur [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Multi-hop across FastAPI dependency injection and yield exception handling."
+  },
+  {
+    "id": "q052",
+    "question": "How do Qdrant collection HNSW indexing parameters affect search performance when combined with payload filters?",
+    "type": "multi_hop",
+    "split": "test",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0",
+      "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "HNSW index parameters like m and ef_construct govern the graph connectivity and build precision.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Qdrant combines HNSW graph traversal with payload filter validation to filter candidates efficiently.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "HNSW parameters configure graph traversal speed and recall [C1], which Qdrant integrates with payload filtering during index navigation [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md",
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Multi-hop across Qdrant HNSW configuration and payload filter indexing."
+  },
+  {
+    "id": "q053",
+    "question": "How does FlashRank rerank passages initially filtered by Qdrant text_any queries?",
+    "type": "multi_hop",
+    "split": "test",
+    "gold_chunk_ids": [
+      "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579",
+      "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+      },
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Qdrant retrieves candidate passages using text_any to capture matches on any query terms.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "FlashRank's Ranker scores and reorders the candidate passages based on cross-encoder transformer attention.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Qdrant retrieves candidates containing any of the query terms [C1], and FlashRank reorders them by semantic relevance using its Ranker [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md",
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Multi-hop across Qdrant keyword filtering and FlashRank neural reranking."
+  },
+  {
+    "id": "q054",
+    "question": "How does pydantic-settings parse nested settings models populated from environment variables?",
+    "type": "multi_hop",
+    "split": "test",
+    "gold_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
+      "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+      },
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "BaseSettings supports nested models as field types.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Nested delimiter configuration in SettingsConfigDict or JSON strings in env vars populate nested sub-models.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "BaseSettings supports nested BaseModel attributes [C1], which are populated from delimited environment variable names or JSON strings configured via SettingsConfigDict [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Multi-hop across BaseSettings nested models and SettingsConfigDict delimiter rules."
+  },
+  {
+    "id": "q055",
+    "question": "In LangGraph, how does an asynchronous checkpointer retrieve state for a thread_id when restarting an interrupted graph run?",
+    "type": "multi_hop",
+    "split": "test",
+    "gold_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be",
+      "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      },
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The thread_id identifies the persistent session across process restarts.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The checkpointer's aget method reads the last checkpoint snapshot associated with the thread_id.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The session thread_id locates the graph history [C1], and calling the checkpointer's aget retrieves the latest checkpoint to resume execution [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Multi-hop across LangGraph session management and async checkpointer retrieval."
+  },
+  {
+    "id": "q056",
+    "question": "What is the difference between text and text_any match conditions in Qdrant full-text filtering?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The text condition matches fields that contain all of the query terms.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The text_any condition matches fields that contain any of the query terms.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In Qdrant, text requires all query terms to be present in the field, whereas text_any requires at least one of the query terms [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Contrastive between text and text_any in Qdrant."
+  },
+  {
+    "id": "q057",
+    "question": "How does Cosine distance differ from Euclidean distance in Qdrant VectorParams?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Cosine distance measures the angle between vectors irrespective of magnitude.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Euclidean distance measures the straight-line distance between vector coordinates.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Cosine distance evaluates vector orientation angle regardless of magnitude, while Euclidean distance evaluates spatial geometric distance between points [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Contrastive distance metrics in Qdrant VectorParams."
+  },
+  {
+    "id": "q058",
+    "question": "How do must clauses and should clauses differ in Qdrant boolean payload filtering?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The must clause requires every condition in the list to be satisfied (AND logic).",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The should clause requires at least one condition in the list to be satisfied (OR logic).",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "The must clause represents logical AND requiring all conditions to pass, whereas should represents logical OR where one passing condition suffices [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Contrastive boolean clauses in Qdrant."
+  },
+  {
+    "id": "q059",
+    "question": "What is the difference between /api/generate and /api/chat endpoints in the Ollama API?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
+      "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      },
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "/api/generate takes a single raw text prompt and returns a completion.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "/api/chat takes a structured list of conversation messages with roles and maintains chat dialogue.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "/api/generate accepts a single prompt string for direct completions [C1], while /api/chat accepts an array of messages with user/system roles for dialogues [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Contrastive endpoints in Ollama API."
+  },
+  {
+    "id": "q060",
+    "question": "How does FastEmbed's lightweight inference approach contrast with full PyTorch/Transformers embedding setups?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2",
+      "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
+      },
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FastEmbed uses ONNX runtime without requiring heavy PyTorch dependencies.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "It operates with small memory footprints and fast startup times suitable for CPU environments.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FastEmbed executes via ONNX Runtime without heavy PyTorch dependencies [C1], achieving fast CPU execution and low resource usage compared to full transformer setups [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md"
+    ],
+    "provenance_notes": "Contrastive architecture between FastEmbed and PyTorch."
+  },
+  {
+    "id": "q061",
+    "question": "In LangGraph, how does MemorySaver contrast with persistent checkpointers like SqliteSaver?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "MemorySaver stores checkpoints in memory and loses state when the process terminates.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "SqliteSaver stores checkpoints in a persistent SQLite database file that survives process restarts.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "MemorySaver keeps checkpoints in RAM losing data upon process shutdown, whereas SqliteSaver persists state to disk across restarts [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Contrastive checkpointer storage in LangGraph."
+  },
+  {
+    "id": "q062",
+    "question": "How does normal dependency execution contrast with yield dependencies in FastAPI?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc",
+      "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
+      },
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Standard dependencies return a value and terminate immediately.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Yield dependencies yield a value to the endpoint and continue execution after the response for cleanup.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Standard dependencies return a value and exit immediately [C1], whereas yield dependencies pause during request processing and resume post-response for teardown [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Contrastive dependency execution modes in FastAPI."
+  },
+  {
+    "id": "q063",
+    "question": "What is the difference between TinyBERT and RankT5 model choices in FlashRank?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "TinyBERT is ultra-compact (~4MB) with lowest latency on CPU.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "RankT5 provides higher ranking accuracy but requires larger memory and higher compute.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "TinyBERT optimizes for ultra-low latency and tiny memory footprints on CPU, whereas RankT5 provides superior precision at the cost of higher latency [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Contrastive FlashRank models."
+  },
+  {
+    "id": "q064",
+    "question": "How does must_not contrast with must in Qdrant when filtering null or missing values?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
+      "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "must requires a field condition like is_empty to be true.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "must_not requires that the condition inside is not satisfied, excluding matching points.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "must requires the specified condition to be true [C1], whereas must_not inverts the condition to exclude points that match [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Contrastive positive and negative filtering in Qdrant."
+  },
+  {
+    "id": "q065",
+    "question": "What is the difference between setting use_cache=True versus use_cache=False in FastAPI Depends?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_dependencies.md",
+        "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "use_cache=True reuses the dependency result across the entire request lifecycle.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "use_cache=False re-executes the dependency callable every time it is encountered.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "With use_cache=True FastAPI memoizes the dependency result within the request scope, while use_cache=False invokes the dependency fresh each time [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_dependencies.md"
+    ],
+    "provenance_notes": "Contrastive use_cache settings in FastAPI."
+  },
+  {
+    "id": "q066",
+    "question": "How does Dot product distance contrast with Cosine distance in Qdrant collection vector metrics?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Dot product computes the raw inner product and is sensitive to vector length.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Cosine distance normalizes vectors to unit length so only angle is measured.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Dot product calculates the unnormalized inner product factoring in magnitude, whereas Cosine distance normalizes vectors to compare direction only [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Contrastive vector metrics in Qdrant."
+  },
+  {
+    "id": "q067",
+    "question": "How does a cyclic graph contrast with an acyclic graph in LangGraph StateGraph design?",
+    "type": "contrastive",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Acyclic graphs flow unidirectionally from START to END without loops.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Cyclic graphs contain conditional edges that can loop back to previous nodes for iterative refinement.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Acyclic graphs proceed strictly forward to END, whereas cyclic graphs allow conditional edges to re-route back to earlier nodes for iterations [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md"
+    ],
+    "provenance_notes": "Contrastive graph topologies in LangGraph."
+  },
+  {
+    "id": "q068",
+    "question": "What is the difference between streaming and non-streaming responses in the Ollama /api/generate endpoint?",
+    "type": "contrastive",
+    "split": "val",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
+      "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      },
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Streaming sends individual token fragments across multiple JSON payloads until done=true.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Non-streaming (stream=false) blocks until generation completes and returns a single JSON payload with the full response.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Streaming emits successive token chunks in real time [C1], while stream=false returns the completed response in a single payload [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Contrastive streaming options in Ollama."
+  },
+  {
+    "id": "q069",
+    "question": "How does passing arguments to BaseSettings at instantiation contrast with loading them from environment variables?",
+    "type": "contrastive",
+    "split": "val",
+    "gold_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
+      "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+      },
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Arguments passed explicitly to BaseSettings during initialization override all other sources.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Environment variables are used as fallbacks only when explicit constructor arguments are omitted.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Explicit keyword arguments take top priority during instantiation [C1], with environment variables serving as fallbacks when kwargs are absent [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Contrastive configuration precedence in pydantic-settings."
+  },
+  {
+    "id": "q070",
+    "question": "What is the operational difference between dense retrieval and cross-encoder reranking?",
+    "type": "contrastive",
+    "split": "val",
+    "gold_chunk_ids": [
+      "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2",
+      "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
+      },
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Dense retrieval encodes queries and documents independently for bi-encoder fast approximate nearest neighbor search.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Cross-encoder reranking processes the query and candidate passage together through full transformer attention.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Dense retrieval computes separate vector embeddings for fast approximate search [C1], while cross-encoders joint-attend to query and passage for higher precision [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md",
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Contrastive retrieval vs reranking paradigms."
+  },
+  {
+    "id": "q071",
+    "question": "How does filtering on a flat payload field contrast with filtering on a nested object field in Qdrant?",
+    "type": "contrastive",
+    "split": "val",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
+      "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Flat filtering matches keys directly at the root of the payload.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Nested filtering uses a nested clause specifying the key path and conditions to evaluate against nested objects or array items.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Flat filtering checks root-level payload attributes [C1], whereas nested filtering evaluates conditions inside nested objects or array elements [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Contrastive flat vs nested filtering in Qdrant."
+  },
+  {
+    "id": "q072",
+    "question": "How does SecretStr contrast with plain str fields in pydantic-settings?",
+    "type": "contrastive",
+    "split": "test",
+    "gold_chunk_ids": [
+      "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Plain str fields display their raw value when printed or serialized in repr().",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "SecretStr obscures its value as '**********' in repr() and logging, requiring get_secret_value() to read.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Plain strings expose their content in string representations, while SecretStr masks content to prevent accidental credential leakage in logs [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Contrastive security types in pydantic-settings."
+  },
+  {
+    "id": "q073",
+    "question": "What is the difference between a normal graph edge and a conditional graph edge in LangGraph?",
+    "type": "contrastive",
+    "split": "test",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Normal edges create static, unconditional transitions from one node to another.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Conditional edges evaluate a routing function to dynamically determine the next destination node.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Normal edges unconditionally transition to a fixed destination, whereas conditional edges route dynamically based on a state evaluation function [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md"
+    ],
+    "provenance_notes": "Contrastive graph edges in LangGraph."
+  },
+  {
+    "id": "q074",
+    "question": "How does Qdrant's is_empty condition contrast with a direct match condition?",
+    "type": "contrastive",
+    "split": "test",
+    "gold_chunk_ids": [
+      "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
+      "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
+      },
+      {
+        "doc_id": "qdrant_payload_filtering.md",
+        "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Direct match conditions test whether a field equals a specific value.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The is_empty condition tests whether the field is absent, null, or contains an empty array/string.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Direct matching verifies equality against a specific target value [C1], while is_empty verifies field absence, emptiness, or null state [C2].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_payload_filtering.md"
+    ],
+    "provenance_notes": "Contrastive direct match vs emptiness in Qdrant."
+  },
+  {
+    "id": "q075",
+    "question": "How does FastEmbed's default model BAAI/bge-small-en-v1.5 contrast with larger models like bge-large-en-v1.5?",
+    "type": "contrastive",
+    "split": "test",
+    "gold_chunk_ids": [
+      "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastembed_quickstart.md",
+        "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "bge-small produces 384-dimensional vectors with ultra-low memory and compute requirements.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "bge-large produces 1024-dimensional vectors with higher capacity but significantly higher latency and memory usage.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "bge-small generates 384-dimensional embeddings optimized for fast CPU inference, whereas bge-large generates 1024-dimensional vectors with higher compute demands [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastembed_quickstart.md"
+    ],
+    "provenance_notes": "Contrastive embedding models in FastEmbed."
+  },
+  {
+    "id": "q076",
+    "question": "In Pydantic v2, how is configuration defined on BaseSettings compared to the legacy Pydantic v1 Config class?",
+    "type": "temporal_ambiguous",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "In Pydantic v2 / pydantic-settings, configuration is set using model_config = SettingsConfigDict(...).",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "The legacy inner class Config approach has been superseded by SettingsConfigDict.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In modern pydantic-settings, configuration uses model_config = SettingsConfigDict(...) rather than the deprecated inner Config class [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Temporal migration from Pydantic v1 Config to Pydantic v2 SettingsConfigDict."
+  },
+  {
+    "id": "q077",
+    "question": "In modern FastAPI, which import path is recommended for HTTP status constants instead of passing magic integer numbers?",
+    "type": "temporal_ambiguous",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_status_codes.md",
+        "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FastAPI provides status constants via fastapi.status (e.g., status.HTTP_201_CREATED).",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Using fastapi.status constants is preferred over raw integer status codes.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Modern FastAPI recommends importing constants from fastapi.status like status.HTTP_201_CREATED instead of raw integer status codes [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_status_codes.md"
+    ],
+    "provenance_notes": "Temporal best practice for FastAPI status code constants."
+  },
+  {
+    "id": "q078",
+    "question": "How does modern pydantic-settings package distribution differ from early Pydantic where BaseSettings was in the core package?",
+    "type": "temporal_ambiguous",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "BaseSettings was separated from core pydantic into the standalone pydantic-settings package.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Applications must install pydantic-settings and import BaseSettings from pydantic_settings.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "In Pydantic v2, BaseSettings was extracted from core pydantic into the dedicated pydantic-settings library [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Temporal package extraction of pydantic-settings."
+  },
+  {
+    "id": "q079",
+    "question": "In LangGraph, how does the current StateGraph graph compilation replace earlier linear chain abstractions?",
+    "type": "temporal_ambiguous",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_thinking_in_graphs.md",
+        "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "StateGraph manages cyclic and conditional execution flows using an explicit state schema.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "It replaces rigid linear pipeline architectures with flexible graph topologies.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "LangGraph StateGraph replaces rigid linear chains with cyclic state machines governed by explicit state schemas and node transitions [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_thinking_in_graphs.md"
+    ],
+    "provenance_notes": "Temporal architectural shift to StateGraph."
+  },
+  {
+    "id": "q080",
+    "question": "How does modern Qdrant collection creation configure vector parameters compared to legacy single-vector configurations?",
+    "type": "temporal_ambiguous",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "qdrant_collections.md",
+        "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Modern Qdrant uses VectorParams to define vector size and distance.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "It supports named vectors and multiple vector spaces per collection.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Modern Qdrant specifies vectors using VectorParams with size and distance, supporting multi-vector collections rather than single unnamed vectors [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "qdrant_collections.md"
+    ],
+    "provenance_notes": "Temporal evolution of Qdrant vector params."
+  },
+  {
+    "id": "q081",
+    "question": "In Ollama, how has the API format parameter evolved to support structured schema generation?",
+    "type": "temporal_ambiguous",
+    "split": "dev",
+    "gold_chunk_ids": [
+      "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "ollama_api_reference.md",
+        "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "The format parameter accepts 'json' to guarantee JSON output.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Modern versions allow structured schema constraints directly in generation calls.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Ollama introduced the format='json' parameter to enforce valid JSON generation instead of relying purely on prompt formatting instructions [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "ollama_api_reference.md"
+    ],
+    "provenance_notes": "Temporal evolution of Ollama structured output formatting."
+  },
+  {
+    "id": "q082",
+    "question": "How does env_file_encoding in SettingsConfigDict ensure consistent cross-platform .env reading in Pydantic v2?",
+    "type": "temporal_ambiguous",
+    "split": "val",
+    "gold_chunk_ids": [
+      "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "pydantic_settings.md",
+        "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "SettingsConfigDict accepts env_file_encoding (typically 'utf-8') to avoid OS-dependent default encoding mismatches.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Configuring env_file_encoding='utf-8' in SettingsConfigDict prevents platform-specific text encoding errors when reading .env files [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "pydantic_settings.md"
+    ],
+    "provenance_notes": "Temporal cross-platform configuration in SettingsConfigDict."
+  },
+  {
+    "id": "q083",
+    "question": "In LangGraph persistence, how does modern thread_id configuration replace manual state passing between invocations?",
+    "type": "temporal_ambiguous",
+    "split": "val",
+    "gold_chunk_ids": [
+      "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "langgraph_persistence.md",
+        "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Passing thread_id in configurable allows the checkpointer to manage conversational state automatically.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Modern LangGraph passes thread_id in the execution config, automating state continuity without requiring manual state serialization [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "langgraph_persistence.md"
+    ],
+    "provenance_notes": "Temporal session handling in LangGraph."
+  },
+  {
+    "id": "q084",
+    "question": "In FastAPI, why is declaring response status codes in decorators preferred over manually modifying response headers?",
+    "type": "temporal_ambiguous",
+    "split": "test",
+    "gold_chunk_ids": [
+      "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "fastapi_status_codes.md",
+        "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "Setting status_code on the path decorator automatically updates OpenAPI documentation and schema definitions.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "Manual header manipulation does not reflect the status code in the generated OpenAPI docs.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "Setting status_code in the decorator updates the OpenAPI schema automatically, ensuring accurate documentation unlike manual response changes [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "fastapi_status_codes.md"
+    ],
+    "provenance_notes": "Temporal OpenAPI alignment in FastAPI decorators."
+  },
+  {
+    "id": "q085",
+    "question": "How does FlashRank's standalone ONNX architecture represent a shift away from heavy PyTorch deployment patterns?",
+    "type": "temporal_ambiguous",
+    "split": "test",
+    "gold_chunk_ids": [
+      "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+    ],
+    "gold_citations": [
+      {
+        "doc_id": "flashrank_docs.md",
+        "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
+      }
+    ],
+    "atomic_facts": [
+      {
+        "id": "f1",
+        "statement": "FlashRank replaces multi-gigabyte PyTorch transformer installs with standalone quantized ONNX models.",
+        "required_for_answer": true
+      },
+      {
+        "id": "f2",
+        "statement": "This eliminates heavy GPU dependencies and simplifies CPU deployment.",
+        "required_for_answer": true
+      }
+    ],
+    "gold_answer": "FlashRank shifts from heavy PyTorch frameworks to lightweight quantized ONNX models, enabling efficient CPU execution without large dependencies [C1].",
+    "requires_abstention": false,
+    "target_doc_ids": [
+      "flashrank_docs.md"
+    ],
+    "provenance_notes": "Temporal shift from PyTorch to ONNX in local reranking."
+  },
+  {
+    "id": "q086",
+    "question": "How do you configure Redis Sentinel for automatic failover and master election in production clusters?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Redis clustering or Sentinel documentation."
+  },
+  {
+    "id": "q087",
+    "question": "What are the best practices for setting up Celery worker queues with RabbitMQ dead-letter exchanges?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Celery or RabbitMQ information."
+  },
+  {
+    "id": "q088",
+    "question": "How does Kubernetes manage overlay network routing using the Calico CNI plugin?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Kubernetes or Calico CNI documentation."
+  },
+  {
+    "id": "q089",
+    "question": "What is the syntax for creating subscriptions in Strawberry GraphQL over WebSockets?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Strawberry GraphQL or WebSocket documentation."
+  },
+  {
+    "id": "q090",
+    "question": "How do you configure PyTorch pinned memory buffers for multi-GPU CUDA streaming pipelines?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain PyTorch CUDA memory management."
+  },
+  {
+    "id": "q091",
+    "question": "What parameters in Apache Kafka configure log retention segments and zero-copy transfer?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Apache Kafka documentation."
+  },
+  {
+    "id": "q092",
+    "question": "How do you create and manage database schema migrations using Alembic with SQLAlchemy async engines?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Alembic migration documentation."
+  },
+  {
+    "id": "q093",
+    "question": "What is the command to create an encrypted ZFS storage pool with RAIDZ2 on FreeBSD?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain ZFS filesystem documentation."
+  },
+  {
+    "id": "q094",
+    "question": "How does PostgreSQL configure logical replication slots for streaming CDC into Elasticsearch?",
+    "type": "unanswerable",
+    "split": "dev",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain PostgreSQL CDC or Elasticsearch documentation."
+  },
+  {
+    "id": "q095",
+    "question": "How do you configure Envoy proxy to enable gRPC-Web transcoding and CORS headers?",
+    "type": "unanswerable",
+    "split": "val",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Envoy proxy or gRPC-Web documentation."
+  },
+  {
+    "id": "q096",
+    "question": "What is the procedure for establishing BGP peering sessions on Juniper Junos OS routers?",
+    "type": "unanswerable",
+    "split": "val",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Juniper router or BGP protocol documentation."
+  },
+  {
+    "id": "q097",
+    "question": "How do you configure distributed tracing in Rust using tracing-subscriber with OpenTelemetry gRPC exporters?",
+    "type": "unanswerable",
+    "split": "val",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Rust tracing documentation."
+  },
+  {
+    "id": "q098",
+    "question": "What are the parameters for tuning memory compaction and swapiness in the Linux virtual memory subsystem?",
+    "type": "unanswerable",
+    "split": "test",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain Linux kernel memory tuning documentation."
+  },
+  {
+    "id": "q099",
+    "question": "How do you deploy an automated multi-region CloudFront distribution using AWS CDK in TypeScript?",
+    "type": "unanswerable",
+    "split": "test",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain AWS CDK or CloudFront documentation."
+  },
+  {
+    "id": "q100",
+    "question": "How do you configure RocksDB block cache and write buffers for optimal SSD wear-leveling?",
+    "type": "unanswerable",
+    "split": "test",
+    "gold_chunk_ids": [],
+    "gold_citations": [],
+    "atomic_facts": [],
+    "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
+    "requires_abstention": true,
+    "target_doc_ids": [],
+    "provenance_notes": "Corpus does not contain RocksDB storage engine tuning."
+  }
+]

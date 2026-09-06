@@ -1,0 +1,19 @@
+{
+  "dataset_id": "evidenceops-controlled-v1",
+  "dataset_version": "1.0.0",
+  "sha256_hash": "d38898b6483ff3040c22eaf0d2dae1ae6bf24d25e0108e9e13c239ef23747849",
+  "sample_count": 100,
+  "split_counts": {
+    "dev": 60,
+    "val": 20,
+    "test": 20
+  },
+  "type_counts": {
+    "single_fact": 30,
+    "multi_hop": 25,
+    "contrastive": 20,
+    "temporal_ambiguous": 10,
+    "unanswerable": 15
+  },
+  "created_at": "2026-09-06T12:00:00Z"
+}

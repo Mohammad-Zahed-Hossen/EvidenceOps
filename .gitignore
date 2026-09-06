@@ -19,11 +19,13 @@ secrets/
 # Local models and caches
 .ollama/
 models/
+artifacts/
 .cache/
 .huggingface/
 *.safetensors
 *.gguf
 *.onnx
+*.joblib
 
 # Local data
 data/raw/*
@@ -43,6 +45,7 @@ traces/
 eval/results/
 eval/reports/
 eval/generated/
+eval/runs/
 *.jsonl
 *.parquet
 

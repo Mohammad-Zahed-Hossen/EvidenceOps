@@ -96,3 +96,24 @@
   audit summaries. Raw exception messages, graph state and backend metadata do not
   cross this boundary. CLI service errors exit nonzero; safe policy abstentions are
   distinct from service failures. No MCP contract, SSOT or Phase 4 implementation changed.
+
+### ADR-016: Evaluation Benchmark Design, Layer B Alignment, and Split Isolation
+- **Context**: Public RAG benchmarks (HotpotQA, MS MARCO, BEIR) exhibit severe Layer B mismatches (missing original documents, differing chunk boundaries, and external web domain assumptions).
+- **Decision**: Construct a controlled 100-sample benchmark dataset (`evidenceops-controlled-v1.json`) grounded directly in the verified ingested corpus chunks. Partition strictly into 60 DEV, 20 VAL, and 20 TEST splits across five question archetypes: 30 single-fact, 25 multi-hop, 20 contrastive, 10 temporal-ambiguous, and 15 unanswerable. Generate canonical JSON SHA-256 identity (`evidenceops-controlled-v1.identity.json`) and dataset provenance metadata. The `OracleSupervisor` is programmatically restricted to the DEV split only; any attempt to evaluate or train on VAL or TEST raises an immediate `ValueError` to prevent data leakage.
+
+### ADR-017: Fair Baseline Benchmarking and Equal Budget Constraints
+- **Context**: Comparing adaptive agentic RAG against artificially weakened baselines produces misleading evaluation claims.
+- **Decision**: Baseline systems (`NaiveDenseRAG`, `BM25RAG`, `TwoStepHybrid`) and EvidenceOps share identical context ceilings (top-k=5..6, max 24,000 characters), identical prompt formatting templates, identical generator backend (`qwen2.5:1.5b` via local Ollama), identical temperature (0.0), and identical citation verification rules. All systems implement the `BaseRAGSystem` abstract protocol.
+
+### ADR-018: Controller Training Pipeline and Heuristic Fallback Guardrails
+- **Context**: Learned routing policies can overfit, fail on edge cases, or behave unpredictably outside the training distribution.
+- **Decision**: Implement `ControllerTrainingPipeline` with deterministic 10-feature state extraction (budget counters, conflict scores, sufficiency states, and token/syntax features) and a multi-class `LogisticRegression` classifier trained strictly on DEV split supervision. `LearnedRetrievalController` enforces hard iteration/retrieval budget guardrails and transparently falls back to `HeuristicRetrievalController` if model confidence is below 0.50 or if the model artifact is unavailable.
+
+### ADR-019: Paired Bootstrap Statistical Significance and Reproducible Run Manifests
+- **Context**: RAG evaluation metrics fluctuate across test sets; reporting raw mean score improvements without confidence intervals or statistical testing violates empirical rigor.
+- **Decision**: Implement non-parametric paired bootstrap testing (default 500-1,000 resamples, 95% bootstrap confidence intervals, and two-tailed p-values with alpha=0.05). Benchmark runs emit standalone, immutable directories under `eval/runs/<run_id>/` containing a machine-readable `manifest.json` (per-sample scores, system aggregates, environment profile, and bootstrap comparisons) and a GitHub-flavored markdown `leaderboard.md`.
+
+### ADR-020: Strict Observability Redaction and Local OpenTelemetry Tracing
+- **Context**: Telemetry is required for local profiling and Jaeger tracing, but raw queries, prompts, generated answers, or corpus chunks must never be emitted into spans or logs.
+- **Decision**: Local OpenTelemetry tracing exports to local Jaeger (`http://localhost:4318/v1/traces`) with zero-dependency socket availability pre-flight to eliminate connection retry spam when Jaeger is offline. A strict `RedactionPolicy` computes SHA-256 hashes and token counts for queries, answers, and chunk text, guaranteeing that no raw text crosses into span attributes or span events. LangGraph orchestration nodes are transparently instrumented at the `validated_node` boundary.
+
