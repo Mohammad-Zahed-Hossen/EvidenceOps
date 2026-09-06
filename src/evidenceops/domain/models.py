@@ -10,7 +10,7 @@ from evidenceops.domain.enums import Action, QueryRoute, RunStatus, SufficiencyL
 class DomainModel(BaseModel):
     """Base class that rejects undeclared contract fields."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
 class DocumentRecord(DomainModel):

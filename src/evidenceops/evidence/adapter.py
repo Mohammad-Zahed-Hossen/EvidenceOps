@@ -21,13 +21,17 @@ def adapt_retrieval_results(results: Sequence[RetrievalResult]) -> tuple[Evidenc
 
     deduped: dict[str, EvidenceRecord] = {}
 
-    for res in results:
+    for res in sorted(results, key=lambda r: (r.rank, r.retrieval_method, r.chunk_id)):
         cid = res.chunk_id
         source_uri = res.metadata.get("source_uri") or f"docs/{res.document_id}.md"
 
         if cid not in deduped:
             routes = [res.retrieval_method]
-            metadata = dict(res.metadata)
+            metadata = dict(res.chunk.metadata) | dict(res.metadata)
+            for component in ("sparse_rank", "dense_rank", "sparse_score", "dense_score"):
+                value = getattr(res, component)
+                if value is not None:
+                    metadata[component] = str(value)
             metadata["all_routes"] = ",".join(routes)
 
             rerank_val = None
@@ -53,6 +57,13 @@ def adapt_retrieval_results(results: Sequence[RetrievalResult]) -> tuple[Evidenc
             deduped[cid] = record
         else:
             existing = deduped[cid]
+            if (existing.document_id, existing.title, existing.text, existing.source_uri) != (
+                res.document_id,
+                res.chunk.title,
+                res.chunk.text,
+                source_uri,
+            ):
+                raise ValueError("contradictory duplicate chunk")
             # Merge route provenance
             current_routes = set(existing.metadata.get("all_routes", "").split(","))
             current_routes.add(res.retrieval_method)
@@ -60,7 +71,9 @@ def adapt_retrieval_results(results: Sequence[RetrievalResult]) -> tuple[Evidenc
 
             # Retain best rank and scores
             best_rank = min(existing.retrieval_rank, res.rank)
-            best_score = max(existing.retrieval_score, res.score)
+            best_score = (
+                res.score if res.rank < existing.retrieval_rank else existing.retrieval_score
+            )
             res_rerank = None
             if "rerank_score" in res.metadata:
                 try:
@@ -76,6 +89,10 @@ def adapt_retrieval_results(results: Sequence[RetrievalResult]) -> tuple[Evidenc
 
             updated_metadata = dict(existing.metadata)
             updated_metadata["all_routes"] = merged_routes
+            for component in ("sparse_rank", "dense_rank", "sparse_score", "dense_score"):
+                value = getattr(res, component)
+                if value is not None:
+                    updated_metadata[component] = str(value)
 
             deduped[cid] = EvidenceRecord(
                 chunk_id=cid,

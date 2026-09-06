@@ -11,7 +11,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Local-first settings with CPU-safe defaults and environment overrides."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", allow_inf_nan=False
+    )
 
     app_env: str = "local"
     log_level: str = "INFO"
@@ -19,31 +21,34 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, ge=1, le=65535)
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "evidenceops_chunks_bge_small_v1"
-    qdrant_timeout_seconds: int = Field(default=10, gt=0)
+    qdrant_timeout_seconds: int = Field(default=10, gt=0, le=60)
     ollama_base_url: str = "http://localhost:11434/v1"
-    ollama_model: str = "qwen2.5:3b-instruct"
-    ollama_timeout_seconds: int = Field(default=60, gt=0)
-    ollama_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    ollama_model: str = Field(default="qwen2.5:1.5b", min_length=1, max_length=128)
+    ollama_timeout_seconds: int = Field(default=60, gt=0, le=60)
+    ollama_temperature: float = Field(default=0.0, ge=0.0, le=0.0)
+    ollama_max_tokens: int = Field(default=256, ge=1, le=512)
+    local_models_only: bool = False
     embedding_model: str = "BAAI/bge-small-en-v1.5"
-    embedding_dimension: int = Field(default=384, gt=0)
+    embedding_dimension: int = Field(default=384, gt=0, le=65536)
     embedding_distance: str = "Cosine"
     flashrank_model: str = "ms-marco-TinyBERT-L-2-v2"
-    rrf_k: int = Field(default=60, gt=0)
+    rrf_k: int = Field(default=60, gt=0, le=10000)
     top_k_sparse: int = Field(default=20, gt=0, le=100)
     top_k_dense: int = Field(default=20, gt=0, le=100)
     top_k_hybrid: int = Field(default=20, gt=0, le=100)
-    top_k_context: int = Field(default=6, gt=0, le=100)
+    top_k_context: int = Field(default=6, gt=0, le=6)
     max_iterations: int = Field(default=3, ge=1, le=3)
     max_retrieval_calls: int = Field(default=3, ge=1, le=3)
-    max_context_chars: int = Field(default=24000, gt=0)
+    max_context_chars: int = Field(default=24000, gt=0, le=24000)
     sufficiency_threshold: float = Field(default=0.72, ge=0.0, le=1.0)
     abstain_threshold: float = Field(default=0.35, ge=0.0, le=1.0)
+    conflict_threshold: float = Field(default=0.60, ge=0.0, le=1.0)
     otel_service_name: str = "evidenceops-api"
     otel_exporter_otlp_endpoint: str = "http://localhost:4318"
-    simulated_cloud_input_cost_usd_per_1k: float = Field(default=0.0, ge=0.0)
-    simulated_cloud_output_cost_usd_per_1k: float = Field(default=0.0, ge=0.0)
+    simulated_cloud_input_cost_usd_per_1k: float = Field(default=0.0, ge=0.0, le=1000.0)
+    simulated_cloud_output_cost_usd_per_1k: float = Field(default=0.0, ge=0.0, le=1000.0)
     raw_data_dir: Path = Path("data/raw")
-    max_source_bytes: int = Field(default=10_000_000, gt=0)
+    max_source_bytes: int = Field(default=10_000_000, gt=0, le=100_000_000)
     supported_source_extensions: str = ".md,.markdown,.txt,.html,.htm"
     chunk_target_words: int = Field(default=500, ge=350, le=600)
     chunk_max_words: int = Field(default=600, ge=350, le=600)
@@ -59,9 +64,16 @@ class Settings(BaseSettings):
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod
     def local_service_url(cls, value: str) -> str:
-        hostname = urlparse(value).hostname
-        if hostname not in {"localhost", "127.0.0.1"}:
-            raise ValueError("local service URLs must use localhost or 127.0.0.1")
+        parsed = urlparse(value)
+        if (
+            parsed.hostname not in {"localhost", "127.0.0.1"}
+            or parsed.scheme not in {"http", "https"}
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("local service URLs require a local HTTP endpoint without credentials")
         return value
 
 

@@ -9,16 +9,16 @@ def test_settings_have_cpu_safe_local_defaults() -> None:
     assert settings.max_iterations == 3
     assert settings.max_retrieval_calls == 3
     assert settings.embedding_dimension == 384
-    assert settings.ollama_model == "qwen2.5:3b-instruct"
+    assert settings.ollama_model == "qwen2.5:1.5b"
 
 
 def test_settings_allow_environment_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TOP_K_CONTEXT", "8")
-    monkeypatch.setenv("OLLAMA_TEMPERATURE", "0.2")
+    monkeypatch.setenv("TOP_K_CONTEXT", "4")
+    monkeypatch.setenv("OLLAMA_TEMPERATURE", "0.0")
     get_settings.cache_clear()
     settings = get_settings()
-    assert settings.top_k_context == 8
-    assert settings.ollama_temperature == 0.2
+    assert settings.top_k_context == 4
+    assert settings.ollama_temperature == 0.0
     get_settings.cache_clear()
 
 

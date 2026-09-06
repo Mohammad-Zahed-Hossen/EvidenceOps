@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 from typing import Any
 
 from evidenceops.domain.errors import RerankingError, RetrievalQueryError
@@ -58,15 +59,24 @@ class FlashRankReranker:
         self,
         model_name: str = "ms-marco-TinyBERT-L-2-v2",
         max_candidates: int = 20,
+        local_files_only: bool = False,
     ) -> None:
         self.model_name = model_name
         self.max_candidates = max_candidates
+        self.local_files_only = local_files_only
         self._ranker: Any = None
 
     def _load(self) -> Any:
         if self._ranker is None:
             try:
                 from flashrank import Ranker
+                from flashrank.Config import default_cache_dir
+
+                if (
+                    self.local_files_only
+                    and not (Path(default_cache_dir) / self.model_name).is_dir()
+                ):
+                    raise RerankingError("local reranker model is unavailable")
 
                 self._ranker = Ranker(model_name=self.model_name)
             except Exception as exc:

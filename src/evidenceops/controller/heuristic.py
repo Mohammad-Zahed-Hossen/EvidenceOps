@@ -26,7 +26,7 @@ class HeuristicRetrievalController(RetrievalController):
         at_iter_limit = state.iteration_count >= state.max_iterations
 
         if at_call_limit or at_iter_limit:
-            if state.evidence_status == EvidenceStatus.SUFFICIENT and state.conflict_score < 0.60:
+            if state.evidence_status == EvidenceStatus.SUFFICIENT and state.conflict_score < 0.30:
                 return ControllerDecision(
                     action=Action.STOP,
                     reason_code="stop_evidence_sufficient_at_budget",
@@ -46,7 +46,7 @@ class HeuristicRetrievalController(RetrievalController):
             )
 
         # Rule 2: Evidence is sufficient and non-conflicting
-        if state.evidence_status == EvidenceStatus.SUFFICIENT and state.conflict_score < 0.60:
+        if state.evidence_status == EvidenceStatus.SUFFICIENT and state.conflict_score < 0.30:
             return ControllerDecision(
                 action=Action.STOP,
                 reason_code="stop_evidence_sufficient",
@@ -70,6 +70,14 @@ class HeuristicRetrievalController(RetrievalController):
                 action=Action.ABSTAIN,
                 reason_code="abstain_conflicting_evidence_unresolvable",
                 confidence=0.85,
+                features=features,
+            )
+
+        if state.metadata.get("refinement_ready") and state.route not in (None, QueryRoute.DIRECT):
+            return ControllerDecision(
+                action=self._route_to_action(state.route),
+                route=state.route,
+                reason_code="route_refined_query",
                 features=features,
             )
 
@@ -101,21 +109,21 @@ class HeuristicRetrievalController(RetrievalController):
             )
 
         # Rule 6: Initial routing based on query features
-        if features.has_code_terms:
-            return ControllerDecision(
-                action=Action.RETRIEVE_SPARSE,
-                route=QueryRoute.SPARSE,
-                reason_code="route_sparse_exact_identifier",
-                confidence=0.85,
-                features=features,
-            )
-
         if features.has_comparison_terms or features.has_multi_hop_terms:
             return ControllerDecision(
                 action=Action.RETRIEVE_HYBRID,
                 route=QueryRoute.HYBRID,
                 reason_code="route_hybrid_complex_query",
                 confidence=0.80,
+                features=features,
+            )
+
+        if features.has_code_terms:
+            return ControllerDecision(
+                action=Action.RETRIEVE_SPARSE,
+                route=QueryRoute.SPARSE,
+                reason_code="route_sparse_exact_identifier",
+                confidence=0.85,
                 features=features,
             )
 

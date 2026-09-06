@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from evidenceops.controller.contracts import FeatureExtractor
-from evidenceops.domain.state import EvidenceOpsState, QueryFeatures
+from evidenceops.domain.state import EvidenceOpsState, QueryFeatures, is_non_factual_greeting
 
 _RE_CAMEL_PASCAL = re.compile(r"\b[a-zA-Z]*[a-z][A-Z][a-zA-Z0-9]*\b")
 _RE_SNAKE = re.compile(r"\b[a-zA-Z0-9]+_[a-zA-Z0-9_]+\b")
@@ -24,12 +24,6 @@ _RE_TEMPORAL = re.compile(
 _RE_MULTI_HOP = re.compile(
     r"\b(how to|step by step|prerequisites|prerequisite|relationship|"
     r"depends on|integrate|pipeline|why)\b",
-    re.IGNORECASE,
-)
-_RE_GREETING = re.compile(
-    r"^(?:(?:hi|hello|hey|good morning|good afternoon|good evening|"
-    r"thanks|thank you|howdy|greetings)"
-    r"(?:\s+(?:there|everyone|all|friend|team))?[\s!.,]*)+$",
     re.IGNORECASE,
 )
 
@@ -66,7 +60,7 @@ class RegexFeatureExtractor(FeatureExtractor):
         )
 
         # Conservative external knowledge probability estimation
-        if _RE_GREETING.match(cleaned):
+        if is_non_factual_greeting(cleaned):
             predicted_prob = 0.05
         elif has_code or has_comparison or has_temporal:
             predicted_prob = 0.95

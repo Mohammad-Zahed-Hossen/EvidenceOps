@@ -52,6 +52,7 @@ class SufficiencyEvaluationResult(DomainModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    low_evidence: bool = False
     status: EvidenceStatus
     composite_score: float = Field(ge=0.0, le=1.0)
     relevance_score: float = Field(ge=0.0, le=1.0)
@@ -80,6 +81,7 @@ def evaluate_sufficiency(
         return SufficiencyEvaluationResult(
             status=EvidenceStatus.INSUFFICIENT,
             composite_score=0.0,
+            low_evidence=True,
             relevance_score=0.0,
             coverage_score=0.0,
             diversity_score=0.0,
@@ -117,6 +119,10 @@ def evaluate_sufficiency(
     else:
         c_score = 1.0
 
+    # Rank alone is not relevance: require lexical support when no reranker exists.
+    if not rerank_scores and c_score == 0:
+        r_score = 0.0
+
     # 3. Diversity Score (D)
     unique_docs = {e.document_id for e in evidence}
     # 2 or more unique documents provides full diversity score
@@ -134,7 +140,7 @@ def evaluate_sufficiency(
         )
     )
     a_score = 0.50 + (0.30 if has_definition else 0.0) + (0.20 if has_code_block else 0.0)
-    a_score = min(1.0, a_score)
+    a_score = min(1.0, a_score) if c_score > 0 else 0.0
 
     composite = 0.45 * r_score + 0.25 * c_score + 0.15 * d_score + 0.15 * a_score
     composite = max(0.0, min(1.0, composite))
@@ -147,6 +153,7 @@ def evaluate_sufficiency(
     return SufficiencyEvaluationResult(
         status=status,
         composite_score=composite,
+        low_evidence=composite < insufficient_threshold,
         relevance_score=r_score,
         coverage_score=c_score,
         diversity_score=d_score,

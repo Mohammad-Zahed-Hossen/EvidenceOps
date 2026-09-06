@@ -223,6 +223,7 @@ def build_documentation_service(settings: Settings) -> LocalDocumentationService
             model_name=settings.embedding_model,
             threads=settings.embedding_threads,
             expected_dimension=settings.embedding_dimension,
+            local_files_only=settings.local_models_only,
         )
         store = QdrantChunkStore(
             url=settings.qdrant_url,

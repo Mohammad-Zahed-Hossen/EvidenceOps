@@ -41,10 +41,12 @@ class FastEmbedEmbeddingProvider:
         model_name: str = "BAAI/bge-small-en-v1.5",
         threads: int = 4,
         expected_dimension: int = 384,
+        local_files_only: bool = False,
     ) -> None:
         self.model_name = model_name
         self.threads = threads
         self.expected_dimension = expected_dimension
+        self.local_files_only = local_files_only
         self._model: Any = None
         self._detected_dimension: int | None = None
 
@@ -57,7 +59,11 @@ class FastEmbedEmbeddingProvider:
             try:
                 from fastembed import TextEmbedding
 
-                self._model = TextEmbedding(model_name=self.model_name, threads=self.threads)
+                self._model = TextEmbedding(
+                    model_name=self.model_name,
+                    threads=self.threads,
+                    local_files_only=self.local_files_only,
+                )
             except Exception as exc:
                 raise EmbeddingError("local embedding model is unavailable") from exc
         return self._model

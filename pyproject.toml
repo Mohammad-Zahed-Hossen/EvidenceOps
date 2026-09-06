@@ -66,11 +66,12 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra -q --import-mode=importlib"
+addopts = "-ra -q --import-mode=importlib -m 'not ollama and not qdrant and not real_model and not phase3_live'"
 testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = [
     "qdrant: Live Qdrant integration tests",
     "real_model: Real FastEmbed or FlashRank model smoke tests",
     "ollama: Real Ollama generation smoke tests",
+    "phase3_live: Real retrieval, reranking and native Ollama pipeline",
 ]

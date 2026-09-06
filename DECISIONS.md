@@ -32,7 +32,7 @@
 
 ### ADR-008: Hardware Profile for 8 GB RAM / CPU-First Execution
 - **Context**: Host development system has an AMD Ryzen 5 5600G with 8 GB RAM and no discrete CUDA GPU.
-- **Decision**: The default local profile is strictly 1.5B to 3B models (`qwen2.5:3b-instruct`). 7B models are strictly optional and must not be configured as default to avoid out-of-memory crashes.
+- **Decision**: The default local profile is strictly 1.5B to 3B models (`qwen2.5:1.5b` selected and verified for Phase 3). 7B models are strictly optional and must not be configured as default to avoid out-of-memory crashes.
 
 ### ADR-009: Ingestion Manifest Contract & Atomic Local Persistence
 - **Context**: Ingestion runs require auditability, deterministic traceability, and collision safety without database overhead.
@@ -56,7 +56,7 @@
 - **Context**: MCP clients (Claude Desktop, IDEs) can communicate over STDIO or network transports. Network transports introduce authentication, port binding, CORS, and remote attack surfaces. Exposing raw filesystem paths or arbitrary internal retrieval parameters introduces prompt-injection and path-traversal vulnerabilities.
 - **Decision**: Expose retrieval solely through local STDIO using FastMCP (`evidenceops-mcp`). Reject network transports (SSE/HTTP) in Phase 2. Expose exactly three allowlisted tools (`search_documentation`, `get_document_chunk`, `get_source_metadata`). Validate all inputs with strict Pydantic models forbidding extra fields (`extra="forbid"`). Sanitize IDs against path traversal before disk access. Reuse `DocumentationService` across CLI and MCP to guarantee identical retrieval semantics.
 
-### ADR-015: Bounded LangGraph Orchestration and Grounded Generation (Early Implementation)
+### ADR-015: Bounded LangGraph Orchestration and Grounded Generation (Phase 3 verified)
 - **Context**: Autonomous multi-hop agents can loop indefinitely, hallucinate non-existent citation references, or overwhelm CPU/RAM budgets without explicit resource boundaries.
 - **Decision**: Orchestration is compiled into a bounded LangGraph `StateGraph` with strict mathematical convergence guarantees:
   1. Maximum 3 retrieval calls and maximum 3 reformulation iterations per query run.
@@ -64,4 +64,35 @@
   3. Strict deterministic heuristic routing: code identifiers -> sparse, complex multi-hop -> hybrid, semantic concepts -> dense.
   4. Non-LLM composite sufficiency ($S = 0.45R + 0.25C + 0.15D + 0.15A$) and conservative pairwise conflict detection before generation.
   5. Deterministic sequential citation assignment (`[C1]`, `[C2]`, ...) with verification: answers citing hallucinated or malformed IDs trigger at most one structured correction retry before explicit abstention (`AbstentionReason.INVALID_CITATIONS`).
-  6. Zero paid APIs: local Ollama running `qwen2.5:3b-instruct` (or compatible small models) at `temperature=0.0`.
+  6. Zero paid APIs: native local Ollama running `qwen2.5:1.5b` at `temperature=0.0`.
+
+- **Phase 3 completion amendment (2026-09-05)**: Retain the eleven-node architecture;
+  validate canonical Pydantic state on both sides of every node. Explicit guards,
+  repeated query-route detection, unchanged-evidence detection and one failure fallback
+  bound retrieval; a recursion limit of 64 is only the last-resort guard. Missing
+  dependencies are recorded without pretending an actual search occurred.
+- **Evidence and conflict policy**: Use the SSOT formula and thresholds 0.72/0.35/0.60.
+  Generation additionally requires conflict below 0.30 per SSOT section 5.3. Choose
+  the SSOT-permitted immediate abstention on material conflict, preserving chunk IDs
+  before reranking can remove witnesses. Compare matching prose subjects and units;
+  code examples and typed assignments are not global configuration claims. This is
+  a limited heuristic, not semantic contradiction detection or calibrated confidence.
+- **Grounding and repair**: Factual generation requires evaluated sufficient packed
+  evidence. Only an independently checked greeting with citations disabled may use
+  direct generation. Prompts enumerate only packed labels; one correction retains all
+  grounding rules. Rejected answers are discarded on abstention. Citation validation
+  proves syntax and membership, not entailment of every claim; Phase 4 owns evaluation.
+- **CPU and offline query policy**: Native qwen2.5:1.5b, temperature 0, 60-second HTTP
+  timeout, default output cap 256 tokens (1..512). Serialize generation per client.
+  The query CLI requires cached FastEmbed/FlashRank models; additive offline flags
+  retain earlier retrieval acquisition defaults and algorithms. Live smoke uses
+  4,000 context characters and two chunks; 24,000/six remain hard default ceilings.
+- **Configuration bounds**: In addition to SSOT query ceilings, reject non-finite
+  numbers and bound Qdrant timeout to 60 seconds, embedding dimensions to 65,536,
+  RRF k to 10,000, source input to 100 MB and simulated unit costs to 1,000 USD/1k.
+  These defensive input bounds do not change existing effective retrieval defaults.
+  Local service URLs reject credentials, query strings, fragments and non-HTTP schemes.
+- **Failure surface**: QueryResponse retains its original fields and adds allowlisted
+  audit summaries. Raw exception messages, graph state and backend metadata do not
+  cross this boundary. CLI service errors exit nonzero; safe policy abstentions are
+  distinct from service failures. No MCP contract, SSOT or Phase 4 implementation changed.

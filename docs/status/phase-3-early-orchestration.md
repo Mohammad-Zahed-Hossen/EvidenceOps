@@ -1,3 +1,6 @@
+> Superseded on 2026-09-05 by [Phase 3 completion handoff](phase-3-handoff.md).
+> This is a historical early-implementation snapshot; its model, thresholds and verification status are not current.
+
 # Phase 3 Early Implementation: LangGraph Orchestration & Grounded Generation
 
 ## 1. Early Implemented Scope

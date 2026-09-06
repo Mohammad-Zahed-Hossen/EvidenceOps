@@ -10,14 +10,23 @@ from pydantic import ConfigDict, Field
 from evidenceops.domain.models import DomainModel, EvidenceRecord
 
 _NUMERIC_ATTR_RE = re.compile(
-    r"\b([a-zA-Z_-]+)\s+(?:is|of|set to|=)\s+([0-9]+(?:\.[0-9]+)?)\s*([a-zA-Z]*)\b",
+    r"\b([a-zA-Z_-]+(?: [a-zA-Z_-]+){0,3})\s+(?:is|of|set to|=)\s+"
+    r"([0-9]+(?:\.[0-9]+)?)\s*([a-zA-Z]*)\b",
     re.IGNORECASE,
 )
 
 _SUPPORTED_RE = re.compile(
-    r"\b([a-zA-Z_-]+)\s+(?:is|are)\s+(supported|not supported|deprecated|enabled|disabled)\b",
+    r"\b([a-zA-Z_-]+(?: [a-zA-Z_-]+){0,3})\s+(?:is|are)\s+"
+    r"(supported|not supported|deprecated|enabled|disabled)\b",
     re.IGNORECASE,
 )
+
+
+def _prose(text: str) -> str:
+    # Examples are not assertions of global configuration. Ignore fenced code and
+    # typed assignment lines rather than confusing a type name with an attribute.
+    text = re.sub(r"```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)", "", text)
+    return re.sub(r"(?m)^.*\b\w+\s*:\s*\w+\s*=.*$", "", text)
 
 
 class ConflictDetectionResult(DomainModel):
@@ -51,20 +60,21 @@ def detect_evidence_conflicts(evidence: Sequence[EvidenceRecord]) -> ConflictDet
             e2 = evidence[j]
 
             # 1. Numeric conflict check
-            matches1 = {m[0]: m[1] for m in _NUMERIC_ATTR_RE.findall(e1.text)}
-            matches2 = {m[0]: m[1] for m in _NUMERIC_ATTR_RE.findall(e2.text)}
+            text1, text2 = _prose(e1.text), _prose(e2.text)
+            matches1 = {(m[0].lower(), m[2].lower()): m[1] for m in _NUMERIC_ATTR_RE.findall(text1)}
+            matches2 = {(m[0].lower(), m[2].lower()): m[1] for m in _NUMERIC_ATTR_RE.findall(text2)}
 
             for key, val1 in matches1.items():
-                norm_key = key.lower()
+                norm_key = key
                 for key2, val2 in matches2.items():
-                    if norm_key == key2.lower() and val1 != val2:
+                    if norm_key == key2 and float(val1) != float(val2):
                         conflicting_pairs.append((e1.chunk_id, e2.chunk_id))
-                        reason_codes.append(f"numeric_conflict_{norm_key}_{val1}_vs_{val2}")
+                        reason_codes.append("numeric_attribute_conflict")
                         break
 
             # 2. Boolean support contradiction check
-            support1 = dict(_SUPPORTED_RE.findall(e1.text))
-            support2 = dict(_SUPPORTED_RE.findall(e2.text))
+            support1 = dict(_SUPPORTED_RE.findall(text1))
+            support2 = dict(_SUPPORTED_RE.findall(text2))
 
             for feature, status1 in support1.items():
                 norm_feat = feature.lower()
@@ -76,15 +86,15 @@ def detect_evidence_conflicts(evidence: Sequence[EvidenceRecord]) -> ConflictDet
                         is_neg2 = "not" in s2 or "disabled" in s2
                         if is_neg1 != is_neg2:
                             conflicting_pairs.append((e1.chunk_id, e2.chunk_id))
-                            reason_codes.append(f"boolean_conflict_{norm_feat}_{s1}_vs_{s2}")
+                            reason_codes.append("boolean_attribute_conflict")
                             break
 
     if conflicting_pairs:
         return ConflictDetectionResult(
             has_conflict=True,
             conflict_score=0.75,
-            conflicting_pairs=conflicting_pairs,
-            reason_codes=list(set(reason_codes)),
+            conflicting_pairs=sorted(set(conflicting_pairs)),
+            reason_codes=sorted(set(reason_codes)),
         )
 
     return ConflictDetectionResult(has_conflict=False, conflict_score=0.0)

@@ -9,7 +9,7 @@ from pydantic import ConfigDict, Field
 
 from evidenceops.domain.models import DomainModel, EvidenceRecord
 
-_RE_CITATION = re.compile(r"\[(C[0-9]+)\]")
+_RE_CITATION = re.compile(r"\[(C[1-9][0-9]*)\]")
 _RE_POTENTIAL_MALFORMED = re.compile(r"\[([cC]itation\s*[0-9]+|[cC][0-9]+|[0-9]+)\]")
 
 
@@ -85,5 +85,10 @@ def validate_answer_citations(
                 f"Malformed citation token '{token}'; citations must match [C1], [C2], etc."
             )
 
+    remainder = _RE_CITATION.sub("", answer)
+    if re.search(r"\[\s*[cC](?:itation)?\s*\d|\b[Cc]\s*\d+\s*\]", remainder):
+        errors.append("Malformed citation token; use exact [C1] syntax.")
+    if not answer.strip():
+        errors.append("Empty generated answer.")
     is_valid = len(errors) == 0
     return CitationValidationResult(is_valid=is_valid, cited_ids=cited_ids, errors=errors)

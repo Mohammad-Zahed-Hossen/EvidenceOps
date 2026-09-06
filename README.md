@@ -61,22 +61,92 @@ Add this block to your MCP client configuration (`claude_desktop_config.json`):
 }
 ```
 
-### 5. Grounded Question Answering (Phase 3 Early Implementation)
+### 5. Grounded Question Answering (Phase 3)
+
+Use native desktop Ollama and start only the Qdrant container. Do not start an
+Ollama container or the whole Compose stack on the 8 GB CPU profile.
+
+First-time model preparation (network access is needed only to acquire missing models):
+
 ```powershell
-# Ask question with grounded synthesis, citation verification, and budget limits
-uv run evidenceops-query "How do I declare status codes in FastAPI?"
-
-# Emit response as structured JSON
-uv run evidenceops-query "What is FastEmbed?" --json
-
-# Set explicit limits (max 3 retrieval calls, max 3 iterations)
-uv run evidenceops-query "Compare Qdrant vs Chroma" --max-retrieval-calls 2 --max-iterations 2
+ollama pull qwen2.5:1.5b
+ollama list
+docker compose up -d qdrant
 ```
 
-### 6. Stop Qdrant
+Prepare the corpus and indexes using the ingestion/index commands above. Run a
+reranked search once to populate the FlashRank cache. Dense indexing prepares
+FastEmbed. The query CLI uses cached models only and returns a structured failure
+if a required cache or service is unavailable; it does not download models.
+
+Daily querying:
+
 ```powershell
+uv run evidenceops-query --help
+uv run evidenceops-query --query "What is dependency injection?" --json
+uv run evidenceops-query --query "Compare FastEmbed and FlashRank." --max-retrieval-calls 2
+uv run evidenceops-query --query "Hello!" --no-require-citations
+```
+
+Defaults: native `http://localhost:11434/v1`, `qwen2.5:1.5b`, temperature `0.0`,
+60-second HTTP timeout, maximum 256 output tokens (configurable from 1 to 512).
+Hard ceilings are 3 retrieval calls, 3 reformulations, 2 generation attempts,
+6 context chunks, and 24,000 formatted context characters. Smaller request limits
+are honored. `--no-require-citations` permits only non-factual greetings to bypass
+retrieval; factual requests still require evidence and citations.
+
+For conservative CPU smoke testing, use temporary process settings without editing `.env`:
+
+```powershell
+$env:MAX_CONTEXT_CHARS = "4000"
+$env:TOP_K_CONTEXT = "2"
+uv run evidenceops-query --query "What is dependency injection?" --json
+Remove-Item Env:MAX_CONTEXT_CHARS
+Remove-Item Env:TOP_K_CONTEXT
+```
+
+JSON distinguishes `completed`, `abstained`, and `failed`, with citation IDs,
+source evidence and safe route/count diagnostics. Text mode prints the cited
+source title, URI and stable chunk ID. Service failures exit nonzero; ordinary
+insufficient-evidence or citation abstentions exit zero and carry their reason.
+No query, prompt or document body is logged by the application; explicitly requested
+JSON includes selected source text as evidence, with backend metadata allowlisted.
+
+The sufficiency score is a deterministic heuristic, not calibrated confidence.
+Unknown/malformed citations trigger one repair; continued failure causes abstention.
+The 1.5B model sometimes omits citations or invents labels even after repair.
+A full 24,000-character context can exceed the practical CPU timeout or the model's
+available token window. Character limits are ceilings, not latency guarantees.
+The 4,000-character live smoke is not a quality or performance benchmark.
+
+### 6. Release local resources
+
+```powershell
+ollama stop qwen2.5:1.5b
 docker compose stop qdrant
+ollama ps
+docker compose ps
 ```
+
+### Phase 3 verification
+
+```powershell
+uv sync --group dev
+uv run pytest -ra -q
+uv run pytest --cov=src/evidenceops --cov-fail-under=75
+uv run ruff check src tests scripts
+uv run ruff format --check src tests scripts
+uv run mypy src/evidenceops
+# Run separately, serially, with prepared local services and caches:
+uv run pytest -m ollama -v
+uv run pytest -m qdrant -v
+uv run pytest -m phase3_live -v
+```
+
+Default tests deselect `ollama`, `qdrant`, `real_model`, and `phase3_live` markers.
+They require neither live daemons nor downloads. The combined live test blocks
+external DNS/connections and uses the existing corpus, Qdrant, FastEmbed,
+FlashRank and native Ollama. See the handoff for observed outcomes and limitations.
 
 ### Model Caching & Troubleshooting
 - **FastEmbed**: `BAAI/bge-small-en-v1.5` downloads into OS temp / Hugging Face cache on first dense embedding invocation (~130 MB ONNX). Expected dimension is 384.
@@ -95,17 +165,17 @@ The authoritative technical design and specification for this project is maintai
 ## Local-First & Zero-Cost Policy
 
 EvidenceOps operates under a strict **local-first and zero-cost policy**:
-- **Generation**: Local Ollama instance (`qwen2.5:3b-instruct`).
+- **Generation**: Local Ollama instance (`qwen2.5:1.5b`).
 - **Embedding**: In-process FastEmbed (`BAAI/bge-small-en-v1.5`) on CPU.
 - **Sparse Retrieval**: In-process `rank-bm25`.
 - **Vector Storage**: Local Qdrant instance.
 - **Reranking**: Local FlashRank ONNX model (`ms-marco-TinyBERT-L-2-v2`).
-- **Observability**: Local OpenTelemetry SDK exporting to local Jaeger.
+- **Observability (planned Phase 4)**: Local OpenTelemetry and Jaeger; not implemented or started by Phase 3.
 - **No Paid APIs**: No dependency on OpenAI, Anthropic, Cohere, Pinecone, or hosted services.
 
 ## Current Implementation Status
 
-Phase 0, Phase 1A, Phase 1B, Phase 1C, and Phase 2 (MCP Foundation) are complete and verified. Phase 3 (LangGraph Orchestration & Generation) has been implemented early and preserved. See [STATUS.md](file:///d:/Code/Assignment/EvidenceOps/STATUS.md) for current progress and [DECISIONS.md](file:///d:/Code/Assignment/EvidenceOps/DECISIONS.md) for architectural decision records.
+Phase 0, Phase 1A, Phase 1B, Phase 1C, and Phase 2 (MCP Foundation) are complete and verified. Phase 3 (bounded LangGraph orchestration and grounded generation) is complete and locally verified. The separate Phase 1C human judgment gate remains pending in the recorded review artifacts; no retrieval-quality improvement is claimed. See [Phase 3 handoff](docs/status/phase-3-handoff.md). See [STATUS.md](file:///d:/Code/Assignment/EvidenceOps/STATUS.md) for current progress and [DECISIONS.md](file:///d:/Code/Assignment/EvidenceOps/DECISIONS.md) for architectural decision records.
 
 ## Quickstart & Setup
 

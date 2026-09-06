@@ -7,6 +7,8 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from evidenceops.controller.contracts import FeatureExtractor, RetrievalController
+from evidenceops.generation.contracts import GeneratorClient, QueryReformulator
 from evidenceops.graph.nodes import (
     abstain_node,
     controller_decide_node,
@@ -25,6 +27,7 @@ from evidenceops.graph.routing import (
     route_after_decision,
     route_after_evaluation,
 )
+from evidenceops.retrieval.contracts import Reranker, SparseRetriever
 
 
 class GraphState(TypedDict, total=False):
@@ -60,14 +63,14 @@ class GraphState(TypedDict, total=False):
 
 
 def build_evidenceops_graph(
-    sparse_retriever: Any = None,
-    dense_retriever: Any = None,
-    hybrid_retriever: Any = None,
-    reranker: Any = None,
-    generator_client: Any = None,
-    controller: Any = None,
-    feature_extractor: Any = None,
-    reformulator: Any = None,
+    sparse_retriever: SparseRetriever | None = None,
+    dense_retriever: SparseRetriever | None = None,
+    hybrid_retriever: SparseRetriever | None = None,
+    reranker: Reranker | None = None,
+    generator_client: GeneratorClient | None = None,
+    controller: RetrievalController | None = None,
+    feature_extractor: FeatureExtractor | None = None,
+    reformulator: QueryReformulator | None = None,
 ) -> Any:
     """Build and compile the bounded LangGraph StateGraph workflow."""
     workflow: Any = StateGraph(GraphState)
@@ -125,6 +128,7 @@ def build_evidenceops_graph(
         {
             "generate": "generate",
             "reformulate": "reformulate",
+            "retrieve": "retrieve",
             "abstain": "abstain",
         },
     )

@@ -16,6 +16,8 @@ def route_after_decision(state: dict[str, Any]) -> str:
         "reformulate": For reformulation actions.
         "abstain": For abstention decisions.
     """
+    if state.get("abstention_reason"):
+        return "abstain"
     next_action = state.get("next_action")
     if next_action in (Action.DIRECT_ANSWER, "direct_answer", Action.STOP, "stop"):
         return "generate"
@@ -43,6 +45,10 @@ def route_after_evaluation(state: dict[str, Any]) -> str:
         "reformulate": When evidence is insufficient/uncertain but budget remains.
         "abstain": When evidence is insufficient/conflicting and budget is exhausted.
     """
+    if state.get("abstention_reason"):
+        return "abstain"
+    if state.get("metadata", {}).get("fallback_pending"):
+        return "retrieve"
     status = state.get("evidence_status")
     if status in (EvidenceStatus.SUFFICIENT, "sufficient"):
         return "generate"

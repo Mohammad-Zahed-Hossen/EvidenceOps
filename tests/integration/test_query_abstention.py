@@ -86,6 +86,7 @@ def test_abstention_on_empty_retrieval() -> None:
         "evidence_below_threshold",
         "retrieval_budget_exhausted",
         "iteration_budget_exhausted",
+        "unchanged_evidence",
     )
     assert response.retrieval_calls <= 2
     assert response.iterations <= 2

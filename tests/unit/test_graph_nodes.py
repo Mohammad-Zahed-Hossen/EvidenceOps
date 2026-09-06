@@ -153,7 +153,8 @@ def test_generate_node_produces_answer(sample_chunk: ChunkRecord) -> None:
         evidence=[ev],
     )
     gen = FakeGenerator("You use status_code [C1].")
-    updated = generate_node(state.to_langgraph_dict(), generator_client=gen)
+    evaluated = evaluate_evidence_node(state.to_langgraph_dict())
+    updated = generate_node(evaluated, generator_client=gen)
     assert updated["answer"] == "You use status_code [C1]."
 
 
@@ -211,6 +212,19 @@ def test_finalize_node() -> None:
         active_query="q",
         answer="Final grounded answer [C1].",
         citations=["C1"],
+        evidence=[
+            EvidenceRecord(
+                chunk_id="c1",
+                document_id="d1",
+                title="Doc",
+                source_uri="docs/test.md",
+                text="Grounded answer",
+                retrieval_method="sparse",
+                retrieval_rank=1,
+                citation_id="C1",
+            )
+        ],
+        metadata={"citation_validation_failed": False},
     )
     updated = finalize_node(state.to_langgraph_dict())
     assert updated["status"] == RunStatus.COMPLETED

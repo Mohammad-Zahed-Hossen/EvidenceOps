@@ -142,6 +142,19 @@ def test_terminal_state_completed_requires_answer() -> None:
         active_query="q",
         answer="Valid grounded answer [C1].",
         citations=["C1"],
+        evidence=[
+            EvidenceRecord(
+                chunk_id="c1",
+                document_id="d1",
+                title="Doc",
+                source_uri="docs/test.md",
+                text="Grounded answer",
+                retrieval_method="sparse",
+                retrieval_rank=1,
+                citation_id="C1",
+            )
+        ],
+        metadata={"citation_validation_failed": False},
     )
     assert valid_completed.status == RunStatus.COMPLETED
 

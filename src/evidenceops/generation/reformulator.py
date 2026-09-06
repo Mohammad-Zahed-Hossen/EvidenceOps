@@ -41,6 +41,14 @@ class LocalQueryReformulator(QueryReformulator):
             # Fallback heuristic reformulation: append keywords or expand
             refined = f"{query.rstrip('?')} documentation usage"
 
+        if not refined.strip() or len(refined) > 1000:
+            raise ValueError("invalid reformulation length")
+        protected = re.findall(
+            r"`[^`]+`|\"[^\"]+\"|--[\w-]+|(?:[A-Za-z]:)?/[\w./-]+|\b\w+[_.]\w[\w.]*|\b[A-Z][A-Z0-9_]{2,}\b",
+            query,
+        )
+        if any(term not in refined for term in protected):
+            raise ValueError("reformulation lost an exact identifier")
         norm_refined = self._normalize(refined)
         if norm_refined in normalized_previous:
             raise ValueError(
