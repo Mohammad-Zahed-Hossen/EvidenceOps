@@ -92,8 +92,8 @@ class EvidenceOpsState(DomainModel):
         stripped = value.strip()
         if not stripped:
             raise ValueError("query must not be blank or whitespace only")
-        if len(stripped) > 1000:
-            raise ValueError("query length must not exceed 1000 characters")
+        if len(stripped) > 2000:
+            raise ValueError("query length must not exceed 2000 characters")
         return stripped
 
     @field_validator("sufficiency_score", "conflict_score", "latency_ms")

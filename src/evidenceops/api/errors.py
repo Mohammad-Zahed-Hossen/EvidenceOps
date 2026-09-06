@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
+from starlette.exceptions import HTTPException
 
 logger = logging.getLogger("evidenceops.api.errors")
 
@@ -41,8 +42,24 @@ def register_error_handlers(app: FastAPI) -> None:
         for err in exc.errors():
             sanitized_details.append(
                 {
-                    "loc": [str(loc_elem) for loc_elem in err.get("loc", [])],
-                    "msg": err.get("msg", "Invalid parameter"),
+                    "loc": [
+                        str(x)
+                        if x
+                        in {
+                            "body",
+                            "query",
+                            "require_citations",
+                            "max_iterations",
+                            "debug",
+                            "dataset_name",
+                            "systems",
+                            "limit",
+                            "retrieval_strategy",
+                        }
+                        else "field"
+                        for x in err.get("loc", [])
+                    ],
+                    "msg": "Invalid parameter",
                     "type": err.get("type", "value_error"),
                 }
             )
@@ -74,7 +91,14 @@ def register_error_handlers(app: FastAPI) -> None:
         response_payload = ApiErrorResponse(
             error=ErrorDetail(
                 code=error_code,
-                message=str(exc.detail),
+                message={
+                    404: "Resource not found.",
+                    409: "Evaluation already running or local work capacity exhausted.",
+                    429: "Query capacity exhausted.",
+                    503: "Local generator or vector store unavailable.",
+                    504: "Local generation timed out.",
+                    500: "An internal error occurred.",
+                }.get(exc.status_code, "Request rejected."),
                 request_id=request_id,
             )
         )

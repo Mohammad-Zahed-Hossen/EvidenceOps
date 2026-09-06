@@ -39,7 +39,7 @@ def test_compute_controller_diagnostics() -> None:
     assert report.total_decisions == 5
     # 4 out of 5 matched -> 80% accuracy
     assert report.accuracy == pytest.approx(0.80)
-    assert report.macro_f1 > 0.60
+    assert report.macro_f1 == pytest.approx(0.60)  # Include predicted-only classes.
     assert report.action_metrics[Action.STOP.value]["f1"] == pytest.approx(1.0)
     assert report.action_metrics[Action.ABSTAIN.value]["f1"] == pytest.approx(1.0)
     # Confusion matrix has entries

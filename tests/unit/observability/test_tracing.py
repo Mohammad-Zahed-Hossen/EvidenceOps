@@ -87,7 +87,7 @@ def test_trace_span_records_clean_spans_in_memory() -> None:
             "route": "two_step",
         },
     ) as span:
-        span.set_attribute("temp_val", 42)
+        span.set_attribute("latency_ms", 42)
 
     spans = exporter.get_finished_spans()
     assert len(spans) == 1
@@ -100,7 +100,7 @@ def test_trace_span_records_clean_spans_in_memory() -> None:
     assert "Secret query" not in str(attrs)
     assert attrs["iteration"] == 1
     assert attrs["route"] == "two_step"
-    assert attrs["temp_val"] == 42
+    assert attrs["latency_ms"] == 42
 
 
 def test_nested_spans_trace() -> None:

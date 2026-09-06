@@ -44,7 +44,7 @@ def test_blank_and_whitespace_query_rejection() -> None:
 
 
 def test_oversized_query_rejection() -> None:
-    oversized = "a" * 1001
+    oversized = "a" * 2001
     with pytest.raises(ValidationError):
         EvidenceOpsState(run_id="run-1", original_query=oversized, active_query="valid")
 

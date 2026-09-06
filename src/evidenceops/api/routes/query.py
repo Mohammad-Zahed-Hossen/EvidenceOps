@@ -23,7 +23,6 @@ from evidenceops.domain.errors import (
     VectorStoreError,
 )
 from evidenceops.graph.service import QueryRequest as InternalQueryRequest
-from evidenceops.observability.tracing import get_tracing_manager
 
 router = APIRouter(tags=["Query"])
 
@@ -42,46 +41,58 @@ async def post_query(
             detail="API query capacity exhausted. Please retry after the current query completes.",
         )
 
-    tracer = get_tracing_manager()
+    if not service.work_lock.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Query capacity exhausted")
 
-    async with service.query_semaphore:
-        with tracer.trace_span(
-            "api.query",
-            attributes={
-                "request.id": getattr(request.state, "request_id", ""),
-                "endpoint": "/v1/query",
-                "require_citations": body.require_citations,
-                "max_iterations": body.max_iterations,
-            },
-        ):
-            internal_request = InternalQueryRequest(
-                query=body.query,
-                require_citations=body.require_citations,
-                max_iterations=body.max_iterations,
-                temperature=0.0,
-            )
+    def execute() -> ApiQueryResponse:
+        try:
+            return _execute_and_record(body, service)
+        finally:
+            service.work_lock.release()
 
-            query_service = service.get_query_service()
+    worker = asyncio.create_task(asyncio.to_thread(execute))
+    # Retain the worker until it finishes even if the HTTP client disconnects.
+    service.query_worker = worker
+    worker.add_done_callback(lambda task: task.exception() if not task.cancelled() else None)
+    return await asyncio.shield(worker)
 
-            try:
-                resp = await asyncio.to_thread(query_service.execute_query, internal_request)
-            except VectorStoreError as exc:
-                service.metrics.record_qdrant_error()
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Vector store unavailable or unreachable.",
-                ) from exc
-            except OllamaTimeoutError as exc:
-                service.metrics.record_ollama_timeout()
-                raise HTTPException(
-                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                    detail="Local generation timed out.",
-                ) from exc
-            except OllamaUnavailableError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Local generator is unavailable.",
-                ) from exc
+
+def _execute_and_record(body: ApiQueryRequest, service: ApiService) -> ApiQueryResponse:
+    try:
+        internal_request = InternalQueryRequest(
+            query=body.query,
+            require_citations=body.require_citations,
+            max_iterations=body.max_iterations,
+            temperature=0.0,
+        )
+        resp = service.get_query_service().execute_query(internal_request)
+    except (VectorStoreError, OllamaTimeoutError, OllamaUnavailableError) as exc:
+        service.metrics.record_query("failed", 0.0, 0, None, 0)
+        if isinstance(exc, OllamaTimeoutError):
+            service.metrics.record_ollama_timeout()
+            raise HTTPException(status_code=504, detail="Generation timeout") from None
+        if isinstance(exc, VectorStoreError):
+            service.metrics.record_qdrant_error()
+        raise HTTPException(status_code=503, detail="Local service unavailable") from None
+    except Exception:
+        service.metrics.record_query("failed", 0.0, 0, None, 0)
+        raise HTTPException(status_code=500, detail="Query execution failed") from None
+
+    failure_status = None
+    if resp.abstention_reason == "generator_timeout":
+        failure_status = 504
+        service.metrics.record_ollama_timeout()
+    elif resp.abstention_reason in {
+        "generator_unavailable",
+        "retrieval_unavailable",
+        "reranker_unavailable",
+    }:
+        failure_status = 503
+    elif resp.status == RunStatus.FAILED:
+        failure_status = 500
+    if failure_status:
+        service.metrics.record_query("failed", resp.duration_ms, resp.retrieval_calls, None, 0)
+        raise HTTPException(status_code=failure_status, detail="Query execution failed")
 
     # Map citations
     citation_map = {e.citation_id: e for e in resp.evidence if getattr(e, "citation_id", None)}

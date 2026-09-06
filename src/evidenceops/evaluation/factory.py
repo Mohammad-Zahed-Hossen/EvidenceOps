@@ -44,18 +44,27 @@ def build_benchmark_systems(
 
     heuristic_ctrl = HeuristicRetrievalController()
 
-    learned_ctrl = LearnedRetrievalController(
-        model_path=controller_model_path,
-        fallback_controller=heuristic_ctrl,
-    )
-
     systems: list[BaseRAGSystem] = []
 
     if run_all or "NaiveDenseRAG" in requested:
-        systems.append(NaiveDenseRAG(dense_retriever=dense_route, generator_service=generator))
+        systems.append(
+            NaiveDenseRAG(
+                dense_retriever=dense_route,
+                generator_service=generator,
+                top_k=active_settings.top_k_context,
+                max_context_chars=active_settings.max_context_chars,
+            )
+        )
 
     if run_all or "BM25RAG" in requested:
-        systems.append(BM25RAG(sparse_retriever=sparse_route, generator_service=generator))
+        systems.append(
+            BM25RAG(
+                sparse_retriever=sparse_route,
+                generator_service=generator,
+                top_k=active_settings.top_k_context,
+                max_context_chars=active_settings.max_context_chars,
+            )
+        )
 
     if run_all or "TwoStepHybrid" in requested:
         systems.append(
@@ -64,6 +73,7 @@ def build_benchmark_systems(
                 reranker=reranker,
                 generator_service=generator,
                 top_k=active_settings.top_k_context,
+                max_context_chars=active_settings.max_context_chars,
             )
         )
 
@@ -85,6 +95,9 @@ def build_benchmark_systems(
         )
 
     if run_all or "LearnedEvidenceOps" in requested:
+        learned_ctrl = LearnedRetrievalController(
+            model_path=controller_model_path, fallback_controller=heuristic_ctrl
+        )
         learned_service = QueryService(
             sparse_retriever=sparse_route,
             dense_retriever=dense_route,

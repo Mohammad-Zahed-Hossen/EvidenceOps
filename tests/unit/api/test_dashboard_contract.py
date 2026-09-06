@@ -90,3 +90,22 @@ def test_dashboard_js_no_unsafe_innerhtml() -> None:
     assert ".innerHTML" not in app_js, (
         "Found .innerHTML usage in app.js. Use textContent or createElement for DOM safety."
     )
+
+
+def test_launcher_scripts_exist_and_safe() -> None:
+    """Verify that EvidenceOps.bat and scripts/run_app.ps1 exist with proper teardown."""
+    repo_root = Path(__file__).resolve().parents[3]
+    bat_file = repo_root / "EvidenceOps.bat"
+    ps1_file = repo_root / "scripts" / "run_app.ps1"
+
+    assert bat_file.exists(), "EvidenceOps.bat must exist in repo root."
+    assert ps1_file.exists(), "scripts/run_app.ps1 must exist."
+
+    bat_content = bat_file.read_text(encoding="utf-8")
+    assert "run_app.ps1" in bat_content
+
+    ps1_content = ps1_file.read_text(encoding="utf-8")
+    assert "docker compose up -d qdrant" in ps1_content
+    assert "docker compose stop qdrant" in ps1_content
+    assert "ollama stop" in ps1_content
+    assert "127.0.0.1:8080" in ps1_content

@@ -30,6 +30,7 @@ Phase 6 has not started.
 - Concurrency & bounds: Enforced `api_max_concurrent_queries=1`, `api_max_concurrent_evaluations=1`, query length `[2..2000]`, and `api_run_history_limit=100`.
 - Security & isolation: Loopback binding `127.0.0.1:8080`, sanitized error envelopes, complete traceback and local path redaction, zero external CDNs or external web fonts in dashboard.
 - Async evaluation runner: Bounded background evaluation execution via allowlist-validated `POST /v1/eval/run` and non-blocking polling via `GET /v1/eval/{evaluation_id}`.
+- Desktop automation: One-click launcher `EvidenceOps.bat` and `scripts/run_app.ps1` with automated Qdrant/Ollama/FastAPI startup, dedicated browser app mode, and clean teardown/memory reclaim.
 - Linting & Typing: Ruff check, ruff format, and Mypy passed with zero errors.
 
 ## Next action

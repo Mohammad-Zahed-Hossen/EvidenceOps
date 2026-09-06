@@ -14,6 +14,7 @@ from evidenceops.domain.models import DomainModel, EvidenceRecord
 from evidenceops.domain.state import EvidenceOpsState
 from evidenceops.generation.contracts import GeneratorClient, QueryReformulator
 from evidenceops.graph.workflow import build_evidenceops_graph
+from evidenceops.observability.tracing import trace_span
 from evidenceops.retrieval.contracts import Reranker, SparseRetriever
 from evidenceops.settings import Settings, get_settings
 
@@ -106,6 +107,12 @@ class QueryService:
 
     def execute_query(self, request: QueryRequest) -> QueryResponse:
         """Execute a query within strict resource and iteration bounds."""
+        with trace_span("query.run", {"query": request.query}) as span:
+            trace_id = request.trace_id or f"{span.get_span_context().trace_id:032x}"
+            traced_request = request.model_copy(update={"trace_id": trace_id})
+            return self._execute_query(traced_request)
+
+    def _execute_query(self, request: QueryRequest) -> QueryResponse:
         request = QueryRequest.model_validate(request.model_dump())
         run_id = request.run_id or f"run-{uuid.uuid4().hex[:12]}"
         t0 = time.perf_counter()

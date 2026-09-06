@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import statistics
 
+import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from evidenceops.evaluation.contracts import EvaluationSample
@@ -23,6 +24,24 @@ class SampleEvaluationScore(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    recall_at_10: float = 0.0
+    complete_support: bool | None = None
+    multi_source: bool = False
+    requires_abstention: bool = False
+    answered: bool = False
+    iterations: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    reviewed_atomic_fact_precision: float | None = None
+    reviewed_atomic_fact_recall: float | None = None
+    reviewed_citation_support: float | None = None
+    reviewed_citation_completeness: float | None = None
+    retrieval_metric_stage: str = "final_selected_context_not_raw_top10"
+    fact_metric_kind: str = "lexical_overlap_proxy"
+    reviewed_atomic_fact_f1: float | None = None
+    unreviewed_fact_count: int = 0
+    citation_metric_kind: str = "label_validity_and_gold_chunk_membership_not_entailment"
+    memory_scope: str = "process_python_allocations_during_call_excludes_native_and_ollama"
     sample_id: str
     system_name: str
     recall_at_1: float
@@ -49,7 +68,23 @@ class AggregateEvaluationReport(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    mean_recall_at_10: float = 0.0
+    multi_source_complete_support_rate: float | None = None
+    answer_coverage: float = 0.0
+    false_abstention_rate: float | None = None
+    unsupported_answer_rate: float | None = None
+    reviewed_unsafe_answer_rate: float | None = None
+    reviewed_selective_risk: float | None = None
+    mean_iterations: float | None = None
+    p50_latency_ms: float | None = None
+    p95_latency_ms: float | None = None
+    p99_latency_ms: float | None = None
+    mean_citation_recall: float = 0.0
     system_name: str
+    failed_count: int = 0
+    reviewed_atomic_fact_f1: float | None = None
+    unreviewed_fact_count: int = 0
+    fact_metric_kind: str = "lexical_overlap_proxy"
     sample_count: int
     mean_recall_at_1: float
     mean_recall_at_3: float
@@ -101,6 +136,17 @@ def evaluate_system_output(
 
     return SampleEvaluationScore(
         sample_id=sample.id,
+        recall_at_10=calculate_recall_at_k(retrieved_cids, gold_cids, k=10),
+        complete_support=set(gold_cids) <= set(retrieved_cids)
+        if gold_cids and not sample.requires_abstention
+        else None,
+        multi_source=len({c.doc_id for c in sample.gold_citations}) > 1,
+        requires_abstention=sample.requires_abstention,
+        answered=system_result.status == "completed",
+        iterations=system_result.iterations,
+        input_tokens=system_result.input_tokens,
+        output_tokens=system_result.output_tokens,
+        unreviewed_fact_count=len(sample.atomic_facts),
         system_name=system_result.system_name,
         recall_at_1=r1,
         recall_at_3=r3,
@@ -147,9 +193,34 @@ def aggregate_evaluation_scores(
         )
 
     count = len(scores)
+    answerable = [s for s in scores if not s.requires_abstention]
+    unsupported = [s for s in scores if s.requires_abstention]
+    multi = [s for s in scores if s.multi_source and s.complete_support is not None]
+    iterations = [s.iterations for s in scores if s.iterations is not None]
     return AggregateEvaluationReport(
         system_name=system_name,
         sample_count=count,
+        mean_recall_at_10=statistics.mean(s.recall_at_10 for s in scores),
+        multi_source_complete_support_rate=statistics.mean(
+            float(s.complete_support is True) for s in multi
+        )
+        if multi
+        else None,
+        answer_coverage=sum(s.answered for s in scores) / count,
+        false_abstention_rate=sum(s.abstention_outcome == "false_positive" for s in answerable)
+        / len(answerable)
+        if answerable
+        else None,
+        unsupported_answer_rate=sum(s.answered for s in unsupported) / len(unsupported)
+        if unsupported
+        else None,
+        mean_iterations=statistics.mean(iterations) if iterations else None,
+        p50_latency_ms=float(np.percentile([s.latency_ms for s in scores], 50)),
+        p95_latency_ms=float(np.percentile([s.latency_ms for s in scores], 95)),
+        p99_latency_ms=float(np.percentile([s.latency_ms for s in scores], 99)),
+        mean_citation_recall=statistics.mean(s.citation_recall for s in scores),
+        failed_count=sum(s.abstention_outcome == "execution_failed" for s in scores),
+        unreviewed_fact_count=sum(s.unreviewed_fact_count for s in scores),
         mean_recall_at_1=statistics.mean(s.recall_at_1 for s in scores),
         mean_recall_at_3=statistics.mean(s.recall_at_3 for s in scores),
         mean_recall_at_5=statistics.mean(s.recall_at_5 for s in scores),

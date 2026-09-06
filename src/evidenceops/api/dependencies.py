@@ -1,18 +1,19 @@
 """FastAPI dependency injection providers."""
 
-from typing import Annotated
+from typing import Annotated, cast
 
-from fastapi import Depends
+from fastapi import Depends, Request
 
-from evidenceops.api.service import ApiService, get_api_service
-from evidenceops.settings import Settings, get_settings
+from evidenceops.api.service import ApiService
+from evidenceops.settings import Settings
 
 
-def get_current_settings() -> Settings:
-    return get_settings()
+def get_current_settings(request: Request) -> Settings:
+    return cast(Settings, request.app.state.settings)
 
 
 def get_current_api_service(
+    request: Request,
     settings: Annotated[Settings, Depends(get_current_settings)],
 ) -> ApiService:
-    return get_api_service()
+    return cast(ApiService, request.app.state.api_service)

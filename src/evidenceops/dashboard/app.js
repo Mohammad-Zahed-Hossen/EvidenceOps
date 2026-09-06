@@ -99,13 +99,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const mResp = await fetch("/v1/metrics");
       const mData = await mResp.json();
-      if (mData.counters) {
-        metricQueries.textContent = String(mData.counters.query_requests_total || 0);
-        metricEvals.textContent = String(mData.counters.evaluation_jobs_total || 0);
-      }
-      if (mData.gauges && mData.gauges.avg_query_latency_ms !== undefined) {
-        metricLatency.textContent = `${Math.round(mData.gauges.avg_query_latency_ms)}ms`;
-      }
+      metricQueries.textContent = String(mData.total_queries ?? 0);
+      metricEvals.textContent = String(mData.evaluation_jobs_submitted ?? 0);
+      metricLatency.textContent = `${Math.round(mData.average_latency_ms ?? 0)}ms`;
+
     } catch (err) {
       // Metrics non-fatal
     }
@@ -130,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const payload = {
       query: query,
+      retrieval_strategy: strategySelect.value,
       max_iterations: parseInt(iterationsInput.value, 10) || 3,
       debug: debugToggle.checked,
     };
@@ -152,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
           errorMsg = `${errorMsg} (${detailMsgs})`;
         }
         answerStatusTag.className = "badge badge-danger";
-        answerStatusTag.textContent = "Error";
+        answerStatusTag.textContent = ({429: "Busy", 503: "Unavailable", 504: "Timeout"})[resp.status] || "Error";
         answerPlaceholder.classList.remove("hidden");
         answerPlaceholder.textContent = `Error (${resp.status}): ${errorMsg}`;
         answerText.classList.add("hidden");

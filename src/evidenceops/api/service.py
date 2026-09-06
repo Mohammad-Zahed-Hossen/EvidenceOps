@@ -85,6 +85,7 @@ class ApiMetricsAccumulator:
         self.abstained_queries = 0
         self.failed_queries = 0
         self.total_retrieval_calls = 0
+        self.total_latency_ms = 0.0
         self.latencies_ms: list[float] = []
         self.action_distribution: dict[str, int] = {}
         self.citation_count_distribution: dict[str, int] = {}
@@ -113,6 +114,7 @@ class ApiMetricsAccumulator:
                 self.failed_queries += 1
 
             self.total_retrieval_calls += retrieval_calls
+            self.total_latency_ms += latency_ms
 
             # Bounded latency samples (keep last 5000)
             if len(self.latencies_ms) >= 5000:
@@ -138,7 +140,7 @@ class ApiMetricsAccumulator:
     def snapshot(self) -> ApiMetricsResponse:
         with self._lock:
             uptime = max(0.0, time.time() - self._start_time)
-            avg_lat = float(np.mean(self.latencies_ms)) if self.latencies_ms else 0.0
+            avg_lat = self.total_latency_ms / self.total_queries if self.total_queries else 0.0
             p50 = (
                 float(np.percentile(self.latencies_ms, 50)) if len(self.latencies_ms) >= 1 else None
             )
@@ -186,6 +188,8 @@ class ApiService:
         self.metrics = ApiMetricsAccumulator(self.start_time)
 
         # Concurrency guards (created lazily in async loop or set to None)
+        self.query_worker: asyncio.Task[Any] | None = None
+        self.work_lock = threading.Lock()
         self._query_semaphore: asyncio.Semaphore | None = None
         self._eval_lock: asyncio.Lock | None = None
 
@@ -194,7 +198,7 @@ class ApiService:
         self._run_lock = threading.Lock()
 
         # In-memory evaluation jobs
-        self._evaluation_jobs: dict[str, ApiEvaluationJobResponse] = {}
+        self._evaluation_jobs: OrderedDict[str, ApiEvaluationJobResponse] = OrderedDict()
         self._eval_jobs_lock = threading.RLock()
 
         # Cached query service instance (created lazily on first query)
@@ -272,6 +276,18 @@ class ApiService:
 
     def register_evaluation_job(self, job: ApiEvaluationJobResponse) -> None:
         with self._eval_jobs_lock:
+            while len(self._evaluation_jobs) >= self.settings.api_run_history_limit:
+                oldest = next(
+                    (
+                        key
+                        for key, value in self._evaluation_jobs.items()
+                        if value.status in {"completed", "failed"}
+                    ),
+                    None,
+                )
+                if oldest is None:
+                    raise RuntimeError("Evaluation history is full")
+                del self._evaluation_jobs[oldest]
             self._evaluation_jobs[job.evaluation_id] = job
             self.metrics.evaluation_jobs_submitted += 1
             self.metrics.evaluation_jobs_running += 1
@@ -288,7 +304,7 @@ class ApiService:
     ) -> None:
         with self._eval_jobs_lock:
             job = self._evaluation_jobs.get(evaluation_id)
-            if job:
+            if job and job.status not in {"completed", "failed"}:
                 updates: dict[str, Any] = {"status": status}
                 if failure_code is not None:
                     updates["failure_code"] = failure_code
@@ -331,7 +347,8 @@ class ApiService:
         parsed_qdrant = urlparse(self.settings.qdrant_url)
         q_host = parsed_qdrant.hostname or "localhost"
         q_port = parsed_qdrant.port or 6333
-        q_ok = check_socket_connectivity(q_host, q_port)
+        readyz_url = f"{self.settings.qdrant_url}/readyz"
+        q_ok = check_socket_connectivity(q_host, q_port) and check_http_endpoint(readyz_url)
         q_msg = "Vector store connection reachable" if q_ok else "Vector store port unreachable"
         components["qdrant"] = HealthComponentStatus(
             name="qdrant",
@@ -352,7 +369,11 @@ class ApiService:
         # 3. Sparse index
         bm25_file = self.settings.bm25_data_dir / f"{self.settings.bm25_index_id}.json"
         bm25_ok = bm25_file.is_file()
-        bm25_msg = "Sparse index artifact verified" if bm25_ok else "Sparse index file missing"
+        bm25_msg = (
+            "Sparse index file present (contents not checked)"
+            if bm25_ok
+            else "Sparse index file missing"
+        )
         components["sparse_index"] = HealthComponentStatus(
             name="sparse_index",
             status="ready" if bm25_ok else "unavailable",

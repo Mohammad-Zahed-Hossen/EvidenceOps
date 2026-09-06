@@ -34,7 +34,7 @@ class SearchDocumentationRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    query: str = Field(min_length=2, max_length=1000)
+    query: str = Field(min_length=2, max_length=2000)
     mode: Literal["sparse", "dense", "hybrid"] = "hybrid"
     top_k: int = Field(default=6, ge=1, le=20)
     source_type: str | None = Field(default=None, min_length=1, max_length=128)

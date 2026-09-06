@@ -7,6 +7,9 @@ import time
 import tracemalloc
 import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+from functools import wraps
+from threading import Lock
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,6 +18,7 @@ from evidenceops.domain.enums import RunStatus
 from evidenceops.domain.models import ChunkRecord
 from evidenceops.evaluation.contracts import EvaluationSample
 from evidenceops.evidence.adapter import adapt_retrieval_results
+from evidenceops.evidence.citations import validate_answer_citations
 from evidenceops.evidence.context import pack_evidence_context
 from evidenceops.generation.contracts import GeneratorClient
 from evidenceops.generation.prompts import build_grounded_prompt
@@ -39,6 +43,9 @@ class SystemExecutionResult(BaseModel):
     retrieval_calls: int = 0
     generation_calls: int = 0
     peak_memory_mb: float = 0.0
+    iterations: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
 
 class BaseRAGSystem(ABC):
@@ -85,6 +92,9 @@ def _to_retrieval_results(hits: list[Any], method: str) -> list[RetrievalResult]
     """Normalize heterogeneous hit objects into RetrievalResult objects."""
     results = []
     for rank, hit in enumerate(hits, start=1):
+        if isinstance(hit, RetrievalResult):
+            results.append(hit)
+            continue
         cid_val = getattr(hit, "chunk_id", None) or getattr(hit, "id", None)
         cid = str(cid_val) if cid_val and not _is_mock(cid_val) else f"c_{rank}"
 
@@ -132,6 +142,31 @@ def _to_retrieval_results(hits: list[Any], method: str) -> list[RetrievalResult]
     return results
 
 
+_MEMORY_LOCK = Lock()
+
+
+def measured_execution(
+    fn: Callable[..., SystemExecutionResult],
+) -> Callable[..., SystemExecutionResult]:
+    """Measure process Python allocations during one call; always restore tracing."""
+
+    @wraps(fn)
+    def wrapped(*args: Any, **kwargs: Any) -> SystemExecutionResult:
+        if not _MEMORY_LOCK.acquire(blocking=False):
+            raise RuntimeError("Benchmark measurement already active")
+        owned = not tracemalloc.is_tracing()
+        try:
+            if owned:
+                tracemalloc.start()
+            return fn(*args, **kwargs)
+        finally:
+            if owned:
+                tracemalloc.stop()
+            _MEMORY_LOCK.release()
+
+    return wrapped
+
+
 class NaiveDenseRAG(BaseRAGSystem):
     """Baseline: Single dense retrieval pass, fixed top-k, single generation pass."""
 
@@ -140,7 +175,8 @@ class NaiveDenseRAG(BaseRAGSystem):
         qdrant_store: Any = None,
         fastembed_service: Any = None,
         generator_service: GeneratorClient | None = None,
-        top_k: int = 5,
+        top_k: int = 6,
+        max_context_chars: int = 24000,
         dense_retriever: Any = None,
     ) -> None:
         self.qdrant_store = qdrant_store
@@ -148,11 +184,12 @@ class NaiveDenseRAG(BaseRAGSystem):
         self.dense_retriever = dense_retriever
         self.generator_service = generator_service
         self.top_k = top_k
+        self.max_context_chars = max_context_chars
         self.system_name = "NaiveDenseRAG"
 
+    @measured_execution
     def execute(self, sample: EvaluationSample) -> SystemExecutionResult:
         run_id = str(uuid.uuid4())
-        tracemalloc.start()
         start_time = time.perf_counter()
 
         retrieval_calls = 0
@@ -173,8 +210,11 @@ class NaiveDenseRAG(BaseRAGSystem):
         retrieved_chunk_ids = [e.chunk_id for e in evidence_records]
 
         # Step 2: Pack context
-        packed = pack_evidence_context(evidence_records, max_chunks=self.top_k)
+        packed = pack_evidence_context(
+            evidence_records, max_chunks=self.top_k, max_characters=self.max_context_chars
+        )
         citation_to_chunk = {e.citation_id: e.chunk_id for e in packed.selected_evidence}
+        retrieved_chunk_ids = [e.chunk_id for e in packed.selected_evidence]
 
         # Step 3: Generation (1 call)
         if not packed.selected_evidence or self.generator_service is None:
@@ -190,13 +230,16 @@ class NaiveDenseRAG(BaseRAGSystem):
             if _detect_abstention_text(gen_text):
                 status = RunStatus.ABSTAINED
                 abstention_reason = "generator_abstained"
+            elif not validate_answer_citations(gen_text, set(citation_to_chunk)).is_valid:
+                status = RunStatus.ABSTAINED
+                abstention_reason = "invalid_citations"
+                gen_text = DEFAULT_ABSTENTION_ANSWER
             else:
                 status = RunStatus.COMPLETED
                 abstention_reason = None
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
         _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
 
         return SystemExecutionResult(
             run_id=run_id,
@@ -222,18 +265,20 @@ class BM25RAG(BaseRAGSystem):
         self,
         sparse_store: Any = None,
         generator_service: GeneratorClient | None = None,
-        top_k: int = 5,
+        top_k: int = 6,
+        max_context_chars: int = 24000,
         sparse_retriever: Any = None,
     ) -> None:
         self.sparse_store = sparse_store
         self.sparse_retriever = sparse_retriever
         self.generator_service = generator_service
         self.top_k = top_k
+        self.max_context_chars = max_context_chars
         self.system_name = "BM25RAG"
 
+    @measured_execution
     def execute(self, sample: EvaluationSample) -> SystemExecutionResult:
         run_id = str(uuid.uuid4())
-        tracemalloc.start()
         start_time = time.perf_counter()
 
         retrieval_calls = 0
@@ -253,8 +298,11 @@ class BM25RAG(BaseRAGSystem):
         retrieved_chunk_ids = [e.chunk_id for e in evidence_records]
 
         # Step 2: Pack context
-        packed = pack_evidence_context(evidence_records, max_chunks=self.top_k)
+        packed = pack_evidence_context(
+            evidence_records, max_chunks=self.top_k, max_characters=self.max_context_chars
+        )
         citation_to_chunk = {e.citation_id: e.chunk_id for e in packed.selected_evidence}
+        retrieved_chunk_ids = [e.chunk_id for e in packed.selected_evidence]
 
         # Step 3: Generation (1 call)
         if not packed.selected_evidence or self.generator_service is None:
@@ -270,13 +318,16 @@ class BM25RAG(BaseRAGSystem):
             if _detect_abstention_text(gen_text):
                 status = RunStatus.ABSTAINED
                 abstention_reason = "generator_abstained"
+            elif not validate_answer_citations(gen_text, set(citation_to_chunk)).is_valid:
+                status = RunStatus.ABSTAINED
+                abstention_reason = "invalid_citations"
+                gen_text = DEFAULT_ABSTENTION_ANSWER
             else:
                 status = RunStatus.COMPLETED
                 abstention_reason = None
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
         _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
 
         return SystemExecutionResult(
             run_id=run_id,
@@ -303,17 +354,19 @@ class TwoStepHybrid(BaseRAGSystem):
         hybrid_retriever: Any,
         reranker: Any,
         generator_service: GeneratorClient,
-        top_k: int = 5,
+        top_k: int = 6,
+        max_context_chars: int = 24000,
     ) -> None:
         self.hybrid_retriever = hybrid_retriever
         self.reranker = reranker
         self.generator_service = generator_service
         self.top_k = top_k
+        self.max_context_chars = max_context_chars
         self.system_name = "TwoStepHybrid"
 
+    @measured_execution
     def execute(self, sample: EvaluationSample) -> SystemExecutionResult:
         run_id = str(uuid.uuid4())
-        tracemalloc.start()
         start_time = time.perf_counter()
 
         retrieval_calls = 0
@@ -331,19 +384,22 @@ class TwoStepHybrid(BaseRAGSystem):
         retrieval_results = _to_retrieval_results(all_hits, method="hybrid")
         evidence_records = list(adapt_retrieval_results(retrieval_results))
 
+        unique_results = tuple({r.chunk_id: r for r in retrieval_results}.values())
+
         # Rerank if reranker is provided and hits exist
         if self.reranker and evidence_records:
-            reranked_hits = self.reranker.rerank(
-                sample.question, evidence_records, limit=self.top_k
-            )
+            reranked_hits = self.reranker.rerank(sample.question, unique_results, limit=self.top_k)
             retrieval_results = _to_retrieval_results(reranked_hits, method="rerank")
             evidence_records = list(adapt_retrieval_results(retrieval_results))
 
         retrieved_chunk_ids = [e.chunk_id for e in evidence_records]
 
         # Step 3: Pack context
-        packed = pack_evidence_context(evidence_records, max_chunks=self.top_k)
+        packed = pack_evidence_context(
+            evidence_records, max_chunks=self.top_k, max_characters=self.max_context_chars
+        )
         citation_to_chunk = {e.citation_id: e.chunk_id for e in packed.selected_evidence}
+        retrieved_chunk_ids = [e.chunk_id for e in packed.selected_evidence]
 
         # Step 4: Generation (1 call)
         if not packed.selected_evidence:
@@ -359,13 +415,16 @@ class TwoStepHybrid(BaseRAGSystem):
             if _detect_abstention_text(gen_text):
                 status = RunStatus.ABSTAINED
                 abstention_reason = "generator_abstained"
+            elif not validate_answer_citations(gen_text, set(citation_to_chunk)).is_valid:
+                status = RunStatus.ABSTAINED
+                abstention_reason = "invalid_citations"
+                gen_text = DEFAULT_ABSTENTION_ANSWER
             else:
                 status = RunStatus.COMPLETED
                 abstention_reason = None
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
         _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
 
         return SystemExecutionResult(
             run_id=run_id,
@@ -395,9 +454,9 @@ class EvidenceOpsSystem(BaseRAGSystem):
         self.query_service = query_service
         self.system_name = system_name
 
+    @measured_execution
     def execute(self, sample: EvaluationSample) -> SystemExecutionResult:
         run_id = str(uuid.uuid4())
-        tracemalloc.start()
         start_time = time.perf_counter()
 
         from evidenceops.graph.service import QueryRequest
@@ -407,7 +466,6 @@ class EvidenceOpsSystem(BaseRAGSystem):
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
         _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
 
         citation_to_chunk = {
             e.citation_id: e.chunk_id for e in resp.evidence if getattr(e, "citation_id", None)
@@ -427,5 +485,6 @@ class EvidenceOpsSystem(BaseRAGSystem):
             latency_ms=latency_ms if latency_ms > 0 else resp.duration_ms,
             retrieval_calls=resp.retrieval_calls,
             generation_calls=resp.generation_attempts,
+            iterations=resp.iterations,
             peak_memory_mb=peak_mem / (1024 * 1024),
         )

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import time
 import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -10,6 +12,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from evidenceops.domain.enums import RunStatus
 from evidenceops.evaluation.artifacts import (
     BenchmarkRunManifest,
     generate_leaderboard_markdown,
@@ -24,7 +27,7 @@ from evidenceops.evaluation.scoring import (
     evaluate_system_output,
 )
 from evidenceops.evaluation.statistics import BootstrapResult, compute_paired_bootstrap
-from evidenceops.evaluation.systems import BaseRAGSystem
+from evidenceops.evaluation.systems import BaseRAGSystem, SystemExecutionResult
 
 
 class BenchmarkRunResult(BaseModel):
@@ -68,7 +71,19 @@ class BenchmarkRunner:
             sys_scores: list[SampleEvaluationScore] = []
 
             for sample in samples:
-                exec_result = system.execute(sample)
+                started = time.perf_counter()
+                try:
+                    exec_result = system.execute(sample)
+                except Exception:
+                    exec_result = SystemExecutionResult(
+                        run_id=str(uuid.uuid4()),
+                        sample_id=sample.id,
+                        system_name=sys_name,
+                        generated_answer="",
+                        status=RunStatus.FAILED,
+                        abstention_reason="execution_failed",
+                        latency_ms=(time.perf_counter() - started) * 1000,
+                    )
                 score = evaluate_system_output(sample, exec_result)
                 sys_scores.append(score)
                 all_sample_scores.append(score)
@@ -101,7 +116,7 @@ class BenchmarkRunner:
                         [s.ndcg_at_10 for s in sys_scores],
                     ),
                     (
-                        "Fact_F1",
+                        "Lexical_proxy_F1",
                         [s.atomic_fact_f1 for s in base_scores],
                         [s.atomic_fact_f1 for s in sys_scores],
                     ),
@@ -144,6 +159,29 @@ class BenchmarkRunner:
             system_reports=system_reports,
             sample_scores=all_sample_scores,
             environment_profile=env_profile,
+            bootstrap_results=bootstrap_results,
+            input_identity={
+                "sample_sha256": hashlib.sha256(
+                    json.dumps(
+                        [
+                            s.model_dump(mode="json")
+                            for s in sorted(samples, key=lambda item: item.id)
+                        ],
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=False,
+                    ).encode()
+                ).hexdigest(),
+                "sample_ids": [s.id for s in samples],
+                "systems": {
+                    getattr(s, "system_name", type(s).__name__): getattr(
+                        s, "benchmark_identity", {"status": "unavailable"}
+                    )
+                    for s in systems
+                },
+                "human_review": "pending",
+                "held_out_claim_eligible": False,
+            },
         )
         leaderboard_md = generate_leaderboard_markdown(
             system_reports=system_reports,

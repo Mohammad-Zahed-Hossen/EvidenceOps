@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import socket
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -17,16 +18,65 @@ from opentelemetry.trace import Span, Tracer
 
 from evidenceops.settings import get_settings
 
-SENSITIVE_KEY_SUBSTRINGS: set[str] = {
+TEXT_KEYS = {
     "query",
+    "original_query",
+    "active_query",
     "prompt",
     "answer",
-    "chunk",
-    "body",
     "content",
-    "document",
-    "secret",
-    "text",
+    "chunk_text",
+    "evidence_body",
+}
+COUNTER_KEYS = {
+    "iteration",
+    "retrieval_calls",
+    "latency_ms",
+    "is_sufficient",
+    "evidence_count",
+    "retrieval.calls",
+    "retrieval.candidates",
+    "retrieval.top_k",
+    "retrieval.cache_hit",
+    "controller.confidence",
+    "generation.input_tokens_estimated",
+    "generation.output_tokens_estimated",
+    "evidence.sufficiency_score",
+    "evidence.conflict_score",
+    "answer.citation_count",
+    "run.abstained",
+    "simulated.cloud_cost_usd",
+}
+ENUM_VALUES = {
+    "route": {"direct", "sparse", "dense", "hybrid", "two_step"},
+    "action": {
+        "retrieve",
+        "direct_answer",
+        "retrieve_sparse",
+        "retrieve_dense",
+        "retrieve_hybrid",
+        "rerank",
+        "reformulate",
+        "stop",
+        "abstain",
+    },
+    "status": {"created", "running", "completed", "abstained", "failed"},
+    "node_name": {
+        name + "_node"
+        for name in (
+            "initialize",
+            "extract_features",
+            "controller_decide",
+            "retrieve",
+            "rerank",
+            "evaluate_evidence",
+            "reformulate",
+            "generate",
+            "validate_citations",
+            "abstain",
+            "finalize",
+        )
+    },
 }
 
 
@@ -52,33 +102,16 @@ def sanitize_attributes(attributes: dict[str, Any]) -> dict[str, Any]:
     and enum names.
     """
     clean: dict[str, Any] = {}
-    policy = RedactionPolicy()
-
-    for k, v in attributes.items():
-        k_lower = k.lower()
-        is_sensitive = any(sub in k_lower for sub in SENSITIVE_KEY_SUBSTRINGS)
-
-        if is_sensitive:
-            if isinstance(v, str):
-                clean[f"{k}_hash"] = policy.hash_text(v)
-                clean[f"{k}_token_count"] = policy.estimate_tokens(v)
-                clean[f"{k}_char_length"] = len(v)
-            elif isinstance(v, list):
-                clean[f"{k}_count"] = len(v)
-        else:
-            if isinstance(v, (int, float, bool)):
-                clean[k] = v
-            elif isinstance(v, str):
-                # Only keep short identifier strings (<= 64 chars) that do not look like sentences
-                if len(v) <= 64 and "\n" not in v:
-                    clean[k] = v
-                else:
-                    clean[f"{k}_hash"] = policy.hash_text(v)
-                    clean[f"{k}_char_length"] = len(v)
-            elif v is None:
-                continue
-            else:
-                clean[f"{k}_type"] = type(v).__name__
+    for key, value in attributes.items():
+        if key in TEXT_KEYS and isinstance(value, str):
+            clean[f"{key}_hash"] = RedactionPolicy.hash_text(value)
+            clean[f"{key}_token_count"] = RedactionPolicy.estimate_tokens(value)
+            clean[f"{key}_char_length"] = len(value)
+        elif key in COUNTER_KEYS and isinstance(value, (int, float, bool)):
+            if math.isfinite(value):
+                clean[key] = value
+        elif key in ENUM_VALUES and isinstance(value, str) and value in ENUM_VALUES[key]:
+            clean[key] = value
 
     return clean
 
@@ -93,6 +126,49 @@ def _is_otlp_endpoint_available(endpoint_url: str) -> bool:
             return True
     except OSError:
         return False
+
+
+class RedactedSpan(Span):
+    """Prevent post-creation mutations from bypassing the attribute allowlist."""
+
+    def __init__(self, span: Span) -> None:
+        self._span = span
+
+    def get_span_context(self) -> Any:
+        return self._span.get_span_context()
+
+    def is_recording(self) -> bool:
+        return self._span.is_recording()
+
+    def end(self, end_time: int | None = None) -> None:
+        self._span.end(end_time)
+
+    def set_attribute(self, key: str, value: Any) -> None:
+        self.set_attributes({key: value})
+
+    def set_attributes(self, attributes: Any) -> None:
+        self._span.set_attributes(sanitize_attributes(dict(attributes)))
+
+    def add_event(self, name: str, attributes: Any = None, timestamp: int | None = None) -> None:
+        # Events are not part of the approved telemetry contract.
+        return None
+
+    def record_exception(
+        self,
+        exception: BaseException,
+        attributes: Any = None,
+        timestamp: int | None = None,
+        escaped: bool = False,
+    ) -> None:
+        return None
+
+    def set_status(self, status: Any, description: str | None = None) -> None:
+        from opentelemetry.trace import Status
+
+        self._span.set_status(Status(getattr(status, "status_code", status)))
+
+    def update_name(self, name: str) -> None:
+        return None
 
 
 class TracingManager:
@@ -136,8 +212,10 @@ class TracingManager:
     ) -> Generator[Span, None, None]:
         """Execute block within an OpenTelemetry span with sanitized attributes."""
         clean_attrs = sanitize_attributes(attributes or {})
-        with self._tracer.start_as_current_span(name, attributes=clean_attrs) as span:
-            yield span
+        with self._tracer.start_as_current_span(
+            name, attributes=clean_attrs, record_exception=False, set_status_on_exception=False
+        ) as span:
+            yield RedactedSpan(span)
 
 
 _GLOBAL_TRACING_MANAGER: TracingManager | None = None
@@ -170,7 +248,7 @@ def extract_node_span_attributes(state: dict[str, Any], node_name: str) -> dict[
     """Generate safe, strictly-redacted span attributes from graph state."""
     raw_query = str(state.get("active_query", state.get("original_query", "")))
     route = str(state.get("route", ""))
-    action = str(state.get("action", ""))
+    action = str(state.get("next_action", ""))
     status = str(state.get("status", ""))
     evidence = state.get("evidence", [])
 
@@ -180,7 +258,7 @@ def extract_node_span_attributes(state: dict[str, Any], node_name: str) -> dict[
         "route": route,
         "action": action,
         "status": status,
-        "iteration": int(state.get("retrieval_iterations", state.get("iteration", 0))),
+        "iteration": int(state.get("iteration_count", 0)),
         "retrieval_calls": int(state.get("retrieval_calls", 0)),
         "evidence_count": len(evidence) if isinstance(evidence, list) else 0,
     }

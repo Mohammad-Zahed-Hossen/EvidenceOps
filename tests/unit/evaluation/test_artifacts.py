@@ -71,8 +71,8 @@ def test_generate_leaderboard_markdown() -> None:
     assert "# EvidenceOps Benchmark Leaderboard" in md
     assert "NaiveDenseRAG" in md
     assert "HeuristicEvidenceOps" in md
-    assert "| System | Recall@1 | MRR@10 | nDCG@10 | Fact F1 |" in md
-    assert "Statistical Significance" in md
+    assert "| System | Recall@1 | MRR@10 | nDCG@10 | Lexical proxy F1 |" in md
+    assert "Paired diagnostics" in md
 
 
 def test_generate_run_manifest() -> None:

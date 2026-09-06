@@ -27,7 +27,7 @@ def get_run_summary(
     """Retrieve redacted run execution details from the bounded in-memory registry."""
     if not RUN_ID_PATTERN.match(run_id):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Invalid run ID format.",
         )
 

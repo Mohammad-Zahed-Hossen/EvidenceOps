@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
-import joblib
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 from evidenceops.controller.features import RegexFeatureExtractor
 from evidenceops.controller.oracle import OracleSupervisor
-from evidenceops.domain.enums import EvidenceStatus
+from evidenceops.domain.enums import Action, EvidenceStatus
 from evidenceops.domain.models import EvidenceRecord
 from evidenceops.domain.state import EvidenceOpsState, QueryFeatures
 from evidenceops.evaluation.contracts import DatasetSplit, EvaluationSample
@@ -127,14 +128,59 @@ class ControllerTrainingPipeline:
         return model
 
     def save_model(self, model: Any, path: Path | str) -> None:
-        """Serialize model to disk."""
-        target_path = Path(path)
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(model, target_path)
+        """Save only numeric linear parameters, never Python executable objects."""
+        payload = {
+            "schema_version": 1,
+            "classes": model.classes_.tolist(),
+            "coefficients": model.coef_.tolist(),
+            "intercepts": model.intercept_.tolist(),
+            "feature_count": int(model.n_features_in_),
+        }
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            json.dumps(payload, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
+        )
 
     def load_model(self, path: Path | str) -> Any:
-        """Deserialize model from disk."""
-        source_path = Path(path)
-        if not source_path.is_file():
-            raise FileNotFoundError(f"Model file not found: {source_path}")
-        return joblib.load(source_path)
+        """Load bounded JSON parameters. Legacy pickle/joblib files are rejected."""
+        source = Path(path)
+        with source.open("rb") as stream:
+            raw = stream.read(16385)
+        if len(raw) > 16384:
+            raise ValueError("Controller artifact exceeds size limit")
+        try:
+            payload = json.loads(raw)
+            if set(payload) != {
+                "schema_version",
+                "classes",
+                "coefficients",
+                "intercepts",
+                "feature_count",
+            }:
+                raise ValueError("Invalid controller fields")
+            classes = payload["classes"]
+            count = payload["feature_count"]
+            if payload["schema_version"] != 1 or type(count) is not int or not 1 <= count <= 10:
+                raise ValueError("Invalid controller schema")
+            if not isinstance(classes, list) or not 2 <= len(classes) <= len(Action):
+                raise ValueError("Invalid controller classes")
+            if len(set(classes)) != len(classes) or any(
+                c not in {a.value for a in Action} for c in classes
+            ):
+                raise ValueError("Invalid controller action")
+            coef = np.asarray(payload["coefficients"], dtype=float)
+            intercept = np.asarray(payload["intercepts"], dtype=float)
+            rows = 1 if len(classes) == 2 else len(classes)
+            if coef.shape != (rows, count) or intercept.shape != (rows,):
+                raise ValueError("Invalid controller dimensions")
+            if not np.isfinite(coef).all() or not np.isfinite(intercept).all():
+                raise ValueError("Nonfinite controller parameters")
+        except (TypeError, KeyError, UnicodeError, ValueError) as exc:
+            raise ValueError("Invalid controller JSON artifact") from exc
+        model = LogisticRegression()
+        model.classes_ = np.asarray(classes)
+        model.coef_ = coef
+        model.intercept_ = intercept
+        model.n_features_in_ = count
+        return model

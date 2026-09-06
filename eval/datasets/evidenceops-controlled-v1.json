@@ -9,7 +9,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_status_codes.md",
+        "doc_id": "c1ec403f4e652fbb6f22e6c370f87f331cc8f3d48f2f929b9ee6c118bac0a947",
         "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
       }
     ],
@@ -42,7 +42,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
       }
     ],
@@ -70,7 +70,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       }
     ],
@@ -98,7 +98,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
       }
     ],
@@ -126,7 +126,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
       }
     ],
@@ -154,7 +154,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       }
     ],
@@ -182,7 +182,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
       }
     ],
@@ -210,7 +210,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
       }
     ],
@@ -238,7 +238,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
       }
     ],
@@ -266,7 +266,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
       }
     ],
@@ -294,7 +294,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -322,7 +322,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
       }
     ],
@@ -350,7 +350,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8"
       }
     ],
@@ -378,7 +378,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
       }
     ],
@@ -406,7 +406,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
       }
     ],
@@ -434,7 +434,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
       }
     ],
@@ -462,7 +462,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -490,7 +490,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
       }
     ],
@@ -518,7 +518,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
       }
     ],
@@ -546,7 +546,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
       }
     ],
@@ -574,7 +574,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       }
     ],
@@ -602,7 +602,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -630,7 +630,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       }
     ],
@@ -658,7 +658,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
       }
     ],
@@ -686,7 +686,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
       }
     ],
@@ -714,7 +714,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "ece61b5be455fea5c3eaa10dccb96c5b5f612e5597c55f39a711021fa8f000e8"
       }
     ],
@@ -742,7 +742,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -770,7 +770,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
       }
     ],
@@ -798,7 +798,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -826,7 +826,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       }
     ],
@@ -855,11 +855,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_status_codes.md",
+        "doc_id": "c1ec403f4e652fbb6f22e6c370f87f331cc8f3d48f2f929b9ee6c118bac0a947",
         "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
       },
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
       }
     ],
@@ -894,11 +894,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       }
     ],
@@ -933,11 +933,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
       },
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -972,11 +972,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       },
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -1011,11 +1011,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
       },
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
       }
     ],
@@ -1049,11 +1049,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
       },
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "a0e885687cd005b1dbfe5d5612b0f17f2c909ad5bd939f6d5dec634b89af017a"
       }
     ],
@@ -1087,11 +1087,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
       },
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
       }
     ],
@@ -1125,11 +1125,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       },
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
       }
     ],
@@ -1163,11 +1163,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
       }
     ],
@@ -1201,11 +1201,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       },
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -1240,11 +1240,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       },
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "7867b59b73067f264ff421980552f57d61a506482eaa08f822b35172e29eebe8"
       }
     ],
@@ -1278,11 +1278,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
       },
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
       }
     ],
@@ -1316,11 +1316,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
       }
     ],
@@ -1354,11 +1354,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
       },
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
       }
     ],
@@ -1392,11 +1392,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       },
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
       }
     ],
@@ -1430,11 +1430,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
       },
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -1469,11 +1469,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_status_codes.md",
+        "doc_id": "c1ec403f4e652fbb6f22e6c370f87f331cc8f3d48f2f929b9ee6c118bac0a947",
         "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
       },
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
       }
     ],
@@ -1508,11 +1508,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
       }
     ],
@@ -1546,11 +1546,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
       },
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       }
     ],
@@ -1584,11 +1584,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       },
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -1623,11 +1623,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
       },
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
       }
     ],
@@ -1661,11 +1661,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
       }
     ],
@@ -1700,11 +1700,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
       },
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
       }
     ],
@@ -1739,11 +1739,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
       },
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
       }
     ],
@@ -1777,11 +1777,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       },
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
       }
     ],
@@ -1814,7 +1814,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
       }
     ],
@@ -1847,7 +1847,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -1880,7 +1880,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       }
     ],
@@ -1914,11 +1914,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       },
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
       }
     ],
@@ -1952,11 +1952,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
       },
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
       }
     ],
@@ -1989,7 +1989,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -2023,11 +2023,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
       },
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
       }
     ],
@@ -2060,7 +2060,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
       }
     ],
@@ -2094,11 +2094,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
       }
     ],
@@ -2131,7 +2131,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_dependencies.md",
+        "doc_id": "6acdd100a2a913c13c34356df50ba60dce36dbfc908787a1acf9769b6d2e8e4e",
         "chunk_id": "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
       }
     ],
@@ -2164,7 +2164,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -2197,7 +2197,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       }
     ],
@@ -2231,11 +2231,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       },
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
       }
     ],
@@ -2269,11 +2269,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
       },
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
       }
     ],
@@ -2307,11 +2307,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2"
       },
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
       }
     ],
@@ -2346,11 +2346,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
       }
     ],
@@ -2383,7 +2383,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
       }
     ],
@@ -2416,7 +2416,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       }
     ],
@@ -2450,11 +2450,11 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
       },
       {
-        "doc_id": "qdrant_payload_filtering.md",
+        "doc_id": "2cceb1a2efa1f21af78fe9f9a46172b8b48c2c8a82c47c3fa8470d0cb7a73c69",
         "chunk_id": "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
       }
     ],
@@ -2487,7 +2487,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastembed_quickstart.md",
+        "doc_id": "98c02c6490b2cbe682c9784b79624268881b442c25a1f11b6d84f83b5839f1f6",
         "chunk_id": "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
       }
     ],
@@ -2520,7 +2520,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
       }
     ],
@@ -2553,7 +2553,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_status_codes.md",
+        "doc_id": "c1ec403f4e652fbb6f22e6c370f87f331cc8f3d48f2f929b9ee6c118bac0a947",
         "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
       }
     ],
@@ -2586,7 +2586,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
       }
     ],
@@ -2619,7 +2619,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_thinking_in_graphs.md",
+        "doc_id": "ebceb42e9e1f7948e05b631bd16fac957ab93d0336dc4173402ab0e2c50b12ce",
         "chunk_id": "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
       }
     ],
@@ -2652,7 +2652,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "qdrant_collections.md",
+        "doc_id": "e21a7a3374cdacd71996cfa80124c74e4327f419fd12814c6e299ce2da422a07",
         "chunk_id": "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
       }
     ],
@@ -2685,7 +2685,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "ollama_api_reference.md",
+        "doc_id": "b1306441184aee8476bdd9265ef112cc4d7da52feafa26184464096ebf132c3b",
         "chunk_id": "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
       }
     ],
@@ -2718,7 +2718,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "pydantic_settings.md",
+        "doc_id": "efc3ec5f413e301d5beb3656b9c8ed19130021f0678349a1a4e2e8ada8609ce6",
         "chunk_id": "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
       }
     ],
@@ -2746,7 +2746,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "langgraph_persistence.md",
+        "doc_id": "4ceffe6ad9204f7fbd90b338723a99aa3728f92becbcadf035b3a4fbac37503f",
         "chunk_id": "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
       }
     ],
@@ -2774,7 +2774,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "fastapi_status_codes.md",
+        "doc_id": "c1ec403f4e652fbb6f22e6c370f87f331cc8f3d48f2f929b9ee6c118bac0a947",
         "chunk_id": "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
       }
     ],
@@ -2807,7 +2807,7 @@
     ],
     "gold_citations": [
       {
-        "doc_id": "flashrank_docs.md",
+        "doc_id": "4c52707d36a1196d8b85c49a9a40827be39b611571885f6a11ceeed18a60420f",
         "chunk_id": "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
       }
     ],

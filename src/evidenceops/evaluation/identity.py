@@ -65,6 +65,10 @@ def verify_dataset_integrity(dataset_path: Path | str, identity_path: Path | str
         if len(samples) != expected_identity.sample_count:
             return False
 
+        if dict(Counter(s.split.value for s in samples)) != expected_identity.split_counts:
+            return False
+        if dict(Counter(s.type.value for s in samples)) != expected_identity.type_counts:
+            return False
         return True
     except Exception:
         return False

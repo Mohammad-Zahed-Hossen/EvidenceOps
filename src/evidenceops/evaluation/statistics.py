@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from itertools import product
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict
 
@@ -37,6 +39,8 @@ def compute_paired_bootstrap(
             f"{len(system_scores)} system scores"
         )
 
+    if not 1 <= n_resamples <= 10000 or len(baseline_scores) > 10000:
+        raise ValueError("Resampling bounds exceeded")
     n = len(baseline_scores)
     if n == 0:
         return BootstrapResult(
@@ -52,6 +56,8 @@ def compute_paired_bootstrap(
 
     b_arr = np.array(baseline_scores, dtype=float)
     s_arr = np.array(system_scores, dtype=float)
+    if not np.isfinite(b_arr).all() or not np.isfinite(s_arr).all():
+        raise ValueError("Scores must be finite")
     diffs = s_arr - b_arr
 
     observed_b_mean = float(np.mean(b_arr))
@@ -59,24 +65,25 @@ def compute_paired_bootstrap(
     observed_diff = observed_s_mean - observed_b_mean
 
     rng = np.random.default_rng(random_seed)
-    # Generate bootstrap sample indices (n_resamples x n)
-    indices = rng.integers(0, n, size=(n_resamples, n))
-    bootstrap_diffs = np.mean(diffs[indices], axis=1)
+    bootstrap_diffs = np.asarray(
+        [np.mean(diffs[rng.integers(0, n, size=n)]) for _ in range(n_resamples)]
+    )
 
     # 95% Confidence Interval (percentile method)
     ci_lower = float(np.percentile(bootstrap_diffs, 2.5))
     ci_upper = float(np.percentile(bootstrap_diffs, 97.5))
 
-    # Two-sided empirical p-value under null hypothesis (diff <= 0 or diff >= 0)
-    if observed_diff > 0:
-        p_val = float(np.mean(bootstrap_diffs <= 0))
-    elif observed_diff < 0:
-        p_val = float(np.mean(bootstrap_diffs >= 0))
+    # Separate paired sign-flip randomization test, not bootstrap tail mass.
+    # Exact for small samples; Monte Carlo with a nonzero correction otherwise.
+    if n <= 12:
+        null_means = [abs(float(np.mean(diffs * signs))) for signs in product((-1, 1), repeat=n)]
+        p_val = sum(value >= abs(observed_diff) - 1e-12 for value in null_means) / len(null_means)
     else:
-        p_val = 1.0
-
-    # Ensure two-sided
-    p_val = min(1.0, p_val * 2.0)
+        extreme = sum(
+            abs(float(np.mean(diffs * rng.choice((-1, 1), size=n)))) >= abs(observed_diff) - 1e-12
+            for _ in range(n_resamples)
+        )
+        p_val = (extreme + 1) / (n_resamples + 1)
     sig = bool(p_val < 0.05 and (ci_lower > 0.0 or ci_upper < 0.0))
 
     return BootstrapResult(

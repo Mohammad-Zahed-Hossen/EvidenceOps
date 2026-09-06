@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from evidenceops.evaluation.scoring import AggregateEvaluationReport, SampleEvaluationScore
 from evidenceops.evaluation.statistics import BootstrapResult
@@ -16,6 +16,8 @@ class BenchmarkRunManifest(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    input_identity: dict[str, Any] = Field(default_factory=dict)
+    bootstrap_results: dict[str, list[BootstrapResult]] = Field(default_factory=dict)
     run_id: str
     dataset_id: str
     split_name: str
@@ -33,11 +35,15 @@ def generate_run_manifest(
     sample_scores: list[SampleEvaluationScore],
     environment_profile: dict[str, Any],
     timestamp: str | None = None,
+    input_identity: dict[str, Any] | None = None,
+    bootstrap_results: dict[str, list[BootstrapResult]] | None = None,
 ) -> BenchmarkRunManifest:
     """Construct an immutable benchmark run manifest."""
     ts = timestamp or datetime.now(UTC).isoformat()
     return BenchmarkRunManifest(
         run_id=run_id,
+        input_identity=input_identity or {},
+        bootstrap_results=bootstrap_results or {},
         dataset_id=dataset_id,
         split_name=split_name,
         timestamp=ts,
@@ -56,11 +62,17 @@ def generate_leaderboard_markdown(
     lines = [
         f"# EvidenceOps Benchmark Leaderboard ({split_name.upper()} split)",
         "",
+        "Human-reviewed factual correctness and citation entailment are unavailable. "
+        "Legacy atomic_fact_* fields contain lexical proxies only; see unreviewed_fact_count. "
+        "Python allocations exclude native model memory and the Ollama process. "
+        "These diagnostics do not establish held-out improvement; small samples are inconclusive.",
+        "",
         "## Aggregate Performance Overview",
         "",
         (
-            "| System | Recall@1 | MRR@10 | nDCG@10 | Fact F1 | Cit. Validity | Cit. Prec | "
-            "Abstain Acc | Latency (ms) | Peak RAM (MB) |"
+            "| System | Recall@1 | MRR@10 | nDCG@10 | Lexical proxy F1 | "
+            "Cit. Validity | Gold-chunk precision | "
+            "Abstain Acc | Latency (ms) | Python allocation peak (MB) |"
         ),
         "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
     ]
@@ -77,7 +89,7 @@ def generate_leaderboard_markdown(
     lines.extend(
         [
             "",
-            "## Statistical Significance (Paired Bootstrap, 95% CI)",
+            "## Paired diagnostics (bootstrap 95% CI; sign-flip p-values)",
             "",
         ]
     )

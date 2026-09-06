@@ -44,8 +44,10 @@ def calculate_ndcg_at_k(
 
     # DCG
     dcg = 0.0
+    seen: set[str] = set()
     for rank, cid in enumerate(retrieved_chunk_ids[:k], start=1):
-        rel = 1.0 if cid in gold_set else 0.0
+        rel = 1.0 if cid in gold_set and cid not in seen else 0.0
+        seen.add(cid)
         dcg += rel / math.log2(rank + 1)
 
     # IDCG (ideal ranking where all gold items appear first)
@@ -65,9 +67,9 @@ def _tokenize(text: str) -> set[str]:
 def calculate_atomic_fact_f1(
     generated_answer: str, atomic_facts: list[AtomicFact]
 ) -> dict[str, float]:
-    """Calculate deterministic precision, recall, and F1 over atomic facts.
+    """Legacy lexical-overlap proxy; NOT factual precision, recall, or F1.
 
-    An atomic fact is considered supported if its salient non-stopword tokens
+    A lexical match is counted if its salient non-stopword tokens
     are substantially present in the generated answer.
     """
     if not atomic_facts:
@@ -173,16 +175,18 @@ def calculate_citation_metrics(
 
     valid_cites = 0
     grounded_gold_cites = 0
+    cited_gold_chunks: set[str] = set()
     for cite in found_citations:
         chunk_id = citation_to_chunk.get(cite)
         if chunk_id and chunk_id in retrieved_set:
             valid_cites += 1
             if chunk_id in gold_set:
                 grounded_gold_cites += 1
+                cited_gold_chunks.add(chunk_id)
 
     validity_rate = valid_cites / len(found_citations)
     precision = grounded_gold_cites / len(found_citations) if found_citations else 0.0
-    recall = grounded_gold_cites / len(gold_set) if gold_set else 1.0
+    recall = len(cited_gold_chunks) / len(gold_set) if gold_set else 0.0
 
     return {
         "citation_validity_rate": validity_rate,
@@ -197,6 +201,8 @@ def calculate_abstention_accuracy(
     requires_abstention: bool,
 ) -> dict[str, Any]:
     """Evaluate whether system correctly abstained when unanswerable or proceeded."""
+    if generated_status not in {RunStatus.COMPLETED, RunStatus.ABSTAINED}:
+        return {"correct": False, "outcome": "execution_failed"}
     is_abstained = generated_status == RunStatus.ABSTAINED
 
     if requires_abstention and is_abstained:

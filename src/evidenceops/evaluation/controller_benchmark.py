@@ -68,8 +68,7 @@ def compute_controller_diagnostics(
             "f1": f1,
             "support": float(support),
         }
-        if support > 0:
-            f1_list.append(f1)
+        f1_list.append(f1)
 
     macro_f1 = sum(f1_list) / len(f1_list) if f1_list else 0.0
 

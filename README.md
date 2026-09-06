@@ -133,6 +133,13 @@ uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 
 - **Health Probes**: `GET /v1/health`
 - **System Metrics**: `GET /v1/metrics`
 
+#### One-Click Desktop App Launcher (Automated Lifecycle)
+
+EvidenceOps includes an automated desktop launcher that starts local background services (Qdrant in Docker, Ollama, and FastAPI), opens the dashboard in dedicated browser app mode, and automatically stops background services and unloads models to reclaim 100% of RAM upon window close:
+
+- **Windows Batch**: Double-click `EvidenceOps.bat` in the repository root.
+- **PowerShell**: `.\scripts\run_app.ps1`
+
 ### 7. Release local resources
 
 ```powershell

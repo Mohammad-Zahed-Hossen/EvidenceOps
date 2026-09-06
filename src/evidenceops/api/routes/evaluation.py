@@ -55,7 +55,7 @@ def _run_evaluation_worker(
             eval_samples = eval_samples[:limit]
 
         mapped_systems = [SYSTEM_NAME_MAP.get(s, s) for s in systems_input]
-        benchmark_systems = build_benchmark_systems(system_names=mapped_systems)
+        benchmark_systems = build_benchmark_systems(settings=settings, system_names=mapped_systems)
 
         runner = BenchmarkRunner(output_dir=settings.api_evaluation_root)
         result = runner.run_benchmark(
@@ -74,8 +74,8 @@ def _run_evaluation_worker(
             relative_output_reference=relative_ref,
             completed_at=datetime.now(UTC).isoformat(),
         )
-    except Exception as exc:
-        logger.exception("Evaluation job %s failed: %s", evaluation_id, exc)
+    except Exception:
+        logger.error("Evaluation job %s failed", evaluation_id)
         service.update_evaluation_job(
             evaluation_id,
             status="failed",
@@ -101,6 +101,9 @@ async def run_evaluation(
             detail="Evaluation job already running. System is limited to 1 concurrent evaluation.",
         )
 
+    if not service.work_lock.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Local work already running")
+
     evaluation_id = f"eval_{uuid.uuid4().hex[:12]}"
     now_str = datetime.now(UTC).isoformat()
     job_resp = ApiEvaluationJobResponse(
@@ -112,19 +115,42 @@ async def run_evaluation(
     )
     service.register_evaluation_job(job_resp)
 
-    thread = threading.Thread(
-        target=_run_evaluation_worker,
-        args=(
+    def execute_worker(*args: object) -> None:
+        try:
+            _run_evaluation_worker(
+                evaluation_id,
+                body.dataset_name,
+                body.systems,
+                body.limit,
+                service.settings,
+                service,
+            )
+        finally:
+            service.work_lock.release()
+
+    try:
+        thread = threading.Thread(
+            target=execute_worker,
+            args=(
+                evaluation_id,
+                body.dataset_name,
+                body.systems,
+                body.limit,
+                service.settings,
+                service,
+            ),
+            daemon=True,
+        )
+        thread.start()
+    except Exception:
+        service.work_lock.release()
+        service.update_evaluation_job(
             evaluation_id,
-            body.dataset_name,
-            body.systems,
-            body.limit,
-            service.settings,
-            service,
-        ),
-        daemon=True,
-    )
-    thread.start()
+            "failed",
+            failure_code="worker_start_failed",
+            safe_message="Evaluation worker unavailable.",
+        )
+        raise HTTPException(status_code=503, detail="Evaluation worker unavailable") from None
 
     return job_resp
 
