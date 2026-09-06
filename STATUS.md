@@ -28,7 +28,7 @@ Phase 6 has not started.
 - Default unit test suite: 410 passed, 1 Windows symlink skip.
 - API and dashboard test suite: 25 unit/contract tests passing (`test_health_metrics.py`, `test_query_api.py`, `test_eval_api.py`, `test_dashboard_contract.py`).
 - Concurrency & bounds: Enforced `api_max_concurrent_queries=1`, `api_max_concurrent_evaluations=1`, query length `[2..2000]`, and `api_run_history_limit=100`.
-- Security & isolation: Loopback binding `127.0.0.1:8000`, sanitized error envelopes, complete traceback and local path redaction, zero external CDNs or external web fonts in dashboard.
+- Security & isolation: Loopback binding `127.0.0.1:8080`, sanitized error envelopes, complete traceback and local path redaction, zero external CDNs or external web fonts in dashboard.
 - Async evaluation runner: Bounded background evaluation execution via allowlist-validated `POST /v1/eval/run` and non-blocking polling via `GET /v1/eval/{evaluation_id}`.
 - Linting & Typing: Ruff check, ruff format, and Mypy passed with zero errors.
 

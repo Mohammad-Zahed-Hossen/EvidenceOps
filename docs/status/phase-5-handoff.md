@@ -65,17 +65,17 @@ Phase 5 delivers a secure, local-first FastAPI service and a unified same-origin
 Start the local FastAPI service using Uvicorn:
 
 ```bash
-uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8000
+uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8080
 ```
 
 Open a browser and navigate to:
 
 ```text
-http://127.0.0.1:8000/
+http://127.0.0.1:8080/
 ```
 
 Interactive OpenAPI documentation is available at:
 
 ```text
-http://127.0.0.1:8000/docs
+http://127.0.0.1:8080/docs
 ```

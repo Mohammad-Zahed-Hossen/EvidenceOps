@@ -92,9 +92,9 @@ def test_request_id_middleware(client: TestClient) -> None:
 
 def test_settings_api_binding_validation() -> None:
     """Settings enforces loopback-only host binding and valid non-privileged port."""
-    valid_settings = Settings(api_host="127.0.0.1", api_port=8000)
+    valid_settings = Settings(api_host="127.0.0.1", api_port=8080)
     assert valid_settings.api_host == "127.0.0.1"
-    assert valid_settings.api_port == 8000
+    assert valid_settings.api_port == 8080
 
     with pytest.raises(ValueError, match="API host must be restricted to loopback"):
         Settings(api_host="0.0.0.0")

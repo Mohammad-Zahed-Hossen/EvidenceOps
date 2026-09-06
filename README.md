@@ -124,12 +124,12 @@ The 4,000-character live smoke is not a quality or performance benchmark.
 EvidenceOps exposes its bounded retrieval engine and benchmark evaluation via a secure localhost-only FastAPI service and same-origin dashboard:
 
 ```powershell
-# Launch FastAPI service (bound strictly to loopback: 127.0.0.1:8000)
-uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8000
+# Launch FastAPI service (bound strictly to loopback: 127.0.0.1:8080)
+uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8080
 ```
 
-- **Recruiter Dashboard**: `http://127.0.0.1:8000/` (Grounded queries, citation cards, trajectory diagnostics, component health probes, background evaluation runner).
-- **Interactive OpenAPI Docs**: `http://127.0.0.1:8000/docs`
+- **Recruiter Dashboard**: `http://127.0.0.1:8080/` (Grounded queries, citation cards, trajectory diagnostics, component health probes, background evaluation runner).
+- **Interactive OpenAPI Docs**: `http://127.0.0.1:8080/docs`
 - **Health Probes**: `GET /v1/health`
 - **System Metrics**: `GET /v1/metrics`
 

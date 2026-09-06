@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     app_env: str = "local"
     log_level: str = "INFO"
     api_host: str = "127.0.0.1"
-    api_port: int = Field(default=8000, ge=1024, le=65535)
+    api_port: int = Field(default=8080, ge=1024, le=65535)
     api_max_concurrent_queries: int = Field(default=1, ge=1, le=10)
     api_max_concurrent_evaluations: int = Field(default=1, ge=1, le=2)
     api_run_history_limit: int = Field(default=100, ge=10, le=1000)
