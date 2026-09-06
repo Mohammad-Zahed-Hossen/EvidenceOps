@@ -23,7 +23,7 @@ class QueryRequest(DomainModel):
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, allow_inf_nan=False)
 
-    query: str = Field(min_length=1, max_length=1000)
+    query: str = Field(min_length=1, max_length=2000)
     run_id: str | None = Field(default=None, min_length=1, max_length=128)
     trace_id: str | None = Field(default=None, min_length=1, max_length=128)
     max_retrieval_calls: int = Field(default=3, ge=1, le=3)

@@ -60,8 +60,8 @@ class EvidenceOpsState(DomainModel):
 
     run_id: str = Field(min_length=1, max_length=128)
     status: RunStatus = RunStatus.CREATED
-    original_query: str = Field(min_length=1, max_length=1000)
-    active_query: str = Field(min_length=1, max_length=1000)
+    original_query: str = Field(min_length=1, max_length=2000)
+    active_query: str = Field(min_length=1, max_length=2000)
     query_features: QueryFeatures = Field(default_factory=QueryFeatures)
     route: QueryRoute | None = None
     next_action: Action | None = None

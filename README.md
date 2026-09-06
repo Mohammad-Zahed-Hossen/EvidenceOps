@@ -119,7 +119,21 @@ A full 24,000-character context can exceed the practical CPU timeout or the mode
 available token window. Character limits are ceilings, not latency guarantees.
 The 4,000-character live smoke is not a quality or performance benchmark.
 
-### 6. Release local resources
+### 6. Local FastAPI Service & Observability Dashboard (Phase 5)
+
+EvidenceOps exposes its bounded retrieval engine and benchmark evaluation via a secure localhost-only FastAPI service and same-origin dashboard:
+
+```powershell
+# Launch FastAPI service (bound strictly to loopback: 127.0.0.1:8000)
+uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8000
+```
+
+- **Recruiter Dashboard**: `http://127.0.0.1:8000/` (Grounded queries, citation cards, trajectory diagnostics, component health probes, background evaluation runner).
+- **Interactive OpenAPI Docs**: `http://127.0.0.1:8000/docs`
+- **Health Probes**: `GET /v1/health`
+- **System Metrics**: `GET /v1/metrics`
+
+### 7. Release local resources
 
 ```powershell
 ollama stop qwen2.5:1.5b

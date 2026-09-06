@@ -18,7 +18,11 @@ class Settings(BaseSettings):
     app_env: str = "local"
     log_level: str = "INFO"
     api_host: str = "127.0.0.1"
-    api_port: int = Field(default=8000, ge=1, le=65535)
+    api_port: int = Field(default=8000, ge=1024, le=65535)
+    api_max_concurrent_queries: int = Field(default=1, ge=1, le=10)
+    api_max_concurrent_evaluations: int = Field(default=1, ge=1, le=2)
+    api_run_history_limit: int = Field(default=100, ge=10, le=1000)
+    api_evaluation_root: Path = Path("eval/runs")
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "evidenceops_chunks_bge_small_v1"
     qdrant_timeout_seconds: int = Field(default=10, gt=0, le=60)
@@ -74,6 +78,21 @@ class Settings(BaseSettings):
             or parsed.fragment
         ):
             raise ValueError("local service URLs require a local HTTP endpoint without credentials")
+        return value
+
+    @field_validator("api_host")
+    @classmethod
+    def validate_api_host(cls, value: str) -> str:
+        if value not in {"127.0.0.1", "localhost"}:
+            raise ValueError("API host must be restricted to loopback ('127.0.0.1' or 'localhost')")
+        return value
+
+    @field_validator("api_evaluation_root")
+    @classmethod
+    def validate_api_evaluation_root(cls, value: Path) -> Path:
+        normalized = str(value).replace("\\", "/")
+        if ".." in normalized or normalized.startswith("/"):
+            raise ValueError("API evaluation root must be a safe project-relative directory")
         return value
 
 
