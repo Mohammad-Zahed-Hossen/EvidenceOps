@@ -121,8 +121,6 @@ def build_context_package(
             score=candidate.score,
             source_version=candidate.source_version,
             canonical_url=candidate.canonical_url,
-            content_hash=candidate.content_hash,
-            fetched_at_utc=candidate.fetched_at_utc,
             metadata=candidate.metadata,
         )
 
@@ -199,8 +197,6 @@ def _derive_package_id(
         fp = r.evidence_id
         if r.canonical_url:
             fp += f"|url={r.canonical_url}"
-        if r.content_hash:
-            fp += f"|hash={r.content_hash}"
         evidence_fingerprints.append(fp)
 
     identity_parts = [
@@ -215,8 +211,7 @@ def _derive_package_id(
     ]
     if policy.web is not None:
         identity_parts.append(
-            f"web={policy.web.allow_external_query},{policy.web.max_search_results},"
-            f"{policy.web.fetch_pages},{policy.web.max_page_fetches}"
+            f"web={policy.web.allow_external_query},{policy.web.max_search_results}"
         )
 
     digest = hashlib.sha256(":".join(identity_parts).encode("utf-8")).hexdigest()

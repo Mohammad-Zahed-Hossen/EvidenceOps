@@ -100,3 +100,17 @@ def test_web_cache_thread_safety_concurrent_access() -> None:
 
     assert len(results) == num_threads
     assert all(r > 0 for r in results)
+
+
+def test_web_cache_policy_sensitivity() -> None:
+    cache = WebRetrievalCache(max_entries=4, ttl_seconds=60)
+    p1 = WebRetrievalPolicy(allow_external_query=True, max_search_results=3)
+    p2 = WebRetrievalPolicy(allow_external_query=True, max_search_results=5)
+    cands1 = (_make_candidate("c1"),)
+    cands2 = (_make_candidate("c2"),)
+
+    cache.put("web", "query", p1, cands1)
+    cache.put("web", "query", p2, cands2)
+
+    assert cache.get("web", "query", p1) == cands1
+    assert cache.get("web", "query", p2) == cands2

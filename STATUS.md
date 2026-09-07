@@ -42,38 +42,39 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: L1–L3 Audit Remediated; Documented DNS-Rebinding Residual Risk (L3 not fully security-verified; L4 blocked)
+### Status: Complete and verified — snippet-only web retrieval
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Baseline Commit for L3:** `5a5bde1`
-- **Current Baseline:** `ee2385f` + Remediation (Findings A, B, D, E, F, G resolved and verified; Finding C honest fallback documented).
-- **Phase L3 Completion & Remediation Status:**
-  - Finding A (Streaming byte cap): Fixed and verified. `SafeWebPageFetcher` streams chunks incrementally via `resp.iter_bytes()` and immediately aborts on exceeding `eff_max_bytes` before materializing the full body.
-  - Finding B (Transport policy enforcement): Fixed and verified. `SafeWebPageFetcher` owns client instantiation with `trust_env=False` and `follow_redirects=False`. Callers cannot inject preconfigured `httpx.Client` instances. A private `_transport` parameter serves only as an internal test seam.
-  - Finding C (DNS rebinding TOCTOU): Evaluated and documented. `httpx 0.28.1` and `httpcore 1.0.9` expose no version-stable, documented public API for DNS-pinned connections that preserves TLS SNI and certificate verification without hooking private methods. Rather than rely on an unstable private hook, LiteBridge retains defense-in-depth controls (HTTPS-only, strict domain allowlist, port 443, no credentials/fragments, IP-literal rejection, pre-request DNS resolution & global-routable validation, manual redirect validation) and accurately documents the remaining DNS-rebinding TOCTOU residual risk. Phase L3 remains not fully security-verified against TOCTOU rebinding.
-  - Finding D (Error and warning sanitization): Fixed and verified. Raw exception text, filesystem paths, IP addresses, backend class names, and secrets are strictly eliminated across public error messages, warnings, and serialized context packages. Recoverable page fetch failures emit only `"A configured page could not be fetched safely."`
-  - Finding E (Core import audit): Fixed and verified. AST audit extended to all 6 core files, prohibiting `socket`, `httpx`, `requests`, `urllib`, `importlib`, and dynamic import calls (`__import__`, `importlib.import_module`), with a negative unit test proving detection.
-  - Finding F (Documentation alignment): Fixed and verified. Corrected next phase name to `L4 — Planner and Budget Policy` and updated ADR-029 and STATUS.md.
-  - Finding G (Cache thread-safety): Fixed and verified. `WebRetrievalCache` operations (`get`, `put`, `clear`, `len`) are protected with `threading.RLock()` and verified under concurrent multi-threaded access.
-- **Deliverables Hardened:**
-  - `src/evidenceops/bridge/adapters/safe_web_fetcher.py`: SSRF-hardened `SafeWebFetcher` enforcing HTTPS-only, no credentials, port 443 only, no URL fragments, no IP literals, pre-request DNS resolution, streaming byte caps without full buffering, private test transport seam, and sanitized error messages.
-  - `src/evidenceops/bridge/adapters/web_cache.py`: Thread-safe bounded in-memory LRU TTL `WebRetrievalCache` with `threading.RLock()`.
-  - `src/evidenceops/bridge/adapters/web_retriever.py`: Fixed sanitized warning emission on page fetch failure.
-  - `src/evidenceops/bridge/service.py` & `evidenceops_local.py`: Sanitized public exception messages with stable error codes, preserving upstream causes via exception chaining.
-- **Verification Results (Post-Remediation):**
+- **Current Baseline:** Rescoped L3 (Snippet-only web search retrieval; direct page fetching deferred).
+- **Phase L3 Completion Status:**
+  - **Snippet-Only Web Retrieval Verified**: Rescoped Phase L3 to provider-neutral search snippet retrieval (initially backed by Tavily Basic Search). All direct page fetching (`SafeWebPageFetcher`, `WebPageFetcher`, `FetchedWebPage`, `SourceKind.WEB_PAGE_EXCERPT`, domain allowlists, redirect limits) has been completely removed from the active runtime, configuration, and tests.
+  - **Local-First Default**: Default operation requires zero API keys, makes zero network calls, and registers no web sources.
+  - **Strict Opt-In Web Retrieval**: Web snippet queries go to the configured search provider only after explicit opt-in: `ExecutionProfile.HYBRID`, selected `tavily_web_search` source, `WebRetrievalPolicy(allow_external_query=True)`, `LITEBRIDGE_ENABLE_TAVILY_WEB=true`, and `TAVILY_API_KEY`.
+  - **Core Import Decoupling**: Core modules contain zero imports of `httpx`, `requests`, `urllib`, `socket`, `importlib`, or LLM providers, verified by AST import audits.
+  - **Zero Attack Surface for Untrusted URLs**: The active L3 product makes zero outbound connections to search-result URLs; its sole external network operation is bounded requests to the fixed Tavily Search API endpoint.
+  - **Sanitized Errors and Provenance**: Error messages strictly avoid leaking secrets, query text, or filesystem paths. Search results preserve canonical URL citations and untrusted evidence boundaries.
+  - **Thread-Safe In-Memory Cache**: `WebRetrievalCache` protects cached snippet batches with `threading.RLock()`. Cache hits make 0 provider calls (`web_calls == 0`).
+- **Deliverables:**
+  - `src/evidenceops/bridge/contracts.py`: Public contracts with `SourceKind.WEB_SEARCH_SNIPPET`, snippet `WebRetrievalPolicy`, and URL-provenance `EvidenceRecord`.
+  - `src/evidenceops/bridge/ports.py`: Provider-neutral `WebSearchProvider` protocol and `WebSearchHit` models.
+  - `src/evidenceops/bridge/adapters/tavily_search.py`: Isolated Tavily search adapter with sanitized error handling.
+  - `src/evidenceops/bridge/adapters/web_cache.py`: Thread-safe bounded LRU TTL cache.
+  - `src/evidenceops/bridge/adapters/web_retriever.py`: Snippet-only `WebRetrieverAdapter` with policy-to-settings clamping.
+  - `src/evidenceops/bridge/factory.py`: Composition root registering web search only when enabled with valid credentials.
+- **Verification Results:**
   - Focused bridge tests: 111 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
   - Full test suite: 620 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
   - Code quality: Ruff check and ruff format pass with zero errors.
   - Type checking: Mypy passes with zero issues.
-  - Core import audit: Proves zero forbidden static imports or dynamic import calls in core modules.
+  - Zero runtime references: AST and import tests verify page-fetch classes and modules are completely absent.
   - Generator independence: Proven by exploding-stub tests across all retrieval modes.
-- **Known Limitations:**
-  - **DNS Rebinding TOCTOU Residual Risk**: `SafeWebFetcher` pre-validates resolved IPs, but standard `httpx` performs a separate DNS resolution upon TCP socket connection. In the absence of a version-stable, TLS-preserving DNS-pinning extension point in `httpx`/`httpcore`, this residual risk remains explicitly documented. Phase L3 is not fully security-verified.
+- **Known Limitations & Deferred Milestones:**
+  - **Deferred Security Milestone (Direct Web Page Retrieval)**: Direct arbitrary web page fetching is excluded from active LiteBridge runtime and deferred to a dedicated future security-hardening milestone requiring a robust, stable DNS-pinning / rebinding defense design.
   - Single-source selection only per call; no multi-source query planning, fan-out, or evidence fusion across local and web simultaneously.
   - Declarative timeouts (`timeout_ms`) with zero retries; hard process cancellation is not implemented.
   - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
   - Context packaging only; answer generation (`answer()`) is not implemented.
-- **Phase L4 Status:**
-  Phase `L4 — Planner and Budget Policy` remains strictly **BLOCKED** until the DNS-rebinding security boundary is resolved or direct page fetching is redesigned/deferred.
+- **Next Phase:**
+  `L4 — Planner and Budget Policy` (UNBLOCKED).

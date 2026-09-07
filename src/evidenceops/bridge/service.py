@@ -127,12 +127,12 @@ class LiteBridge:
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
-        # Validate candidate source kinds (Correction #2)
+        # Validate candidate source kinds
         if resolved_descriptor is not None:
             if resolved_descriptor.source_kind == SourceKind.LOCAL_DOCUMENT:
                 permitted_kinds = {SourceKind.LOCAL_DOCUMENT}
             elif resolved_descriptor.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
-                permitted_kinds = {SourceKind.WEB_SEARCH_SNIPPET, SourceKind.WEB_PAGE_EXCERPT}
+                permitted_kinds = {SourceKind.WEB_SEARCH_SNIPPET}
             else:
                 permitted_kinds = {resolved_descriptor.source_kind}
 
@@ -156,10 +156,7 @@ class LiteBridge:
             for candidate in batch.candidates:
                 if candidate.source_kind == SourceKind.LOCAL_DOCUMENT:
                     pass
-                elif candidate.source_kind in (
-                    SourceKind.WEB_SEARCH_SNIPPET,
-                    SourceKind.WEB_PAGE_EXCERPT,
-                ):
+                elif candidate.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
                     if (
                         effective_policy.execution_profile != ExecutionProfile.HYBRID
                         or effective_policy.web is None

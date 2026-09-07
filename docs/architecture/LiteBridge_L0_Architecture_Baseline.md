@@ -269,6 +269,10 @@ Until these conditions are met, `experiment/litebridge-bridge` remains an incuba
 ### 7. Adapters, Not Core, Own Backend-Specific Logic
 No connector or provider may alter LiteBridge core contracts to accommodate vendor-specific fields, query formats, or credentials. All vendor-specific schemas, API translation, rate-limit policies, and error handling belong strictly inside isolated adapter modules.
 
+### 8. Architecture Rescope Amendment: Snippet-Only Web Retrieval (Phase L3)
+Phase L3 provides opt-in, provider-neutral web search snippet retrieval only (initially backed by Tavily Basic Search). Arbitrary direct web page fetching has been intentionally deferred to a future dedicated security-hardening milestone because Python HTTP clients (`httpx`/`httpcore`) lack a stable, version-public mechanism to decouple socket IP connection from TLS SNI validation without accessing private library implementation details. Active Phase L3 contains zero arbitrary outbound URL connection capabilities; its sole external network operation is bounded communication with the configured search provider API endpoint under explicit `ExecutionProfile.HYBRID` opt-in. Phase L4 is eligible only after snippet-only L3 verification passes.
+
+
 ---
 
 ## H. Resume Guide

@@ -22,10 +22,9 @@ def test_execution_profile_values() -> None:
 
 
 def test_source_kind_values() -> None:
-    assert SourceKind.LOCAL_DOCUMENT == "local_document"
-    assert SourceKind.WEB_SEARCH_SNIPPET == "web_search_snippet"
-    assert SourceKind.WEB_PAGE_EXCERPT == "web_page_excerpt"
-    assert len(list(SourceKind)) == 3
+    assert SourceKind.LOCAL_DOCUMENT.value == "local_document"
+    assert SourceKind.WEB_SEARCH_SNIPPET.value == "web_search_snippet"
+    assert not hasattr(SourceKind, "WEB_PAGE_EXCERPT")
 
 
 def test_stop_reason_values() -> None:

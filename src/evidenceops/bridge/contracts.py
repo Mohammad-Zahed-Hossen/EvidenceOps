@@ -24,7 +24,6 @@ class SourceKind(StrEnum):
 
     LOCAL_DOCUMENT = "local_document"
     WEB_SEARCH_SNIPPET = "web_search_snippet"
-    WEB_PAGE_EXCERPT = "web_page_excerpt"
 
 
 class PrivacyClassification(StrEnum):
@@ -59,18 +58,6 @@ class WebRetrievalPolicy(BaseModel):
 
     allow_external_query: bool = False
     max_search_results: int = Field(default=5, ge=1, le=5)
-    fetch_pages: bool = False
-    max_page_fetches: int = Field(default=0, ge=0, le=3)
-
-    @model_validator(mode="after")
-    def _validate_page_fetches(self) -> WebRetrievalPolicy:
-        if not self.fetch_pages and self.max_page_fetches != 0:
-            raise LiteBridgeValidationError("max_page_fetches must be 0 when fetch_pages is False")
-        if self.fetch_pages and self.max_page_fetches < 1:
-            raise LiteBridgeValidationError(
-                "max_page_fetches must be at least 1 when fetch_pages is True"
-            )
-        return self
 
 
 class RetrievalPolicy(BaseModel):
@@ -87,8 +74,6 @@ class RetrievalPolicy(BaseModel):
 
 
 SLUG_REGEX = re.compile(r"^[a-z0-9_-]+$")
-HASH_HEX_REGEX = re.compile(r"^[0-9a-f]{64}$")
-UTC_TIMESTAMP_REGEX = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$")
 
 
 def validate_canonical_https_url(url: str) -> None:
@@ -271,36 +256,17 @@ class EvidenceRecord(BaseModel):
     score: float = 0.0
     source_version: str | None = None
     canonical_url: str | None = None
-    content_hash: str | None = None
-    fetched_at_utc: str | None = None
     metadata: tuple[tuple[str, str], ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _validate_provenance(self) -> EvidenceRecord:
         if self.source_kind == SourceKind.LOCAL_DOCUMENT:
-            if (
-                self.canonical_url is not None
-                or self.content_hash is not None
-                or self.fetched_at_utc is not None
-            ):
-                raise ValueError(
-                    "Local document records must not specify canonical_url, content_hash, "
-                    "or fetched_at_utc"
-                )
+            if self.canonical_url is not None:
+                raise ValueError("Local document records must not specify canonical_url")
         elif self.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
             if self.canonical_url is None:
                 raise ValueError("Web search snippet records require canonical_url")
             validate_canonical_https_url(self.canonical_url)
-            if self.fetched_at_utc is not None:
-                raise ValueError("Web search snippet records must not specify fetched_at_utc")
-        elif self.source_kind == SourceKind.WEB_PAGE_EXCERPT:
-            if self.canonical_url is None:
-                raise ValueError("Web page excerpt records require canonical_url")
-            validate_canonical_https_url(self.canonical_url)
-            if self.content_hash is None or not HASH_HEX_REGEX.match(self.content_hash):
-                raise ValueError("Web page excerpt records require a 64-char SHA-256 content_hash")
-            if self.fetched_at_utc is None or not UTC_TIMESTAMP_REGEX.match(self.fetched_at_utc):
-                raise ValueError("Web page excerpt records require a valid UTC timestamp")
         return self
 
 

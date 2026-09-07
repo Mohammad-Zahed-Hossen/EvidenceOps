@@ -432,19 +432,17 @@ def test_service_web_source_permits_both_snippet_and_page_excerpt() -> None:
         rank=1,
         canonical_url="https://fastapi.tiangolo.com/",
     )
-    c_page = RawEvidenceCandidate(
-        candidate_id="c_page",
-        source_kind=SourceKind.WEB_PAGE_EXCERPT,
+    c_snippet_2 = RawEvidenceCandidate(
+        candidate_id="c_snippet_2",
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
         source_id="tavily_web_search",
         document_id="https://docs.python.org/3/",
-        text="Page excerpt text",
+        text="Snippet 2 text",
         retrieval_route="web_search",
         rank=2,
         canonical_url="https://docs.python.org/3/",
-        content_hash="b" * 64,
-        fetched_at_utc="2026-09-07T12:00:00Z",
     )
-    retriever = FakeRetriever(candidates=(c_snippet, c_page))
+    retriever = FakeRetriever(candidates=(c_snippet, c_snippet_2))
     registry = SourceRegistry()
     registry.register(_make_web_descriptor("tavily_web_search"), retriever)
     bridge = LiteBridge(source_registry=registry)
@@ -461,7 +459,7 @@ def test_service_web_source_permits_both_snippet_and_page_excerpt() -> None:
 
     assert len(pkg.evidence) == 2
     assert pkg.evidence[0].source_kind == SourceKind.WEB_SEARCH_SNIPPET
-    assert pkg.evidence[1].source_kind == SourceKind.WEB_PAGE_EXCERPT
+    assert pkg.evidence[1].source_kind == SourceKind.WEB_SEARCH_SNIPPET
     assert "URL: https://fastapi.tiangolo.com/" in pkg.context_text
     assert "URL: https://docs.python.org/3/" in pkg.context_text
 
@@ -492,44 +490,38 @@ def test_service_forwards_web_calls_accounting() -> None:
     assert pkg.web_calls == 3
 
 
-def test_package_id_includes_url_and_hash_but_excludes_fetched_at_utc() -> None:
+def test_package_id_includes_url_and_is_deterministic() -> None:
     c1 = RawEvidenceCandidate(
         candidate_id="c_web",
-        source_kind=SourceKind.WEB_PAGE_EXCERPT,
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
         source_id="tavily_web_search",
         document_id="https://fastapi.tiangolo.com/",
         text="Sample text",
         retrieval_route="web_search",
         rank=1,
         canonical_url="https://fastapi.tiangolo.com/",
-        content_hash="c" * 64,
-        fetched_at_utc="2026-09-07T12:00:00Z",
     )
-    # Identical except fetched_at_utc is 1 hour later
+    # Identical candidate
     c2 = RawEvidenceCandidate(
         candidate_id="c_web",
-        source_kind=SourceKind.WEB_PAGE_EXCERPT,
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
         source_id="tavily_web_search",
         document_id="https://fastapi.tiangolo.com/",
         text="Sample text",
         retrieval_route="web_search",
         rank=1,
         canonical_url="https://fastapi.tiangolo.com/",
-        content_hash="c" * 64,
-        fetched_at_utc="2026-09-07T13:00:00Z",
     )
-    # Different content hash
+    # Different canonical URL
     c3 = RawEvidenceCandidate(
         candidate_id="c_web",
-        source_kind=SourceKind.WEB_PAGE_EXCERPT,
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
         source_id="tavily_web_search",
-        document_id="https://fastapi.tiangolo.com/",
+        document_id="https://docs.python.org/3/",
         text="Sample text",
         retrieval_route="web_search",
         rank=1,
-        canonical_url="https://fastapi.tiangolo.com/",
-        content_hash="d" * 64,
-        fetched_at_utc="2026-09-07T12:00:00Z",
+        canonical_url="https://docs.python.org/3/",
     )
 
     policy = RetrievalPolicy(
@@ -551,7 +543,7 @@ def test_package_id_includes_url_and_hash_but_excludes_fetched_at_utc() -> None:
     pkg2 = make_bridge(r2).prepare_context("query", policy=policy, source_policy=sp)
     pkg3 = make_bridge(r3).prepare_context("query", policy=policy, source_policy=sp)
 
-    # Changing fetched_at_utc does NOT change package_id (deterministic)
+    # Determinism
     assert pkg1.package_id == pkg2.package_id
-    # Changing content hash changes package_id
+    # Changing URL changes package_id
     assert pkg1.package_id != pkg3.package_id

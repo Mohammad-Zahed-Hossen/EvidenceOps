@@ -61,7 +61,8 @@ Stop immediately and fail the gate if any of the following occur:
 
 - **Phase L1 (Context Mode):** STOP if generation provider services, models, or prompt builders are imported, started, or executed during `prepare_context()`.
 - **Phase L2 (Private Connectors):** STOP if the source registry requires network access or web-specific fields/logic.
-- **Phase L3 (Web Search & Fetch):** STOP if SSRF protection (loopback/private IP blocking), redirect limits, response size limits, content-type allowlisting, or prompt-injection boundaries are incomplete or untested.
+- **Phase L3 (Safe Web Search Snippets):** STOP if external queries execute under `LOCAL_ONLY` profile, or without explicit `WebRetrievalPolicy(allow_external_query=True)` consent, or if untrusted search hits lack canonical URL citation boundaries, or if provider failure messages leak credentials. Direct page fetching is deferred.
+- **Deferred Security Milestone (Direct Web Page Retrieval):** STOP if arbitrary URL fetching lacks provably secure SSRF protection, DNS-pinning / rebinding defense, redirect limits, response size streaming limits, content-type allowlisting, or if private transport hooks are used.
 - **Phase L4 (Planner & Budgets):** STOP if the planner becomes an unbounded agent loop, emits non-deterministic decisions, or leaks backend-specific class names.
 - **Phase L5 (Provider Adapters):** STOP if provider SDKs (OpenAI, Anthropic, Gemini) become mandatory core dependencies, or if private document evidence can silently fall back to an external provider.
 - **Phase L6 (Context Compression):** STOP if context compression can break citation mappings (`[C1]`, `[C2]`), invent unsupported claims, or delete essential evidence without reporting omission metadata.

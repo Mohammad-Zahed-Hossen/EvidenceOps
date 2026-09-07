@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from evidenceops.bridge.adapters.evidenceops_local import EvidenceOpsLocalRetrieverAdapter
-from evidenceops.bridge.adapters.safe_web_fetcher import SafeWebFetcher
 from evidenceops.bridge.adapters.tavily_search import TavilySearchAdapter
 from evidenceops.bridge.adapters.web_cache import WebRetrievalCache
 from evidenceops.bridge.adapters.web_retriever import WebRetrieverAdapter
@@ -82,25 +81,17 @@ def build_litebridge(settings: Settings | None = None) -> LiteBridge:
             api_key=api_key,
             timeout_ms=effective_settings.litebridge_web_timeout_ms,
         )
-        page_fetcher = SafeWebFetcher(
-            allowed_domains=effective_settings.parsed_allowed_fetch_domains,
-            timeout_ms=effective_settings.litebridge_web_timeout_ms,
-            max_response_bytes=effective_settings.litebridge_web_max_response_bytes,
-            max_redirects=effective_settings.litebridge_web_max_redirects,
-        )
         cache = WebRetrievalCache(
             max_entries=effective_settings.litebridge_web_cache_max_entries,
             ttl_seconds=effective_settings.litebridge_web_cache_ttl_seconds,
         )
         web_adapter = WebRetrieverAdapter(
             search_provider=search_provider,
-            page_fetcher=page_fetcher,
             cache=cache,
             source_id="tavily_web_search",
             adapter_id="tavily_web",
-            allowed_domains=effective_settings.parsed_allowed_fetch_domains,
             max_configured_results=effective_settings.litebridge_web_max_results,
-            max_configured_page_fetches=effective_settings.litebridge_web_max_page_fetches,
+            timeout_ms=effective_settings.litebridge_web_timeout_ms,
         )
         web_descriptor = SourceDescriptor(
             source_id="tavily_web_search",

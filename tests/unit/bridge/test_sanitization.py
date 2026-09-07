@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import socket
-
 import pytest
 
 from evidenceops.bridge.adapters.evidenceops_local import EvidenceOpsLocalRetrieverAdapter
-from evidenceops.bridge.adapters.safe_web_fetcher import SafeWebFetcher
+from evidenceops.bridge.adapters.tavily_search import TavilySearchAdapter
 from evidenceops.bridge.adapters.web_retriever import WebRetrieverAdapter
-from evidenceops.bridge.context_builder import build_context_package
 from evidenceops.bridge.contracts import (
     ExecutionProfile,
     RetrievalPolicy,
@@ -17,7 +14,7 @@ from evidenceops.bridge.contracts import (
     WebRetrievalPolicy,
 )
 from evidenceops.bridge.errors import LiteBridgeRetrievalError
-from evidenceops.bridge.ports import WebSearchHit, WebSearchProvider
+from evidenceops.bridge.ports import WebSearchProvider
 from evidenceops.bridge.service import LiteBridge
 
 HOSTILE_SECRETS = (
@@ -54,74 +51,80 @@ def test_service_error_does_not_leak_exception_text(secret: str) -> None:
 
 
 @pytest.mark.parametrize("secret", HOSTILE_SECRETS)
-def test_web_retriever_warning_does_not_leak_exception_or_secrets(secret: str) -> None:
-    """Page fetch failure in WebRetrieverAdapter must emit a fixed warning
-    without leaking secrets.
-    """
+def test_web_retriever_search_error_does_not_leak_exception_or_secrets(secret: str) -> None:
+    """Search failure in WebRetrieverAdapter must raise without leaking secrets."""
+    from evidenceops.bridge.contracts import (
+        PrivacyClassification,
+        SourceDescriptor,
+        SourceFreshness,
+        SourcePolicy,
+    )
+    from evidenceops.bridge.source_registry import SourceRegistry
 
     class HostileSearchProvider(WebSearchProvider):
         def search(self, query: str, max_results: int = 5, timeout_ms: int = 5000):
-            return (
-                WebSearchHit(
-                    title="Allowed Doc",
-                    url="https://docs.python.org/3/",
-                    snippet="Snippet text",
-                    rank=1,
-                ),
-            )
-
-    class HostilePageFetcher:
-        def fetch(self, url: str, **kwargs):
-            raise RuntimeError(f"Fetch failure with secret {secret}")
+            raise RuntimeError(f"Tavily failure with secret {secret}")
 
     adapter = WebRetrieverAdapter(
         source_id="web_search",
         search_provider=HostileSearchProvider(),
-        page_fetcher=HostilePageFetcher(),  # type: ignore[arg-type]
-        allowed_domains=("docs.python.org",),
     )
 
     policy = RetrievalPolicy(
         execution_profile=ExecutionProfile.HYBRID,
-        web=WebRetrievalPolicy(allow_external_query=True, fetch_pages=True, max_page_fetches=1),
+        web=WebRetrievalPolicy(allow_external_query=True),
     )
 
-    batch = adapter.retrieve("python", policy)
-    assert len(batch.candidates) == 1
-    assert batch.candidates[0].source_kind == SourceKind.WEB_SEARCH_SNIPPET
+    reg = SourceRegistry()
+    desc = SourceDescriptor(
+        source_id="web_search",
+        display_name="Web Search",
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+        adapter_id="tavily_web",
+        enabled=True,
+        privacy_classification=PrivacyClassification.PUBLIC_WEB,
+        freshness=SourceFreshness.LIVE,
+        citation_required=True,
+        max_response_chars=24000,
+        timeout_ms=5000,
+        max_retries=0,
+        supported_execution_profiles=(ExecutionProfile.HYBRID,),
+    )
+    reg.register(desc, adapter)
+    bridge = LiteBridge(source_registry=reg)
 
-    for warning in batch.warnings:
-        assert secret not in warning
-        assert warning == "A configured page could not be fetched safely."
+    with pytest.raises(LiteBridgeRetrievalError) as svc_exc:
+        bridge.prepare_context(
+            "python",
+            policy=policy,
+            source_policy=SourcePolicy(allowed_source_ids=("web_search",)),
+        )
 
-    # Build context package and verify model_dump()
-    package = build_context_package("python", policy, batch, elapsed_ms=10.0)
-    dumped = package.model_dump()
-    dumped_str = str(dumped)
-
-    assert secret not in dumped_str
-    for w in package.warnings:
-        assert secret not in w
+    assert secret not in str(svc_exc.value)
+    assert secret not in svc_exc.value.message
 
 
 @pytest.mark.parametrize("secret", HOSTILE_SECRETS)
-def test_safe_web_fetcher_dns_error_does_not_leak_secrets(secret: str) -> None:
-    """SafeWebFetcher must not leak hostile strings or raw socket errors in DNS failures."""
+def test_tavily_search_adapter_does_not_leak_secrets(secret: str) -> None:
+    """TavilySearchAdapter must not leak secrets when provider fails."""
+    import httpx
 
-    def hostile_dns(host: str) -> list[str]:
-        raise socket.gaierror(f"Hostile DNS {secret}")
+    def hostile_handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError(f"Connection failed with {secret}")
 
-    fetcher = SafeWebFetcher(
-        allowed_domains=("docs.python.org",),
-        dns_resolver=hostile_dns,
+    client = httpx.Client(transport=httpx.MockTransport(hostile_handler))
+    adapter = TavilySearchAdapter(
+        api_key="tvly-secret-key-12345",
+        client=client,
     )
 
     with pytest.raises(LiteBridgeRetrievalError) as exc_info:
-        fetcher.fetch_page("https://docs.python.org/page")
+        adapter.search("test query")
 
     err = exc_info.value
     assert secret not in str(err)
     assert secret not in err.message
+    assert "tvly-secret-key-12345" not in str(err)
 
 
 @pytest.mark.parametrize("secret", HOSTILE_SECRETS)

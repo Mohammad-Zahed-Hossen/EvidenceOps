@@ -220,10 +220,10 @@ Adapters translate concrete integrations into LiteBridge ports:
 
 ```text
 EvidenceOpsLocalRetrieverAdapter
-WebSearchAdapter              (future L3)
-WebPageFetcherAdapter         (future L3)
+WebSearchAdapter              (L3)
 StructuredApiAdapter          (future)
 GenerationProviderAdapter     (future L5)
+DirectWebPageFetcherAdapter   (deferred security milestone)
 ```
 
 Only adapters and factories may import integration-specific code or third-party vendor SDKs.
@@ -851,16 +851,21 @@ Exit gate: context preparation works without any LLM generation call, and core u
 
 Exit gate: local document retrieval is source-agnostic and reproducible.
 
-### Phase L3: Web search and page retrieval
+### Phase L3: Safe Web Search Snippet Retrieval
 
-- add provider-neutral web search protocol;
-- implement approved provider adapters implementing LiteBridge ports;
-- implement safe page fetching;
-- add freshness, caching, domain allowlist, SSRF, and size controls;
-- preserve URL and page citations;
-- no connector may alter LiteBridge core contracts for backend-specific metadata.
+- provider-neutral web-search port (`WebSearchProvider`);
+- registered provider adapters implementing LiteBridge ports (initially Tavily Basic Search snippets);
+- explicit hybrid profile and query-consent gate (`ExecutionProfile.HYBRID`, `WebRetrievalPolicy(allow_external_query=True)`);
+- result URL provenance and untrusted evidence rendering;
+- bounded request, result, and in-memory cache controls with `web_calls` accounting;
+- sanitized provider failure handling;
+- no direct arbitrary page fetching.
 
-Exit gate: web retrieval is bounded, cited, policy-controlled, and safe under malicious URL/content tests.
+Exit gate: Registered web search is bounded, explicitly opted into, URL-cited, mock-tested, generator-independent, and local-only operation remains unaffected.
+
+### Deferred Security Milestone: Direct Web Page Retrieval
+
+Direct arbitrary web page fetching (`WEB_PAGE_EXCERPT`, page fetcher) is excluded from active LiteBridge runtime and deferred to a future dedicated security-hardening milestone. A Time-of-Check to Time-of-Use (TOCTOU) DNS-rebinding residual risk exists because Python HTTP client libraries (`httpx`/`httpcore`) do not offer a stable, version-public API to decouple socket IP connection from TLS SNI / certificate validation. Direct page retrieval remains excluded until an approved security design provides robust SSRF and DNS-rebinding controls without unsupported private transport hooks.
 
 ### Phase L4: Planner and budget policy
 

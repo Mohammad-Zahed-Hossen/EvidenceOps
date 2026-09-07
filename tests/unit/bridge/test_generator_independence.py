@@ -342,3 +342,69 @@ def test_web_backed_prepare_context_succeeds_when_generation_stubs_explode(
     assert pkg.web_calls == 1
     assert len(pkg.evidence) == 1
     assert "FastAPI web snippet without LLMs" in pkg.context_text
+
+
+def test_active_adapters_have_no_page_fetch_or_socket_dependencies() -> None:
+    """Verify no active adapter imports socket, html parser, or page-fetch machinery."""
+    bridge_dir = Path(__file__).resolve().parents[3] / "src" / "evidenceops" / "bridge"
+    adapters_dir = bridge_dir / "adapters"
+    assert adapters_dir.exists()
+
+    # The safe_web_fetcher.py file must not exist
+    assert not (adapters_dir / "safe_web_fetcher.py").exists()
+
+    # Audit active adapter files
+    active_adapter_files = [
+        adapters_dir / "evidenceops_local.py",
+        adapters_dir / "tavily_search.py",
+        adapters_dir / "web_cache.py",
+        adapters_dir / "web_retriever.py",
+    ]
+    forbidden_adapter_terms = {"socket", "html.parser", "bs4", "BeautifulSoup", "urllib.request"}
+
+    for adapter_file in active_adapter_files:
+        assert adapter_file.exists(), f"Adapter file {adapter_file} does not exist"
+        tree = ast.parse(adapter_file.read_text(encoding="utf-8"), filename=str(adapter_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert alias.name not in forbidden_adapter_terms
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                assert module not in forbidden_adapter_terms
+
+
+def test_page_fetch_symbols_and_modules_are_completely_absent() -> None:
+    """Verify deleted page-fetch modules, ports, contracts, and settings cannot be accessed."""
+    import importlib
+
+    # 1. safe_web_fetcher module cannot be imported
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("evidenceops.bridge.adapters.safe_web_fetcher")
+
+    # 2. WebPageFetcher, FetchedWebPage cannot be imported from ports
+    import evidenceops.bridge.ports as bridge_ports
+
+    assert not hasattr(bridge_ports, "WebPageFetcher")
+    assert not hasattr(bridge_ports, "FetchedWebPage")
+
+    # 3. SourceKind has no WEB_PAGE_EXCERPT
+    from evidenceops.bridge.contracts import SourceKind, WebRetrievalPolicy
+
+    assert not hasattr(SourceKind, "WEB_PAGE_EXCERPT")
+    assert SourceKind.WEB_SEARCH_SNIPPET.value == "web_search_snippet"
+
+    # 4. WebRetrievalPolicy has no page fetch fields
+    policy = WebRetrievalPolicy()
+    assert not hasattr(policy, "fetch_pages")
+    assert not hasattr(policy, "max_page_fetches")
+
+    # 5. Settings has no page fetch fields
+    from evidenceops.settings import Settings
+
+    settings = Settings()
+    assert not hasattr(settings, "litebridge_web_max_page_fetches")
+    assert not hasattr(settings, "litebridge_web_max_response_bytes")
+    assert not hasattr(settings, "litebridge_web_max_redirects")
+    assert not hasattr(settings, "litebridge_web_allowed_fetch_domains")
+    assert not hasattr(settings, "parsed_allowed_fetch_domains")

@@ -89,7 +89,6 @@ def test_build_litebridge_web_enabled_wires_web_source() -> None:
         bm25_index_id="test_bm25_index",
         litebridge_enable_tavily_web=True,
         tavily_api_key=SecretStr("tvly_valid_test_key"),
-        litebridge_web_allowed_fetch_domains="docs.python.org,fastapi.tiangolo.com",
     )
     with patch("evidenceops.bridge.factory.build_documentation_service"):
         bridge = build_litebridge(settings)

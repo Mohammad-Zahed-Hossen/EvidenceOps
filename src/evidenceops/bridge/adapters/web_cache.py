@@ -45,8 +45,6 @@ class WebRetrievalCache:
             query.strip(),
             str(policy.allow_external_query),
             str(policy.max_search_results),
-            str(policy.fetch_pages),
-            str(policy.max_page_fetches),
         ]
         return hashlib.sha256(":".join(parts).encode("utf-8")).hexdigest()
 

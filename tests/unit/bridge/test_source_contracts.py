@@ -267,31 +267,19 @@ def test_web_retrieval_policy_validation() -> None:
     p_default = WebRetrievalPolicy()
     assert p_default.allow_external_query is False
     assert p_default.max_search_results == 5
-    assert p_default.fetch_pages is False
-    assert p_default.max_page_fetches == 0
 
-    # fetch_pages=False requires max_page_fetches == 0
-    with pytest.raises(LiteBridgeValidationError):
-        WebRetrievalPolicy(fetch_pages=False, max_page_fetches=1)
+    # Page fetch fields are completely removed and forbidden
+    with pytest.raises(ValidationError):
+        WebRetrievalPolicy(fetch_pages=True)  # type: ignore[call-arg]
 
-    # fetch_pages=True requires max_page_fetches >= 1
-    with pytest.raises(LiteBridgeValidationError):
-        WebRetrievalPolicy(fetch_pages=True, max_page_fetches=0)
-
-    # Valid fetch_pages=True
-    p_fetch = WebRetrievalPolicy(fetch_pages=True, max_page_fetches=2)
-    assert p_fetch.fetch_pages is True
-    assert p_fetch.max_page_fetches == 2
+    with pytest.raises(ValidationError):
+        WebRetrievalPolicy(max_page_fetches=1)  # type: ignore[call-arg]
 
     # Bounds: max_search_results (1 to 5)
     with pytest.raises(ValidationError):
         WebRetrievalPolicy(max_search_results=0)
     with pytest.raises(ValidationError):
         WebRetrievalPolicy(max_search_results=6)
-
-    # Bounds: max_page_fetches (0 to 3)
-    with pytest.raises(ValidationError):
-        WebRetrievalPolicy(fetch_pages=True, max_page_fetches=4)
 
 
 def test_web_source_descriptor_validation() -> None:
@@ -468,7 +456,21 @@ def test_evidence_provenance_validation_for_web_kinds() -> None:
             canonical_url="https://127.0.0.1/path",
         )
 
-    # Snippet rejects fetched_at_utc
+    # Valid snippet record
+    snippet_rec = EvidenceRecord(
+        evidence_id="ev1",
+        citation_id="C1",
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+        source_id="tavily_web_search",
+        document_id="doc1",
+        excerpt="content",
+        retrieval_route="web_search",
+        rank=1,
+        canonical_url="https://docs.python.org/3/",
+    )
+    assert snippet_rec.canonical_url == "https://docs.python.org/3/"
+
+    # Extra/removed fields like fetched_at_utc and content_hash are forbidden
     with pytest.raises(ValidationError):
         EvidenceRecord(
             evidence_id="ev1",
@@ -480,39 +482,19 @@ def test_evidence_provenance_validation_for_web_kinds() -> None:
             retrieval_route="web_search",
             rank=1,
             canonical_url="https://docs.python.org/3/",
-            fetched_at_utc="2026-09-07T23:00:00Z",
+            fetched_at_utc="2026-09-07T23:00:00Z",  # type: ignore[call-arg]
         )
 
-    # 3. Web page excerpt requires canonical HTTPS URL, SHA-256 content_hash, and UTC timestamp
     with pytest.raises(ValidationError):
-        # Missing hash and timestamp
         EvidenceRecord(
             evidence_id="ev1",
             citation_id="C1",
-            source_kind=SourceKind.WEB_PAGE_EXCERPT,
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
             source_id="tavily_web_search",
             document_id="doc1",
             excerpt="content",
-            retrieval_route="web_fetch",
+            retrieval_route="web_search",
             rank=1,
             canonical_url="https://docs.python.org/3/",
+            content_hash="a" * 64,  # type: ignore[call-arg]
         )
-
-    valid_hash = "a" * 64
-    # Valid web page excerpt
-    rec = EvidenceRecord(
-        evidence_id="ev1",
-        citation_id="C1",
-        source_kind=SourceKind.WEB_PAGE_EXCERPT,
-        source_id="tavily_web_search",
-        document_id="doc1",
-        excerpt="content",
-        retrieval_route="web_fetch",
-        rank=1,
-        canonical_url="https://docs.python.org/3/",
-        content_hash=valid_hash,
-        fetched_at_utc="2026-09-07T23:00:00Z",
-    )
-    assert rec.canonical_url == "https://docs.python.org/3/"
-    assert rec.content_hash == valid_hash
-    assert rec.fetched_at_utc == "2026-09-07T23:00:00Z"
