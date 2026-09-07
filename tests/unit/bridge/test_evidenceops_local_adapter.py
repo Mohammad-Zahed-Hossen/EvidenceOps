@@ -81,8 +81,9 @@ def test_adapter_wraps_evidenceops_errors() -> None:
     with pytest.raises(LiteBridgeRetrievalError) as exc_info:
         adapter.retrieve("query", policy=RetrievalPolicy())
 
-    assert "Sparse index unreadable" in str(exc_info.value)
+    assert "EvidenceOps local retrieval failed" in str(exc_info.value)
     assert exc_info.value.__cause__ is not None
+    assert "Sparse index unreadable" in str(exc_info.value.__cause__)
 
 
 def test_adapter_maps_upstream_timeout_to_litebridge_timeout() -> None:

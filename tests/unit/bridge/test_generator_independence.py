@@ -19,6 +19,58 @@ from evidenceops.bridge.ports import RawEvidenceCandidate, RetrievalBatch
 from evidenceops.bridge.service import LiteBridge
 from evidenceops.bridge.source_registry import SourceRegistry
 
+FORBIDDEN_ROOTS = {
+    "socket",
+    "httpx",
+    "requests",
+    "urllib",
+    "importlib",
+    "evidenceops.generation",
+    "evidenceops.retrieval",
+    "evidenceops.domain",
+    "evidenceops.graph",
+    "evidenceops.api",
+    "evidenceops.dashboard",
+    "evidenceops.mcp_server",
+    "langgraph",
+    "ollama",
+    "openai",
+    "anthropic",
+    "google",
+    "qdrant_client",
+    "fastembed",
+    "flashrank",
+}
+
+
+def audit_ast_for_forbidden_imports(tree: ast.AST, source_name: str) -> None:
+    """Walk an AST and assert zero forbidden static imports or dynamic import calls."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                for forbidden in FORBIDDEN_ROOTS:
+                    if alias.name == forbidden or alias.name.startswith(f"{forbidden}."):
+                        raise AssertionError(
+                            f"Forbidden import '{alias.name}' found in {source_name}"
+                        )
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            for forbidden in FORBIDDEN_ROOTS:
+                if module == forbidden or module.startswith(f"{forbidden}."):
+                    raise AssertionError(f"Forbidden import-from '{module}' found in {source_name}")
+        elif isinstance(node, ast.Call):
+            # Detect __import__(...)
+            if isinstance(node.func, ast.Name) and node.func.id == "__import__":
+                raise AssertionError(f"Forbidden dynamic call '__import__' found in {source_name}")
+            # Detect importlib.import_module(...) or any foo.import_module(...)
+            if isinstance(node.func, ast.Attribute) and node.func.attr in {
+                "import_module",
+                "__import__",
+            }:
+                raise AssertionError(
+                    f"Forbidden dynamic call '{node.func.attr}' found in {source_name}"
+                )
+
 
 def test_core_modules_have_zero_forbidden_imports() -> None:
     """AST audit proving core LiteBridge files have zero forbidden dependencies."""
@@ -34,43 +86,43 @@ def test_core_modules_have_zero_forbidden_imports() -> None:
         bridge_dir / "source_registry.py",
     ]
 
-    forbidden_roots = {
-        "evidenceops.generation",
-        "evidenceops.retrieval",
-        "evidenceops.domain",
-        "evidenceops.graph",
-        "evidenceops.api",
-        "evidenceops.dashboard",
-        "evidenceops.mcp_server",
-        "langgraph",
-        "ollama",
-        "openai",
-        "anthropic",
-        "google",
-        "qdrant_client",
-        "fastembed",
-        "flashrank",
-        "requests",
-        "httpx",
-        "urllib",
-    }
-
     for file_path in core_files:
         assert file_path.exists(), f"Expected core file {file_path} does not exist"
         tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    for forbidden in forbidden_roots:
-                        assert not alias.name.startswith(forbidden), (
-                            f"Forbidden import '{alias.name}' found in core file {file_path.name}"
-                        )
-            elif isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                for forbidden in forbidden_roots:
-                    assert not module.startswith(forbidden), (
-                        f"Forbidden import-from '{module}' found in core file {file_path.name}"
-                    )
+        audit_ast_for_forbidden_imports(tree, file_path.name)
+
+
+def test_import_audit_detects_forbidden_dynamic_imports_negative_test() -> None:
+    """Negative unit tests proving the audit rejects dynamic import calls and forbidden imports."""
+    dynamic_import_snippet = """
+def load_something():
+    mod = __import__("socket")
+    return mod
+"""
+    tree_dynamic = ast.parse(dynamic_import_snippet, filename="dynamic_sample.py")
+    with pytest.raises(AssertionError) as exc_info:
+        audit_ast_for_forbidden_imports(tree_dynamic, "dynamic_sample.py")
+    assert "__import__" in str(exc_info.value)
+
+    import_module_snippet = """
+def load_another():
+    importlib.import_module("ollama")
+"""
+    tree_import_module = ast.parse(import_module_snippet, filename="import_module_sample.py")
+    with pytest.raises(AssertionError) as exc_info:
+        audit_ast_for_forbidden_imports(tree_import_module, "import_module_sample.py")
+    assert "import_module" in str(exc_info.value)
+
+    direct_socket_snippet = """
+import socket
+
+def connect():
+    pass
+"""
+    tree_socket = ast.parse(direct_socket_snippet, filename="socket_sample.py")
+    with pytest.raises(AssertionError) as exc_info:
+        audit_ast_for_forbidden_imports(tree_socket, "socket_sample.py")
+    assert "socket" in str(exc_info.value)
 
 
 class ExplodingFakeRetriever:

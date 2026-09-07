@@ -151,15 +151,10 @@ class WebRetrieverAdapter(EvidenceRetriever):
                                 use_fetched_page = True
                                 page_fetches_done += 1
                             else:
-                                warnings.append(
-                                    f"Failed to fetch page for '{hit.url}'; falling back to snippet"
-                                )
-                        except Exception as exc:
+                                warnings.append("A configured page could not be fetched safely.")
+                        except Exception:
                             web_calls += 1
-                            warnings.append(
-                                f"Error fetching page for '{hit.url}': {exc}; "
-                                "falling back to snippet"
-                            )
+                            warnings.append("A configured page could not be fetched safely.")
 
             if use_fetched_page and fetched is not None:
                 source_kind = SourceKind.WEB_PAGE_EXCERPT

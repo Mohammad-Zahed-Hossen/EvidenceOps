@@ -1,4 +1,13 @@
-"""SSRF-safe, allowlist-only web page fetcher for LiteBridge Phase L3."""
+"""SSRF-hardened, allowlist-only web page fetcher for LiteBridge Phase L3.
+
+Documented Residual Risk:
+Pre-request DNS validation verifies that the resolved address is globally routable.
+However, because standard HTTP client architectures perform separate resolution
+upon socket connection, a Time-of-Check to Time-of-Use (TOCTOU) DNS-rebinding residual
+risk remains without connection-level IP pinning. LiteBridge implements defense-in-depth
+(HTTPS only, domain allowlist, port 443 only, no credentials/fragments, IP-literal rejection,
+strict redirect counts with re-validation on each hop, and response size streaming caps).
+"""
 
 from __future__ import annotations
 
@@ -68,26 +77,25 @@ def _resolve_and_validate_ips(
 ) -> list[str]:
     """Resolve hostname and assert that all resolved IP addresses are globally routable."""
     if dns_resolver is not None:
-        ip_list = dns_resolver(hostname)
+        try:
+            ip_list = dns_resolver(hostname)
+        except Exception as err:
+            raise LiteBridgeRetrievalError("DNS resolution failed during page fetch.") from err
     else:
         try:
             addr_info = socket.getaddrinfo(hostname, 443, proto=socket.IPPROTO_TCP)
             ip_list = [str(entry[4][0]) for entry in addr_info]
         except socket.gaierror as err:
-            raise LiteBridgeRetrievalError(
-                f"DNS resolution failed for host '{hostname}': {err}"
-            ) from err
+            raise LiteBridgeRetrievalError("DNS resolution failed during page fetch.") from err
 
     if not ip_list:
-        raise LiteBridgeRetrievalError(f"No IP addresses resolved for host '{hostname}'")
+        raise LiteBridgeRetrievalError("DNS resolution failed during page fetch.")
 
     for ip_str in ip_list:
         try:
             ip_obj = ipaddress.ip_address(ip_str)
         except ValueError as err:
-            raise LiteBridgeRetrievalError(
-                f"Invalid IP address '{ip_str}' resolved for host '{hostname}'"
-            ) from err
+            raise LiteBridgeRetrievalError("Invalid address resolved during page fetch.") from err
 
         if (
             ip_obj.is_loopback
@@ -98,9 +106,7 @@ def _resolve_and_validate_ips(
             or ip_obj.is_unspecified
             or not ip_obj.is_global
         ):
-            raise LiteBridgeRetrievalError(
-                f"Host '{hostname}' resolved to non-globally-routable address '{ip_str}'"
-            )
+            raise LiteBridgeRetrievalError("Target address is not permitted for page fetch.")
 
     return ip_list
 
@@ -146,7 +152,7 @@ def _validate_safe_url(url: str, allowed_domains: tuple[str, ...]) -> tuple[str,
 
 
 class SafeWebPageFetcher(WebPageFetcher):
-    """SSRF-safe page fetcher with domain allowlist, IP validation, and size capping."""
+    """SSRF-hardened page fetcher with streaming size cap and redirect validation."""
 
     def __init__(
         self,
@@ -154,14 +160,15 @@ class SafeWebPageFetcher(WebPageFetcher):
         timeout_ms: int = 5000,
         max_response_bytes: int = 200_000,
         max_redirects: int = 3,
-        client: httpx.Client | None = None,
+        *,
+        _transport: httpx.BaseTransport | None = None,
         dns_resolver: Callable[[str], list[str]] | None = None,
     ) -> None:
         self._allowed_domains = allowed_domains
         self._timeout_ms = timeout_ms
         self._max_response_bytes = max_response_bytes
         self._max_redirects = max_redirects
-        self._client = client
+        self._transport = _transport
         self._dns_resolver = dns_resolver
 
     def fetch(
@@ -197,84 +204,90 @@ class SafeWebPageFetcher(WebPageFetcher):
             _resolve_and_validate_ips(hostname, self._dns_resolver)
 
             try:
-                if self._client is not None:
-                    resp = self._client.get(
+                with httpx.Client(
+                    transport=self._transport,
+                    trust_env=False,
+                    follow_redirects=False,
+                ) as client:
+                    with client.stream(
+                        "GET",
                         canonical_url,
                         timeout=timeout_seconds,
-                    )
-                else:
-                    with httpx.Client(trust_env=False, follow_redirects=False) as client:
-                        resp = client.get(
-                            canonical_url,
-                            timeout=timeout_seconds,
+                    ) as resp:
+                        if resp.status_code in {301, 302, 303, 307, 308}:
+                            redirect_count += 1
+                            if redirect_count > eff_max_redirects:
+                                raise LiteBridgeRetrievalError(
+                                    f"Redirect limit exceeded ({eff_max_redirects}) "
+                                    f"fetching '{url}'"
+                                )
+                            location = resp.headers.get("Location")
+                            if not location:
+                                raise LiteBridgeRetrievalError(
+                                    f"Redirect response from '{canonical_url}' missing Location "
+                                    "header"
+                                )
+                            current_url = urljoin(canonical_url, location)
+                            continue
+
+                        if resp.status_code != 200:
+                            raise LiteBridgeRetrievalError(
+                                f"Page fetch returned non-200 status {resp.status_code} "
+                                f"for '{canonical_url}'"
+                            )
+
+                        content_type_header = resp.headers.get("Content-Type", "").lower()
+                        if not any(
+                            content_type_header.startswith(allowed_ct)
+                            for allowed_ct in ALLOWED_CONTENT_TYPES
+                        ):
+                            raise LiteBridgeRetrievalError(
+                                f"Unsupported content-type '{content_type_header}' "
+                                f"for '{canonical_url}'"
+                            )
+
+                        byte_chunks: list[bytes] = []
+                        total_bytes = 0
+                        for chunk in resp.iter_bytes():
+                            total_bytes += len(chunk)
+                            if total_bytes > eff_max_bytes:
+                                raise LiteBridgeRetrievalError(
+                                    "Page content exceeds maximum allowed size"
+                                )
+                            byte_chunks.append(chunk)
+
+                        raw_bytes = b"".join(byte_chunks)
+                        charset = resp.encoding or "utf-8"
+                        try:
+                            body_text = raw_bytes.decode(charset, errors="replace")
+                        except Exception:
+                            body_text = raw_bytes.decode("utf-8", errors="replace")
+
+                        extractor = _HTMLTextExtractor()
+                        extractor.feed(body_text)
+                        extracted_text = extractor.get_extracted_text()
+                        page_title = extractor.get_title() or hostname
+
+                        content_hash = hashlib.sha256(extracted_text.encode("utf-8")).hexdigest()
+                        fetched_at_utc = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                        return FetchedWebPage(
+                            canonical_url=canonical_url,
+                            title=page_title,
+                            text=extracted_text,
+                            content_hash=content_hash,
+                            fetched_at_utc=fetched_at_utc,
                         )
             except httpx.TimeoutException as err:
                 raise LiteBridgeTimeoutError(
                     f"Page fetch timed out for URL '{canonical_url}'"
                 ) from err
             except httpx.HTTPError as err:
-                raise LiteBridgeRetrievalError(
-                    f"HTTP error fetching URL '{canonical_url}': {type(err).__name__}"
-                ) from err
+                raise LiteBridgeRetrievalError("HTTP request failed during page fetch") from err
             except LiteBridgeRetrievalError:
                 raise
             except Exception as err:
-                raise LiteBridgeRetrievalError(
-                    f"Unexpected error fetching URL '{canonical_url}': {type(err).__name__}"
-                ) from err
-
-            if resp.status_code in {301, 302, 303, 307, 308}:
-                redirect_count += 1
-                if redirect_count > eff_max_redirects:
-                    raise LiteBridgeRetrievalError(
-                        f"Redirect limit exceeded ({eff_max_redirects}) fetching '{url}'"
-                    )
-                location = resp.headers.get("Location")
-                if not location:
-                    raise LiteBridgeRetrievalError(
-                        f"Redirect response from '{canonical_url}' missing Location header"
-                    )
-                current_url = urljoin(canonical_url, location)
-                continue
-
-            if resp.status_code != 200:
-                raise LiteBridgeRetrievalError(
-                    f"Page fetch returned non-200 status {resp.status_code} for '{canonical_url}'"
-                )
-
-            content_type_header = resp.headers.get("Content-Type", "").lower()
-            if not any(
-                content_type_header.startswith(allowed_ct) for allowed_ct in ALLOWED_CONTENT_TYPES
-            ):
-                raise LiteBridgeRetrievalError(
-                    f"Unsupported content-type '{content_type_header}' for '{canonical_url}'"
-                )
-
-            raw_bytes = resp.content
-            if len(raw_bytes) > eff_max_bytes:
-                raw_bytes = raw_bytes[:eff_max_bytes]
-
-            charset = resp.encoding or "utf-8"
-            try:
-                body_text = raw_bytes.decode(charset, errors="replace")
-            except Exception:
-                body_text = raw_bytes.decode("utf-8", errors="replace")
-
-            extractor = _HTMLTextExtractor()
-            extractor.feed(body_text)
-            extracted_text = extractor.get_extracted_text()
-            page_title = extractor.get_title() or hostname
-
-            content_hash = hashlib.sha256(extracted_text.encode("utf-8")).hexdigest()
-            fetched_at_utc = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-            return FetchedWebPage(
-                canonical_url=canonical_url,
-                title=page_title,
-                text=extracted_text,
-                content_hash=content_hash,
-                fetched_at_utc=fetched_at_utc,
-            )
+                raise LiteBridgeRetrievalError("Unexpected error during page fetch") from err
 
     def fetch_page(self, url: str) -> FetchedWebPage:
         """Convenience method forwarding to fetch."""

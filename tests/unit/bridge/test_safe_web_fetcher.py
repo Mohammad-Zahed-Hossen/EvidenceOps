@@ -35,10 +35,10 @@ def test_safe_web_fetcher_success() -> None:
             text=html_doc,
         )
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = httpx.MockTransport(handler)
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns(PUBLIC_IP),
     )
 
@@ -94,31 +94,31 @@ def test_safe_web_fetcher_rejects_non_443_port() -> None:
 
 
 def test_safe_web_fetcher_rejects_private_ip_resolution() -> None:
-    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+    transport = httpx.MockTransport(lambda r: httpx.Response(200))
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns("10.0.0.1"),
     )
 
     with pytest.raises(LiteBridgeRetrievalError) as exc_info:
         fetcher.fetch_page("https://docs.python.org/")
 
-    assert "non-globally-routable" in str(exc_info.value)
+    assert "Target address is not permitted for page fetch." in str(exc_info.value)
 
 
 def test_safe_web_fetcher_rejects_loopback_ip_resolution() -> None:
-    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+    transport = httpx.MockTransport(lambda r: httpx.Response(200))
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns("127.0.0.1"),
     )
 
     with pytest.raises(LiteBridgeRetrievalError) as exc_info:
         fetcher.fetch_page("https://docs.python.org/")
 
-    assert "non-globally-routable" in str(exc_info.value)
+    assert "Target address is not permitted for page fetch." in str(exc_info.value)
 
 
 def test_safe_web_fetcher_follows_safe_redirect() -> None:
@@ -134,10 +134,10 @@ def test_safe_web_fetcher_follows_safe_redirect() -> None:
             text="<html><body>Redirected content</body></html>",
         )
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = httpx.MockTransport(handler)
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns(PUBLIC_IP),
     )
 
@@ -153,10 +153,10 @@ def test_safe_web_fetcher_rejects_redirect_to_unallowed_domain() -> None:
             headers={"Location": "https://evil.com/landing"},
         )
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = httpx.MockTransport(handler)
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns(PUBLIC_IP),
     )
 
@@ -173,10 +173,10 @@ def test_safe_web_fetcher_rejects_redirect_loop() -> None:
             headers={"Location": "https://docs.python.org/source"},
         )
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = httpx.MockTransport(handler)
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         max_redirects=2,
         dns_resolver=_mock_dns(PUBLIC_IP),
     )
@@ -195,10 +195,10 @@ def test_safe_web_fetcher_rejects_unsupported_content_type() -> None:
             content=b"%PDF-1.4 ...",
         )
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = httpx.MockTransport(handler)
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns(PUBLIC_IP),
     )
 
@@ -212,12 +212,184 @@ def test_safe_web_fetcher_timeout() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.TimeoutException("Read timed out")
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = httpx.MockTransport(handler)
     fetcher = SafeWebFetcher(
         allowed_domains=("docs.python.org",),
-        client=client,
+        _transport=transport,
         dns_resolver=_mock_dns(PUBLIC_IP),
     )
 
     with pytest.raises(LiteBridgeTimeoutError):
         fetcher.fetch_page("https://docs.python.org/slow")
+
+
+def test_safe_web_fetcher_exact_byte_cap_succeeds() -> None:
+    cap = 500
+    exact_body = b"A" * cap
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/plain; charset=utf-8"},
+            content=exact_body,
+        )
+
+    fetcher = SafeWebFetcher(
+        allowed_domains=("docs.python.org",),
+        _transport=httpx.MockTransport(handler),
+        dns_resolver=_mock_dns(PUBLIC_IP),
+    )
+
+    fetched = fetcher.fetch("https://docs.python.org/exact", max_response_bytes=cap)
+    assert len(fetched.text.encode("utf-8")) == cap
+
+
+def test_safe_web_fetcher_one_byte_over_cap_fails() -> None:
+    cap = 500
+    oversized_body = b"A" * (cap + 1)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/html; charset=utf-8"},
+            content=oversized_body,
+        )
+
+    fetcher = SafeWebFetcher(
+        allowed_domains=("docs.python.org",),
+        _transport=httpx.MockTransport(handler),
+        dns_resolver=_mock_dns(PUBLIC_IP),
+    )
+
+    with pytest.raises(LiteBridgeRetrievalError) as exc_info:
+        fetcher.fetch("https://docs.python.org/oversized", max_response_bytes=cap)
+
+    assert "exceeds maximum allowed size" in str(exc_info.value)
+
+
+def test_safe_web_fetcher_oversized_plain_text_rejected() -> None:
+    cap = 250
+    oversized_text = b"P" * 300
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/plain; charset=utf-8"},
+            content=oversized_text,
+        )
+
+    fetcher = SafeWebFetcher(
+        allowed_domains=("docs.python.org",),
+        _transport=httpx.MockTransport(handler),
+        dns_resolver=_mock_dns(PUBLIC_IP),
+    )
+
+    with pytest.raises(LiteBridgeRetrievalError) as exc_info:
+        fetcher.fetch("https://docs.python.org/oversized.txt", max_response_bytes=cap)
+
+    assert "exceeds maximum allowed size" in str(exc_info.value)
+
+
+def test_safe_web_fetcher_streaming_aborts_early_without_materializing_full_body() -> None:
+    chunks_yielded = 0
+
+    class ChunkStream(httpx.SyncByteStream):
+        def __iter__(self):
+            nonlocal chunks_yielded
+            for _ in range(10):
+                chunks_yielded += 1
+                yield b"X" * 100
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/plain"},
+            stream=ChunkStream(),
+        )
+
+    fetcher = SafeWebFetcher(
+        allowed_domains=("docs.python.org",),
+        _transport=httpx.MockTransport(handler),
+        dns_resolver=_mock_dns(PUBLIC_IP),
+    )
+
+    # Max bytes is 250. Should fail on chunk 3 (total 300 bytes) and never yield all 10 chunks!
+    with pytest.raises(LiteBridgeRetrievalError) as exc_info:
+        fetcher.fetch("https://docs.python.org/stream", max_response_bytes=250)
+
+    assert "exceeds maximum allowed size" in str(exc_info.value)
+    assert chunks_yielded < 10
+
+
+# Finding B: Tests proving caller cannot inject preconfigured client or bypass policies
+def test_safe_web_fetcher_rejects_client_kwarg() -> None:
+    """SafeWebFetcher must not accept a preconfigured client as an injection point."""
+    with pytest.raises(TypeError):
+        SafeWebFetcher(  # type: ignore[call-arg]
+            allowed_domains=("docs.python.org",),
+            client=httpx.Client(),
+        )
+
+
+def test_safe_web_fetcher_enforces_trust_env_false_and_follow_redirects_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fetcher-owned client must always be initialized with:
+    trust_env=False, follow_redirects=False.
+    """
+    created_clients: list[httpx.Client] = []
+    original_client_init = httpx.Client.__init__
+
+    def tracked_client_init(self, *args, **kwargs):
+        original_client_init(self, *args, **kwargs)
+        created_clients.append(self)
+
+    monkeypatch.setattr(httpx.Client, "__init__", tracked_client_init)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/plain"},
+            content=b"ok",
+        )
+
+    fetcher = SafeWebFetcher(
+        allowed_domains=("docs.python.org",),
+        _transport=httpx.MockTransport(handler),
+        dns_resolver=_mock_dns(PUBLIC_IP),
+    )
+
+    fetcher.fetch("https://docs.python.org/test")
+
+    assert len(created_clients) >= 1
+    for client in created_clients:
+        assert client.trust_env is False
+        assert client.follow_redirects is False
+
+
+def test_safe_web_fetcher_does_not_auto_follow_redirects() -> None:
+    """Mock transport returns 302; fetcher manually validates next hop and does not auto-follow."""
+    requests_seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests_seen.append(str(request.url))
+        if str(request.url) == "https://docs.python.org/hop1":
+            return httpx.Response(
+                status_code=302,
+                headers={"Location": "https://docs.python.org/hop2"},
+            )
+        return httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/plain"},
+            content=b"landed safely",
+        )
+
+    fetcher = SafeWebFetcher(
+        allowed_domains=("docs.python.org",),
+        _transport=httpx.MockTransport(handler),
+        dns_resolver=_mock_dns(PUBLIC_IP),
+    )
+
+    fetched = fetcher.fetch("https://docs.python.org/hop1")
+    assert fetched.canonical_url == "https://docs.python.org/hop2"
+    assert requests_seen == ["https://docs.python.org/hop1", "https://docs.python.org/hop2"]

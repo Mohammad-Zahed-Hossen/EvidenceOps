@@ -123,9 +123,7 @@ class LiteBridge:
             raise
         except Exception as err:
             source_name = resolved_source_id or "direct_retriever"
-            raise LiteBridgeRetrievalError(
-                f"Retrieval failed for source '{source_name}': {err}"
-            ) from err
+            raise LiteBridgeRetrievalError(f"Retrieval failed for source '{source_name}'") from err
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 

@@ -249,4 +249,4 @@ def test_web_retriever_fetch_failure_falls_back_to_snippet() -> None:
     assert len(batch.candidates) == 1
     assert batch.candidates[0].source_kind == SourceKind.WEB_SEARCH_SNIPPET
     assert batch.candidates[0].text == "Fallback snippet"
-    assert any("falling back to snippet" in w for w in batch.warnings)
+    assert "A configured page could not be fetched safely." in batch.warnings

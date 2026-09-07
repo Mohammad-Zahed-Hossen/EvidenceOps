@@ -45,12 +45,10 @@ class EvidenceOpsLocalRetrieverAdapter(EvidenceRetriever):
                 f"EvidenceOps local retrieval timed out for source '{self._source_id}'"
             ) from err
         except EvidenceOpsError as err:
-            raise LiteBridgeRetrievalError(
-                f"EvidenceOps local retrieval failed: {err.message}"
-            ) from err
+            raise LiteBridgeRetrievalError("EvidenceOps local retrieval failed") from err
         except Exception as err:
             raise LiteBridgeRetrievalError(
-                f"EvidenceOps local retrieval unexpected error: {err}"
+                "EvidenceOps local retrieval unexpected failure"
             ) from err
 
         elapsed_ms = (time.perf_counter() - start) * 1000.0

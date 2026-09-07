@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import threading
 import time
 from collections import OrderedDict
 from collections.abc import Callable
@@ -31,6 +32,7 @@ class WebRetrievalCache:
         self._ttl_seconds = max(ttl_seconds, 1)
         self._time_fn = time_fn
         self._store: OrderedDict[str, _CacheEntry] = OrderedDict()
+        self._lock = threading.RLock()
 
     def _make_key(
         self,
@@ -56,18 +58,19 @@ class WebRetrievalCache:
     ) -> tuple[RawEvidenceCandidate, ...] | None:
         """Return cached candidates if present and unexpired; otherwise None."""
         key = self._make_key(source_id, query, policy)
-        entry = self._store.get(key)
-        if entry is None:
-            return None
+        with self._lock:
+            entry = self._store.get(key)
+            if entry is None:
+                return None
 
-        now = self._time_fn()
-        if now >= entry.expiry_time:
-            self._store.pop(key, None)
-            return None
+            now = self._time_fn()
+            if now >= entry.expiry_time:
+                self._store.pop(key, None)
+                return None
 
-        # Move to end for LRU ordering
-        self._store.move_to_end(key)
-        return entry.candidates
+            # Move to end for LRU ordering
+            self._store.move_to_end(key)
+            return entry.candidates
 
     def put(
         self,
@@ -81,13 +84,20 @@ class WebRetrievalCache:
         now = self._time_fn()
         expiry_time = now + self._ttl_seconds
 
-        # Evict oldest if full
-        if key not in self._store and len(self._store) >= self._max_entries:
-            self._store.popitem(last=False)
+        with self._lock:
+            # Evict oldest if full
+            if key not in self._store and len(self._store) >= self._max_entries:
+                self._store.popitem(last=False)
 
-        self._store[key] = _CacheEntry(candidates=candidates, expiry_time=expiry_time)
-        self._store.move_to_end(key)
+            self._store[key] = _CacheEntry(candidates=candidates, expiry_time=expiry_time)
+            self._store.move_to_end(key)
 
     def clear(self) -> None:
         """Clear all entries from cache."""
-        self._store.clear()
+        with self._lock:
+            self._store.clear()
+
+    def __len__(self) -> int:
+        """Return number of cached entries."""
+        with self._lock:
+            return len(self._store)

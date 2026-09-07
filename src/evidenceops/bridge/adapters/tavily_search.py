@@ -78,13 +78,9 @@ class TavilySearchAdapter(WebSearchProvider):
         except httpx.TimeoutException as err:
             raise LiteBridgeTimeoutError("Tavily search request timed out") from err
         except httpx.HTTPError as err:
-            raise LiteBridgeRetrievalError(
-                f"Tavily search connection error: {type(err).__name__}"
-            ) from err
+            raise LiteBridgeRetrievalError("Tavily search connection error") from err
         except Exception as err:
-            raise LiteBridgeRetrievalError(
-                f"Tavily search unexpected transport error: {type(err).__name__}"
-            ) from err
+            raise LiteBridgeRetrievalError("Tavily search unexpected transport error") from err
 
         if resp.status_code in {401, 403}:
             raise LiteBridgeSourceError("Tavily search authentication failed (invalid API key)")

@@ -42,36 +42,38 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Phase L3 complete and locally verified
+### Status: L1–L3 Audit Remediated; Documented DNS-Rebinding Residual Risk (L3 not fully security-verified; L4 blocked)
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
 - **Baseline Commit for L3:** `5a5bde1`
-- **Phase L3 Completion Status:** Complete and verified (safe opt-in web search and page retrieval, SSRF protection, domain allowlists, generator-independent).
-- **Deliverables Implemented:**
-  - `src/evidenceops/bridge/contracts.py`: Added `SourceKind.WEB_SEARCH_SNIPPET`, `SourceKind.WEB_PAGE_EXCERPT`, `PrivacyClassification.PUBLIC_WEB`, `SourceFreshness.LIVE`, `WebRetrievalPolicy`, `validate_canonical_https_url`, `supported_execution_profiles` on `SourceDescriptor`, web provenance fields on `EvidenceRecord`, and `web_calls` on `ContextPackage`.
-  - `src/evidenceops/bridge/ports.py`: Added `WebSearchHit`, `FetchedWebPage`, protocols `WebSearchProvider` and `WebPageFetcher`, web provenance fields on `RawEvidenceCandidate`, and `web_calls` on `RetrievalBatch`.
-  - `src/evidenceops/settings.py` & `.env.example`: Added 10 LiteBridge web settings with strict hostname-only domain validation and `parsed_allowed_fetch_domains`.
-  - `src/evidenceops/bridge/adapters/tavily_search.py`: Isolated `TavilySearchAdapter` translating Tavily Basic Search API into `WebSearchHit` records without exposing API keys in error representations.
-  - `src/evidenceops/bridge/adapters/safe_web_fetcher.py`: SSRF-safe `SafeWebFetcher` enforcing HTTPS-only, no credentials, port 443 only, no URL fragments, no IP literals, pre-request DNS resolution rejecting non-globally-routable IPs, manual redirect hop validation (max 3), content-type verification, response streaming byte caps, and stdlib HTML text extraction.
-  - `src/evidenceops/bridge/adapters/web_cache.py`: In-memory bounded LRU TTL `WebRetrievalCache` keyed by query and policy hash.
-  - `src/evidenceops/bridge/adapters/web_retriever.py`: Coordinated `WebRetrieverAdapter` enforcing policy-to-settings caps, caching with `web_calls=0` accounting, and graceful fallback to snippets on fetch failure.
-  - `src/evidenceops/bridge/source_registry.py`: Extended to support `ExecutionProfile.HYBRID` and validate source descriptor `supported_execution_profiles`.
-  - `src/evidenceops/bridge/service.py`: Enforces 5-part web opt-in requirements, rejects web policy under `LOCAL_ONLY`, validates candidate kinds allowing both snippets and page excerpts for web sources, forwards `web_calls` accounting, and maintains deterministic package identity.
-  - `src/evidenceops/bridge/factory.py`: Composition root conditionally registering `tavily_web_search` when enabled with API key, while preserving local-only default operation.
-  - `src/evidenceops/bridge/__init__.py`: Exported `WebRetrievalPolicy`.
-- **Verification Results (Post-L3):**
-  - Focused L3 tests: 95 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 604 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check (207 files) and ruff format (207 files) pass with zero errors.
-  - Type checking: Mypy passes with zero issues across 101 source files.
-  - Import audit: AST inspection proves core modules contain zero imports of `httpx`, `requests`, `urllib`, `socket`, `ipaddress`, EvidenceOps internals, or LLM providers; adapter modules contain zero LLM or generation imports.
-  - Generator independence: Proven by exploding-stub tests across direct retriever, local registry, and web retriever modes confirming `prepare_context()` succeeds while all generation providers raise if touched.
-- **Known L3 Limitations:**
+- **Current Baseline:** `ee2385f` + Remediation (Findings A, B, D, E, F, G resolved and verified; Finding C honest fallback documented).
+- **Phase L3 Completion & Remediation Status:**
+  - Finding A (Streaming byte cap): Fixed and verified. `SafeWebPageFetcher` streams chunks incrementally via `resp.iter_bytes()` and immediately aborts on exceeding `eff_max_bytes` before materializing the full body.
+  - Finding B (Transport policy enforcement): Fixed and verified. `SafeWebPageFetcher` owns client instantiation with `trust_env=False` and `follow_redirects=False`. Callers cannot inject preconfigured `httpx.Client` instances. A private `_transport` parameter serves only as an internal test seam.
+  - Finding C (DNS rebinding TOCTOU): Evaluated and documented. `httpx 0.28.1` and `httpcore 1.0.9` expose no version-stable, documented public API for DNS-pinned connections that preserves TLS SNI and certificate verification without hooking private methods. Rather than rely on an unstable private hook, LiteBridge retains defense-in-depth controls (HTTPS-only, strict domain allowlist, port 443, no credentials/fragments, IP-literal rejection, pre-request DNS resolution & global-routable validation, manual redirect validation) and accurately documents the remaining DNS-rebinding TOCTOU residual risk. Phase L3 remains not fully security-verified against TOCTOU rebinding.
+  - Finding D (Error and warning sanitization): Fixed and verified. Raw exception text, filesystem paths, IP addresses, backend class names, and secrets are strictly eliminated across public error messages, warnings, and serialized context packages. Recoverable page fetch failures emit only `"A configured page could not be fetched safely."`
+  - Finding E (Core import audit): Fixed and verified. AST audit extended to all 6 core files, prohibiting `socket`, `httpx`, `requests`, `urllib`, `importlib`, and dynamic import calls (`__import__`, `importlib.import_module`), with a negative unit test proving detection.
+  - Finding F (Documentation alignment): Fixed and verified. Corrected next phase name to `L4 — Planner and Budget Policy` and updated ADR-029 and STATUS.md.
+  - Finding G (Cache thread-safety): Fixed and verified. `WebRetrievalCache` operations (`get`, `put`, `clear`, `len`) are protected with `threading.RLock()` and verified under concurrent multi-threaded access.
+- **Deliverables Hardened:**
+  - `src/evidenceops/bridge/adapters/safe_web_fetcher.py`: SSRF-hardened `SafeWebFetcher` enforcing HTTPS-only, no credentials, port 443 only, no URL fragments, no IP literals, pre-request DNS resolution, streaming byte caps without full buffering, private test transport seam, and sanitized error messages.
+  - `src/evidenceops/bridge/adapters/web_cache.py`: Thread-safe bounded in-memory LRU TTL `WebRetrievalCache` with `threading.RLock()`.
+  - `src/evidenceops/bridge/adapters/web_retriever.py`: Fixed sanitized warning emission on page fetch failure.
+  - `src/evidenceops/bridge/service.py` & `evidenceops_local.py`: Sanitized public exception messages with stable error codes, preserving upstream causes via exception chaining.
+- **Verification Results (Post-Remediation):**
+  - Focused bridge tests: 111 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 620 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors.
+  - Type checking: Mypy passes with zero issues.
+  - Core import audit: Proves zero forbidden static imports or dynamic import calls in core modules.
+  - Generator independence: Proven by exploding-stub tests across all retrieval modes.
+- **Known Limitations:**
+  - **DNS Rebinding TOCTOU Residual Risk**: `SafeWebFetcher` pre-validates resolved IPs, but standard `httpx` performs a separate DNS resolution upon TCP socket connection. In the absence of a version-stable, TLS-preserving DNS-pinning extension point in `httpx`/`httpcore`, this residual risk remains explicitly documented. Phase L3 is not fully security-verified.
   - Single-source selection only per call; no multi-source query planning, fan-out, or evidence fusion across local and web simultaneously.
   - Declarative timeouts (`timeout_ms`) with zero retries; hard process cancellation is not implemented.
   - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
   - Context packaging only; answer generation (`answer()`) is not implemented.
-- **Explicit Next Approved Action:**
-  `L4 — Hybrid Evidence Fusion`.
+- **Phase L4 Status:**
+  Phase `L4 — Planner and Budget Policy` remains strictly **BLOCKED** until the DNS-rebinding security boundary is resolved or direct page fetching is redesigned/deferred.
