@@ -37,3 +37,32 @@ CPU-safe profile validation, and portfolio documentation are recorded in [the Ph
 
 Work is paused. Repository is packaged as an honest, defensible portfolio release candidate.
 Awaiting user instructions for Git operations or portfolio presentation.
+
+---
+
+## LiteBridge Experimental Track
+
+### Status: Phase L0 complete and verified
+
+LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch.
+
+- **Branch Name:** `experiment/litebridge-bridge`
+- **Baseline Commit:** `1c490dc65e57c3e38766d466755b95e359f10ca5`
+- **Phase L0 Completion Status:** Complete and verified (post-change quality checks passed)
+
+- **Files Added:**
+  - `LiteBridge_SSOT.md` (authoritative specification tracked)
+  - `docs/architecture/LiteBridge_L0_Architecture_Baseline.md` (architecture baseline & contract charter)
+- **Files Modified:**
+  - `DECISIONS.md` (added ADR-025)
+  - `README.md` (added experimental branch scope notice)
+  - `STATUS.md` (added LiteBridge status section)
+- **Verification Commands & Baseline Results:**
+  - `uv run pytest -ra -q`: 509 passed, 1 skipped (Windows symlink privilege)
+  - `uv run ruff check src tests scripts`: All checks passed
+  - `uv run ruff format --check src tests scripts`: 182 files already formatted
+  - `uv run mypy src/evidenceops`: Success (no issues found in 87 source files)
+  - `git diff --check`: Clean
+- **EvidenceOps No-Change Guarantee:** Zero modifications to existing EvidenceOps runtime behaviors, CLI commands, API routes, MCP tools, database schemas, evaluation datasets, or generation provider behavior. `main` branch remains protected and untouched.
+- **Explicit Exclusions:** Web search, external page fetching, external LLM adapters, context compression, and `prepare_context()` are **not** implemented in Phase L0.
+- **Explicit Next Phase:** `L1 — Generator-independent context mode`.

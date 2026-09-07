@@ -219,6 +219,11 @@ Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboard
 - **Local LLM Nuances**: The 1.5B parameter model (`qwen2.5:1.5b`) is tuned for CPU speed; it occasionally requires the built-in citation repair pass to conform to strict citation formatting.
 - **In-Memory Run History**: The API caches the last 100 query runs in memory; history resets on server restart.
 
+## Project Status & Experimental Scope
+
+- **Production Baseline (`main`)**: `main` remains EvidenceOps—a complete, local-first, evidence-grounded RAG application.
+- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: `experiment/litebridge-bridge` is an experimental future middleware branch exploring model-agnostic retrieval and context preparation. LiteBridge is not a currently available product feature. Users must not expect web retrieval, external page fetching, or cloud-provider support from current EvidenceOps.
+
 ---
 
 ## Documentation Index
