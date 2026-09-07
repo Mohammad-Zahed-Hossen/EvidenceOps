@@ -188,3 +188,17 @@
      - Public SDK documentation does not require users to understand EvidenceOps.
      - Moving the package requires changing only composition/import wiring, not rewriting core behavior.
   9. **No Runtime Implementation**: This ADR is documentation and architecture governance prior to Phase L1; no implementation code, tests, dependencies, or configuration are modified in this task.
+
+### ADR-027: LiteBridge Phase L1 Generator-Independent Context Mode
+- **Context**: Phase L1 implements the core, generator-independent context-preparation layer (`prepare_context()`). The implementation must adhere strictly to the Core-Port-Adapter boundary established in ADR-026 and `LiteBridge_SSOT.md` (v1.1), ensuring that LiteBridge core remains portable and decoupled from EvidenceOps models and LLM generation providers.
+- **Decision**:
+  1. **Primary Product Boundary**: `ContextPackage` is the primary public output of LiteBridge. Downstream LLM applications consume this immutable package. Generation is optional and separated from context preparation.
+  2. **Strict Generator Independence**: `prepare_context()` contains zero imports, zero configuration, and zero calls to any LLM generation provider or LangGraph orchestration node. Calling `prepare_context()` executes retrieval and context packaging only.
+  3. **Port-Based Local Retrieval**: Core `LiteBridge` service depends exclusively on the `EvidenceRetriever` protocol (`ports.py`). Retrieval is executed via a single bounded call per request.
+  4. **Isolated EvidenceOps Adapter**: `EvidenceOpsLocalRetrieverAdapter` (`adapters/evidenceops_local.py`) is the sole module permitted to import EvidenceOps retrieval services (`LocalDocumentationService`). It translates `DocumentationSearchResult` into LiteBridge-neutral `RawEvidenceCandidate` tuples.
+  5. **Composition Boundary**: `build_litebridge()` (`factory.py`) wires the adapter into LiteBridge with neutral reproducibility identifiers (`adapter_id`, `corpus_identity`, `index_identity`, `code_identity`) without exposing Qdrant/BM25 internals.
+  6. **True Contract Immutability**: All public contracts (`ContextPackage`, `EvidenceRecord`, `RetrievalPolicy`, `RawEvidenceCandidate`, `RetrievalBatch`) enforce `frozen=True`, `extra="forbid"`, and use immutable `tuple` collections instead of mutable lists or dicts.
+  7. **Whole-Item Extractive Budget Enforcement**: Evidence items are selected in retrieval rank order and included only if the entire item fits within character and token budgets (evaluated against the final rendered `context_text` including headers and citation markers). Items are never silently truncated in the middle. Stop reason reflects precedence: `NO_EVIDENCE` if 0 candidates returned; `BUDGET_EXCEEDED` if candidates returned but none or only some fit; `SUCCESS` if all candidates fit.
+  8. **Deterministic Package Identity**: `package_id` is derived strictly from stable inputs (normalized query hash, policy, selected evidence IDs, reproducibility metadata) and strictly excludes non-deterministic execution timings or timestamps.
+  9. **Single-Inheritance Error Hierarchy**: All LiteBridge errors inherit strictly from `LiteBridgeError(Exception)` without multiple-inheritance complexities. Underlying causes are preserved via `__cause__` while keeping public representations sanitized.
+  10. **Deferred Capabilities**: Web search, external page fetching, external LLM adapters, context compression, and API/MCP tools remain strictly deferred to subsequent phases.

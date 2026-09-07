@@ -222,7 +222,7 @@ Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboard
 ## Project Status & Experimental Scope
 
 - **Production Baseline (`main`)**: `main` remains EvidenceOps—a complete, local-first, evidence-grounded RAG application. Current EvidenceOps on `main` does not provide web retrieval or cloud-provider middleware.
-- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: LiteBridge is being incubated on a separate branch (`experiment/litebridge-bridge`). Its public product boundary is a provider-neutral context package. EvidenceOps currently serves as its first local retrieval adapter and testbed, and LiteBridge core is intentionally designed with strict port-and-adapter boundaries for future extraction into an independent package. LiteBridge is not yet implemented as an active runtime product feature.
+- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: LiteBridge is being incubated on a separate branch (`experiment/litebridge-bridge`). Its public product boundary is a provider-neutral context package. Phase L1 implements generator-independent local context preparation (`prepare_context()`) with strict Core-Port-Adapter separation, using EvidenceOps as its initial local retrieval adapter. LiteBridge is not yet available as an end-user CLI, API, or dashboard feature in EvidenceOps.
 
 ---
 

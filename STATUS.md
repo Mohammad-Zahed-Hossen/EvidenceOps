@@ -42,32 +42,37 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Architecture guardrail amendment complete; Phase L1 pending
+### Status: Phase L1 complete and locally verified
 
-LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch.
+LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Baseline Commit:** `1c490dc65e57c3e38766d466755b95e359f10ca5`
-- **Phase L0 & Guardrails Status:** Complete and verified (pre-L1 architecture amendment complete)
-- **Phase L1 Status:** Not yet implemented. Phase L1 may begin only under the new core/port/adapter guardrails.
-
-- **Documents Created & Updated in this Amendment:**
-  - `LiteBridge_SSOT.md` (updated to v1.1: product identity, core-port-adapter boundary, layout, phase amendments, extraction gate)
-  - `docs/architecture/LiteBridge_L0_Architecture_Baseline.md` (updated: adapter-only capability matrix, architecture guardrail amendment, updated resume guide)
-  - `docs/architecture/LiteBridge_Phase_Gates.md` (new: non-negotiable invariants, phase-start/phase-completion checklists, phase stop rules)
-  - `AGENTS.md` (added: LiteBridge architecture guardrails)
-  - `DECISIONS.md` (added: ADR-026 on core-port-adapter boundary and extraction policy)
-  - `STATUS.md` (updated: architecture amendment status and guardrails)
-  - `README.md` (updated: accurate architecture note on experimental branch scope)
-
-- **Verification Commands & Baseline Results:**
-  - `uv run pytest -ra -q`: 509 passed, 1 skipped (Windows symlink privilege)
-  - `uv run ruff check src tests scripts`: All checks passed
-  - `uv run ruff format --check src tests scripts`: 182 files already formatted
-  - `uv run mypy src/evidenceops`: Success (no issues found in 87 source files)
-  - `git diff --check`: Clean
-
-- **EvidenceOps No-Change Guarantee:** Zero modifications to existing EvidenceOps runtime behaviors, CLI commands, API routes, MCP tools, database schemas, evaluation datasets, or generation provider behavior. `main` branch remains protected and untouched. No runtime code, dependencies, datasets, or EvidenceOps behavior changed.
-
+- **Baseline Commit for L1:** `c75407f`
+- **Phase L1 Completion Status:** Complete and verified (zero LLM generation calls, core decoupled).
+- **Deliverables Implemented:**
+  - `src/evidenceops/bridge/contracts.py`: LiteBridge-owned immutable public contracts (`ContextPackage`, `EvidenceRecord`, `RetrievalPolicy`, `ExecutionProfile`, `SourceKind`, `StopReason`) using frozen Pydantic models and tuple fields.
+  - `src/evidenceops/bridge/ports.py`: Provider-neutral retrieval protocol (`EvidenceRetriever`), `RawEvidenceCandidate`, and `RetrievalBatch`.
+  - `src/evidenceops/bridge/errors.py`: Sanitized single-inheritance error hierarchy (`LiteBridgeError`).
+  - `src/evidenceops/bridge/context_builder.py`: Pure context rendering with untrusted-data boundary, whole-item budget enforcement, deterministic token estimation, and stable `package_id`.
+  - `src/evidenceops/bridge/service.py`: `LiteBridge` facade with `prepare_context()` depending strictly on `EvidenceRetriever` port.
+  - `src/evidenceops/bridge/adapters/evidenceops_local.py`: Isolated adapter translating EvidenceOps `LocalDocumentationService` to LiteBridge port.
+  - `src/evidenceops/bridge/factory.py`: Composition root wiring adapter into LiteBridge with neutral reproducibility metadata.
+  - `src/evidenceops/bridge/__init__.py`: Clean public exports.
+- **Verification Results (Post-L1):**
+  - Focused L1 tests: 26 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 535 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check (197 files) and ruff format (197 files) pass with zero errors.
+  - Type checking: Mypy passes with zero issues across 96 source files.
+  - Import audit: AST inspection proves core files (`contracts.py`, `ports.py`, `errors.py`, `context_builder.py`, `service.py`) contain zero imports of `evidenceops.generation`, `evidenceops.retrieval`, `evidenceops.domain`, or external provider SDKs.
+  - Generator independence: Proven by exploding-stub test confirming `prepare_context()` succeeds while all generation providers and request constructors raise if touched.
+- **Known L1 Limitations:**
+  - Local documentation corpus only (`SourceKind.LOCAL_DOCUMENT`).
+  - Exactly one retrieval call per request; no multi-step iterative retrieval.
+  - No query planner or learned routing policy.
+  - Zero web search, page fetching, or remote API retrieval.
+  - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
+  - Context packaging only; answer generation (`answer()`) is not implemented.
+  - Character-based deterministic token estimation (`ceil(chars / 4)`), not exact tokenizer counts.
+  - Extractive whole-item selection only; no LLM-based context compression.
 - **Explicit Next Approved Action:**
-  `L1 — Generator-Independent Context Mode, using a LiteBridge-owned retrieval port and an isolated EvidenceOps adapter.`
+  `L2 — Source registry and private connectors`.
