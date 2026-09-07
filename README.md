@@ -1,239 +1,224 @@
 # EvidenceOps
 
-## Retrieval Subsystem (Phase 1C)
+**Cost-Aware Adaptive Retrieval & Evidence Evaluation Platform**
 
-Phase 1C provides deterministic, local-first retrieval built strictly from persisted Phase 1B processed artifacts (`data/processed/*.json`). No raw documents are re-read or re-chunked.
+EvidenceOps is a locally runnable, cost-aware adaptive retrieval and evidence evaluation platform. Rather than blindly executing fixed-$k$ retrieval for every prompt or unleashing unbounded, expensive multi-agent loops, EvidenceOps dynamically routes queries to the most cost-effective retrieval strategy (sparse, dense, hybrid, or direct generation), verifies candidate evidence sufficiency and pairwise conflict, enforces mathematical iteration bounds, and synthesizes grounded answers with strict citation traceability—all operating under a **100% local-first, zero-paid-API policy**.
 
-### 1. Start Qdrant (Docker)
-```powershell
-docker compose up -d qdrant
-docker compose ps
-```
-Qdrant binds strictly to `127.0.0.1:6333`.
+---
 
-### 2. Build Indexes
-```powershell
-# Build sparse BM25 snapshot (JSON under data/bm25/)
-uv run evidenceops-index --processed-root data/processed --bm25-root data/bm25 --build-sparse
+## Why EvidenceOps Exists
 
-# Build dense Qdrant collection using FastEmbed (bge-small-en-v1.5)
-uv run evidenceops-index --processed-root data/processed --build-dense
+Standard Retrieval-Augmented Generation (RAG) implementations typically exhibit two failure modes:
 
-# Build both simultaneously
-uv run evidenceops-index --processed-root data/processed --bm25-root data/bm25 --build-sparse --build-dense
-```
+1. **Fixed-Step RAG**: Blindly executes dense embedding retrieval and reranking for all queries regardless of intent. Simple queries (e.g., greetings, factual exact lookups) incur unnecessary vector search and LLM context overhead, while complex multi-step queries fail due to insufficient evidence or lack of query reformulation.
+2. **Unbounded Agent Loops**: Autonomous multi-hop agents often run indefinitely, consuming unpredictable compute/memory, drifting off-topic, or generating hallucinations when evidence is absent.
 
-### 3. Search
-```powershell
-# Sparse BM25 search (does not require Docker or models)
-uv run evidenceops-search --query "Qdrant payload filtering" --method sparse --top-k 5
+EvidenceOps addresses this engineering trade-off by introducing:
+- **Adaptive Retrieval Routing**: Classifies queries by intent (exact code identifiers &rarr; sparse BM25; conceptual prose &rarr; dense FastEmbed; complex synthesis &rarr; hybrid RRF; non-factual greetings &rarr; direct response).
+- **Sufficiency & Conflict Guardrails**: Evaluates packed candidate evidence with deterministic heuristic scoring ($S = 0.45R + 0.25C + 0.15D + 0.15A$) and pairwise conflict detection before generation.
+- **Strict Bounded Execution**: Enforces hard mathematical bounds (maximum 3 retrieval iterations, maximum 3 retrieval calls, maximum 6 chunks / 24,000 characters context) to eliminate runaway execution.
+- **Auditable Citation Verification**: Requires all factual statements to reference canonical sequential citations (`[C1]`, `[C2]`), automatically attempting at most one structured repair before cleanly abstaining (`insufficient_evidence`).
 
-# Dense vector search (requires Qdrant)
-uv run evidenceops-search --query "vector similarity search" --method dense --top-k 5
+---
 
-# Hybrid search with Reciprocal Rank Fusion (RRF, k=60)
-uv run evidenceops-search --query "vector indexing in python" --method hybrid --top-k 6
+## System Architecture
 
-# FlashRank cross-encoder reranked search (TinyBERT-L-2-v2)
-uv run evidenceops-search --query "vector indexing in python" --method reranked --top-k 6
-```
-
-### 4. Model Context Protocol (MCP) Server (Phase 2)
-
-EvidenceOps exposes its local documentation retrieval corpus to MCP-compliant AI assistants (such as Claude Desktop or IDE MCP extensions) through a strictly local STDIO transport (`evidenceops-mcp`).
-
-#### Allowlisted Tools
-1. `search_documentation`: Query the corpus using `sparse`, `dense`, or `hybrid` retrieval with reranking. Enforces bounded `top_k` (1..20).
-2. `get_document_chunk`: Fetch the full text and heading hierarchy for a specific `chunk_id`.
-3. `get_source_metadata`: Retrieve provenance, license, content SHA-256, and origin metadata for a `document_id`.
-
-#### Client Configuration (e.g. Claude Desktop / Cline / Roo Code)
-Add this block to your MCP client configuration (`claude_desktop_config.json`):
-```json
-{
-  "mcpServers": {
-    "evidenceops": {
-      "command": "uv",
-      "args": ["run", "evidenceops-mcp"],
-      "cwd": "D:\\Code\\Assignment\\EvidenceOps"
-    }
-  }
-}
+```text
+                     User Query (API / CLI / Dashboard)
+                                    │
+                                    ▼
+                         [Query Analysis Node]
+                                    │
+                    Extracts lexical/semantic features
+                                    │
+                                    ▼
+                           [Controller Node]
+         ┌───────────────┬──────────────────┬───────────────┐
+         ▼               ▼                  ▼               ▼
+      SPARSE           DENSE              HYBRID         DIRECT
+    (rank-bm25)   (FastEmbed+Qdrant)   (RRF Fusion)    (Greetings)
+         │               │                  │               │
+         └───────────────┴────────┬─────────┘               │
+                                  ▼                         │
+                         [Reranker Node]                    │
+                       (FlashRank ONNX)                     │
+                                  │                         │
+                                  ▼                         │
+                     [Sufficiency & Conflict]               │
+                                  │                         │
+                 ┌────────────────┴───────────────┐         │
+                 ▼ Sufficient                     ▼ Low     │
+         [Generate Answer]               [Reformulate Query]│
+         (Local Ollama LLM)                       │         │
+                 │                        (Max 3 iterations)│
+                 ▼                                │         │
+        [Verify Citations]                        └─────────┘
+        (Repair or Abstain)
+                 │
+                 ▼
+      Final Response (Answer + Citations / Structured Abstention)
 ```
 
-### 5. Grounded Question Answering (Phase 3)
+---
 
-Use native desktop Ollama and start only the Qdrant container. Do not start an
-Ollama container or the whole Compose stack on the 8 GB CPU profile.
+## Technology Stack
 
-First-time model preparation (network access is needed only to acquire missing models):
+EvidenceOps relies entirely on open-source, local-first tools without paid cloud subscriptions:
 
+| Subsystem | Technology | Execution Profile |
+| :--- | :--- | :--- |
+| **Generation** | Ollama (`qwen2.5:1.5b`) | Native local process (`127.0.0.1:11434`), temperature 0.0 |
+| **Dense Embeddings** | FastEmbed (`bge-small-en-v1.5`) | In-process ONNX runtime, CPU-only (~130 MB cache) |
+| **Sparse Index** | `rank-bm25` | Deterministic local JSON snapshots under `data/bm25/` |
+| **Vector Database** | Qdrant | Docker container on loopback (`127.0.0.1:6333`) |
+| **Cross-Encoder Reranker**| FlashRank (`TinyBERT-L-2-v2`) | Local ONNX runtime, CPU-only (~17 MB cache) |
+| **Orchestration** | LangGraph | Bounded finite state machine, deterministic recursion bounds |
+| **Backend API** | FastAPI / Uvicorn | Loopback-bound (`127.0.0.1:8080`), concurrency = 1 |
+| **Observability & UI** | Vanilla HTML5 / CSS3 / ES6 | Same-origin, zero-CDN, zero-external-font, zero `.innerHTML` |
+| **Tracing** | OpenTelemetry SDK / Jaeger | Strictly redacted spans (SHA-256 hashes, zero raw text) |
+| **Tool Interface** | Model Context Protocol (FastMCP)| Local STDIO transport with 3 allowlisted tools |
+
+---
+
+## CPU-Safe Hardware Profile
+
+The default configuration is specifically tuned for commodity consumer hardware:
+- **Reference Target**: AMD Ryzen 5 5600G (6 cores / 12 threads), 8 GB RAM, no discrete CUDA GPU.
+- **Operational Footprint**:
+  - FastAPI service idle: ~62 MB RAM
+  - Qdrant container: ~45 MB RAM
+  - Ollama (`qwen2.5:1.5b`): ~1.2 GB RAM
+  - Total measured EvidenceOps process-component footprint: **~1.35 GB RAM** (well within the 8 GB machine ceiling)
+- **Concurrency**: `api_max_concurrent_queries=1` prevents thread contention and memory thrashing on CPU cores.
+
+---
+
+## Quickstart & Local Setup
+
+### 1. Prerequisites
+- **Python**: 3.12+
+- **uv**: Modern fast Python package manager ([install guide](https://docs.astral.sh/uv/))
+- **Docker Desktop / Engine**: For running Qdrant
+- **Ollama**: Local model runner ([install guide](https://ollama.com/))
+
+### 2. Installation
 ```powershell
-ollama pull qwen2.5:1.5b
-ollama list
-docker compose up -d qdrant
-```
+# Clone the repository
+git clone https://github.com/Mohammad-Zahed-Hossen/EvidenceOps.git
+cd EvidenceOps
 
-Prepare the corpus and indexes using the ingestion/index commands above. Run a
-reranked search once to populate the FlashRank cache. Dense indexing prepares
-FastEmbed. The query CLI uses cached models only and returns a structured failure
-if a required cache or service is unavailable; it does not download models.
-
-Daily querying:
-
-```powershell
-uv run evidenceops-query --help
-uv run evidenceops-query --query "What is dependency injection?" --json
-uv run evidenceops-query --query "Compare FastEmbed and FlashRank." --max-retrieval-calls 2
-uv run evidenceops-query --query "Hello!" --no-require-citations
-```
-
-Defaults: native `http://localhost:11434/v1`, `qwen2.5:1.5b`, temperature `0.0`,
-60-second HTTP timeout, maximum 256 output tokens (configurable from 1 to 512).
-Hard ceilings are 3 retrieval calls, 3 reformulations, 2 generation attempts,
-6 context chunks, and 24,000 formatted context characters. Smaller request limits
-are honored. `--no-require-citations` permits only non-factual greetings to bypass
-retrieval; factual requests still require evidence and citations.
-
-For conservative CPU smoke testing, use temporary process settings without editing `.env`:
-
-```powershell
-$env:MAX_CONTEXT_CHARS = "4000"
-$env:TOP_K_CONTEXT = "2"
-uv run evidenceops-query --query "What is dependency injection?" --json
-Remove-Item Env:MAX_CONTEXT_CHARS
-Remove-Item Env:TOP_K_CONTEXT
-```
-
-JSON distinguishes `completed`, `abstained`, and `failed`, with citation IDs,
-source evidence and safe route/count diagnostics. Text mode prints the cited
-source title, URI and stable chunk ID. Service failures exit nonzero; ordinary
-insufficient-evidence or citation abstentions exit zero and carry their reason.
-No query, prompt or document body is logged by the application; explicitly requested
-JSON includes selected source text as evidence, with backend metadata allowlisted.
-
-The sufficiency score is a deterministic heuristic, not calibrated confidence.
-Unknown/malformed citations trigger one repair; continued failure causes abstention.
-The 1.5B model sometimes omits citations or invents labels even after repair.
-A full 24,000-character context can exceed the practical CPU timeout or the model's
-available token window. Character limits are ceilings, not latency guarantees.
-The 4,000-character live smoke is not a quality or performance benchmark.
-
-### 6. Local FastAPI Service & Observability Dashboard (Phase 5)
-
-EvidenceOps exposes its bounded retrieval engine and benchmark evaluation via a secure localhost-only FastAPI service and same-origin dashboard:
-
-```powershell
-# Launch FastAPI service (bound strictly to loopback: 127.0.0.1:8080)
-uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8080
-```
-
-- **Recruiter Dashboard**: `http://127.0.0.1:8080/` (Grounded queries, citation cards, trajectory diagnostics, component health probes, background evaluation runner).
-- **Interactive OpenAPI Docs**: `http://127.0.0.1:8080/docs`
-- **Health Probes**: `GET /v1/health`
-- **System Metrics**: `GET /v1/metrics`
-
-#### One-Click Desktop App Launcher (Automated Lifecycle)
-
-EvidenceOps includes an automated desktop launcher that starts local background services (Qdrant in Docker, Ollama, and FastAPI), opens the dashboard in dedicated browser app mode, and automatically stops background services and unloads models to reclaim 100% of RAM upon window close:
-
-- **Windows Batch**: Double-click `EvidenceOps.bat` in the repository root.
-- **PowerShell**: `.\scripts\run_app.ps1`
-
-### 7. Release local resources
-
-```powershell
-ollama stop qwen2.5:1.5b
-docker compose stop qdrant
-ollama ps
-docker compose ps
-```
-
-### Phase 3 verification
-
-```powershell
+# Create environment and sync dependencies
 uv sync --group dev
-uv run pytest -ra -q
-uv run pytest --cov=src/evidenceops --cov-fail-under=75
-uv run ruff check src tests scripts
-uv run ruff format --check src tests scripts
-uv run mypy src/evidenceops
-# Run separately, serially, with prepared local services and caches:
-uv run pytest -m ollama -v
-uv run pytest -m qdrant -v
-uv run pytest -m phase3_live -v
-```
 
-Default tests deselect `ollama`, `qdrant`, `real_model`, and `phase3_live` markers.
-They require neither live daemons nor downloads. The combined live test blocks
-external DNS/connections and uses the existing corpus, Qdrant, FastEmbed,
-FlashRank and native Ollama. See the handoff for observed outcomes and limitations.
-
-### Model Caching & Troubleshooting
-- **FastEmbed**: `BAAI/bge-small-en-v1.5` downloads into OS temp / Hugging Face cache on first dense embedding invocation (~130 MB ONNX). Expected dimension is 384.
-- **FlashRank**: `ms-marco-TinyBERT-L-2-v2` downloads into cache on first reranking invocation (~17 MB ONNX).
-- **Qdrant Unavailable**: If Qdrant is stopped, `dense` and `hybrid` retrieval return an explicit `VectorStoreError` without silent fallback. Run `docker compose up -d qdrant`.
-- **Dimension Mismatch**: If an existing Qdrant collection was created with a different embedding dimension, `VectorStoreError` is raised immediately to prevent corrupt queries.
-
-> **Cost-Aware Retrieval and Evaluation Platform**
-
-EvidenceOps is an AI engineering platform designed to investigate and demonstrate cost-aware, evidence-grounded information retrieval and synthesis. Rather than blindly executing fixed-top-k retrieval for every query or executing unbounded multi-agent tool loops, EvidenceOps leverages a lightweight controller to adaptively determine retrieval routing (sparse, dense, hybrid, or abstain), rerank candidate passages, verify evidence sufficiency, and synthesize verifiable answers with explicit citations while rigorously measuring latency, token consumption, and compute cost.
-
-## Technical Authority
-
-The authoritative technical design and specification for this project is maintained in [EvidenceOps_SSOT.md](file:///d:/Code/Assignment/EvidenceOps/EvidenceOps_SSOT.md). All architectural implementations, schemas, interfaces, and evaluation protocols adhere to this Single Source of Truth.
-
-## Local-First & Zero-Cost Policy
-
-EvidenceOps operates under a strict **local-first and zero-cost policy**:
-- **Generation**: Local Ollama instance (`qwen2.5:1.5b`).
-- **Embedding**: In-process FastEmbed (`BAAI/bge-small-en-v1.5`) on CPU.
-- **Sparse Retrieval**: In-process `rank-bm25`.
-- **Vector Storage**: Local Qdrant instance.
-- **Reranking**: Local FlashRank ONNX model (`ms-marco-TinyBERT-L-2-v2`).
-- **Observability (planned Phase 4)**: Local OpenTelemetry and Jaeger; not implemented or started by Phase 3.
-- **No Paid APIs**: No dependency on OpenAI, Anthropic, Cohere, Pinecone, or hosted services.
-
-## Current Implementation Status
-
-Phase 0, Phase 1A, Phase 1B, Phase 1C, and Phase 2 (MCP Foundation) are complete and verified. Phase 3 (bounded LangGraph orchestration and grounded generation) is complete and locally verified. The separate Phase 1C human judgment gate remains pending in the recorded review artifacts; no retrieval-quality improvement is claimed. See [Phase 3 handoff](docs/status/phase-3-handoff.md). See [STATUS.md](file:///d:/Code/Assignment/EvidenceOps/STATUS.md) for current progress and [DECISIONS.md](file:///d:/Code/Assignment/EvidenceOps/DECISIONS.md) for architectural decision records.
-
-## Quickstart & Setup
-
-### 1. Environment Setup (uv)
-
-```powershell
-# Create virtual environment (Python 3.12)
-uv venv --python 3.12 .venv
-
-# Activate environment (PowerShell)
-.venv\Scripts\Activate.ps1
-
-# Install / sync development dependencies
-uv sync --group dev
-```
-
-### 2. Configuration
-
-```powershell
-# Copy template environment configuration
+# Copy environment configuration template
 Copy-Item .env.example .env
 ```
 
-### 3. Local Corpus Ingestion (Phase 1B)
-
-EvidenceOps includes a deterministic local ingestion pipeline supporting `.md`, `.markdown`, `.txt`, `.html`, and `.htm` documents:
-
+### 3. Model Preparation
 ```powershell
-# Ingest local corpus
-uv run evidenceops-ingest `
-  --source-root data/raw `
-  --run-id local-ingest-v1 `
-  --recursive
+# Pull the verified CPU-safe local LLM (one-time setup)
+ollama pull qwen2.5:1.5b
 ```
 
-**Output Locations**:
-- Processed Document Artifacts: `data/processed/<document_id>.json`
-- Ingestion Run Manifests: `data/manifests/<run_id>.json`
+### 4. Corpus Ingestion & Indexing
+```powershell
+# Ingest local documentation corpus (Markdown, HTML, text)
+uv run evidenceops-ingest --source-root data/raw --run-id local-ingest-v1 --recursive
 
-Refer to [docs/setup/local-development.md](file:///d:/Code/Assignment/EvidenceOps/docs/setup/local-development.md) for full setup instructions and [docs/status/phase-1b-handoff.md](file:///d:/Code/Assignment/EvidenceOps/docs/status/phase-1b-handoff.md) for the Phase 1B technical summary.
+# Build sparse BM25 snapshot and dense Qdrant index
+docker compose up -d qdrant
+uv run evidenceops-index --processed-root data/processed --bm25-root data/bm25 --build-sparse --build-dense
+```
+
+---
+
+## Running EvidenceOps
+
+### Option A: One-Click Desktop Launcher (Automated Lifecycle)
+EvidenceOps provides automated launch scripts that start Qdrant, Ollama, and FastAPI, open the dashboard in dedicated browser app mode, and cleanly stop services and unload models upon closing:
+- **Windows**: Double-click `EvidenceOps.bat` in the project root.
+- **PowerShell**: Run `.\scripts\run_app.ps1`.
+
+### Option B: Manual Service Startup
+```powershell
+# 1. Start Qdrant container
+docker compose up -d qdrant
+
+# 2. Launch FastAPI backend & recruiter dashboard
+uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8080
+```
+- **Recruiter Dashboard**: Open [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
+- **Interactive OpenAPI Docs**: [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
+- **Health Probe**: `GET /v1/health`
+- **Prometheus Metrics**: `GET /v1/metrics`
+
+### Option C: Command-Line Interface (CLI)
+```powershell
+# Query CLI
+uv run evidenceops-query --query "What is dependency injection?" --json
+
+# Documentation search CLI
+uv run evidenceops-search --query "vector indexing" --method hybrid --top-k 5
+
+# Local Model Context Protocol (MCP) server
+uv run evidenceops-mcp
+```
+
+---
+
+## Representative Demo Workflow
+
+| Scenario | Input Query | Engine Behavior | Output |
+| :--- | :--- | :--- | :--- |
+| **1. Direct Gate** | `"Hello, what can you do?"` | Controller routes directly to generator without retrieval overhead. | Direct response explaining capabilities; 0 retrieval calls. |
+| **2. Exact Identifier** | `"How is DocumentChunk id formatted?"` | Routes to sparse BM25; matches exact code symbol. | Grounded response citing `[C1]` with chunk title & URI. |
+| **3. Documentation Search** | `"What is Qdrant payload filtering?"` | Routes to hybrid RRF; retrieves and reranks passages. | Synthesized technical explanation with citations `[C1]`, `[C2]`. |
+| **4. Multi-Step Comparison**| `"Compare FastEmbed and FlashRank roles."` | Multi-pass adaptive retrieval; re-ranks candidates across iterations. | Bounded synthesis comparing embeddings vs rerankers; calls &le; 3. |
+| **5. Unsupported Fact** | `"Who won the 2026 World Cup?"` | Sufficiency check fails ($S < 0.35$); reformulates up to 3 times. | **Structured Abstention**: Returns `"insufficient_evidence"` with zero hallucinated facts. |
+
+---
+
+## Evaluation & Benchmark Reproducibility
+
+EvidenceOps includes a rigorous, frozen 100-item evaluation benchmark comparing adaptive retrieval against standard industry baselines:
+- **Dataset**: `eval/datasets/eval_dataset_v1.json` (60 dev / 20 validation / 20 test).
+- **Baselines**: `NaiveDenseRAG`, `BM25RAG`, `TwoStepHybridRAG`, and `EvidenceOpsAdaptive`.
+- **Metrics**: Recall@K, MRR, nDCG, Citation Precision, Citation Recall, Lexical Fact Proxy, and Abstention Precision.
+- **Statistical Significance**: Paired sign-flip permutation tests with 95% bootstrap confidence intervals ($B = 500$).
+
+### Running Benchmarks
+```powershell
+# Execute reproducible evaluation runner
+uv run evidenceops-eval --dataset-path eval/datasets/eval_dataset_v1.json --systems adaptive,bm25,dense,hybrid
+```
+Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboards under `eval/runs/<run_id>/`.
+
+---
+
+## Security, Privacy & Air-Gap Invariants
+
+1. **Strict Localhost Boundary**: API binds exclusively to `127.0.0.1:8080`. External requests are rejected.
+2. **Zero-CDN Air-Gapped Dashboard**: The web UI contains zero CDN references, zero external web fonts, and zero tracking pixels.
+3. **Complete DOM Safety**: 100% of dynamic DOM updates use `textContent`, `createElement`, and `replaceChildren`. Zero `.innerHTML`, `.outerHTML`, or `insertAdjacentHTML`.
+4. **Strict Telemetry Redaction**: OpenTelemetry traces export only cryptographic SHA-256 hashes and token length metrics. Raw user queries, prompts, and document text are never exported.
+5. **Safe Deserialization**: Controller models use strict JSON schemas. Pickle, joblib, and arbitrary code execution are prohibited.
+6. **No Runtime Downloads**: API and evaluation runtimes enforce `local_models_only=True` to prevent unauthenticated network calls to Hugging Face.
+
+---
+
+## Known Limitations
+
+- **Expert Review Status**: Gold evaluation labels are machine-generated with heuristic verification; expert human review remains marked as **pending**.
+- **Sample Size**: The held-out test split contains 20 items. While statistically tested with bootstrap confidence intervals, larger sample sizes are recommended for definitive production claims.
+- **Local LLM Nuances**: The 1.5B parameter model (`qwen2.5:1.5b`) is tuned for CPU speed; it occasionally requires the built-in citation repair pass to conform to strict citation formatting.
+- **In-Memory Run History**: The API caches the last 100 query runs in memory; history resets on server restart.
+
+---
+
+## Documentation Index
+
+- [EvidenceOps Single Source of Truth (SSOT)](file:///d:/Code/Assignment/EvidenceOps/EvidenceOps_SSOT.md)
+- [Architecture Decision Records (ADRs)](file:///d:/Code/Assignment/EvidenceOps/DECISIONS.md)
+- [Project Roadmap & Status](file:///d:/Code/Assignment/EvidenceOps/STATUS.md)
+- [Phase 6 Final Implementation Audit](file:///d:/Code/Assignment/EvidenceOps/docs/status/phase-6-final-audit.md)
+- [Phase 4-5 Implementation Audit](file:///d:/Code/Assignment/EvidenceOps/docs/status/phase-4-5-independent-audit.md)

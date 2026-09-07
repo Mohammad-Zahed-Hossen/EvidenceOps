@@ -12,8 +12,13 @@
       <div class="brand-logo">EO</div>
       <div class="brand-text">
         <h1>EvidenceOps</h1>
-        <span class="subtitle">Evidence-First Observability & Governance</span>
+        <span class="subtitle">Adaptive Retrieval & Evidence Evaluation Console</span>
       </div>
+    </div>
+    <div class="header-chips" aria-label="System configuration info">
+      <span class="header-chip"><span class="chip-dot"></span> LLM: <strong>qwen2.5:1.5b</strong> (CPU)</span>
+      <span class="header-chip">Max Calls: <strong>3</strong></span>
+      <span class="header-chip">Port: <strong>8080</strong></span>
     </div>
     <div class="header-status">
       <div class="system-status-indicator" id="system-status-pill">
@@ -27,12 +32,24 @@
   </header>
 
   <main class="dashboard-layout">
-    <!-- Top Row: Query & Service Overview -->
+    <!-- Top Row: Query & Route Governor -->
     <section class="card query-panel" aria-labelledby="query-section-heading">
       <div class="card-header">
         <h2 id="query-section-heading" class="card-title">Query Execution & Route Governor</h2>
         <span class="badge badge-cpu">CPU-Bounded (1 Concurrency)</span>
       </div>
+
+      <!-- Sample Query Benchmarks -->
+      <div class="sample-queries-wrapper" aria-label="Sample test queries">
+        <span class="sample-queries-label">Corpus Benchmarks:</span>
+        <div class="sample-pills-list">
+          <button type="button" class="sample-pill" data-query="How do I declare query parameters in FastAPI?">FastAPI Query Params</button>
+          <button type="button" class="sample-pill" data-query="How does Qdrant handle vector indexing and distance metrics?">Qdrant Vector Indexing</button>
+          <button type="button" class="sample-pill" data-query="Compare sparse BM25 keyword matching with dense vector retrieval.">BM25 vs Dense Hybrid</button>
+          <button type="button" class="sample-pill" data-query="What was the closing stock price of Apple on January 1st, 2026?">Unsupported (Abstain)</button>
+        </div>
+      </div>
+
       <form id="query-form" class="query-form">
         <div class="form-group">
           <label for="query-input">User Inquiry</label>
@@ -115,7 +132,7 @@
         <div class="citations-section">
           <h3 class="section-subtitle">Grounded Evidence Citations (<span id="citation-count">0</span>)</h3>
           <div id="citations-list" class="citations-list">
-            <div class="empty-citations">No citations yet.</div>
+            <div class="empty-citations">No citations returned yet.</div>
           </div>
         </div>
       </section>
@@ -127,6 +144,45 @@
           <div class="card-header">
             <h2 id="trajectory-section-heading" class="card-title">Execution Trajectory & Telemetry</h2>
             <span class="badge" id="route-badge">Idle</span>
+          </div>
+
+          <!-- Chronological Trajectory Flow -->
+          <div class="trajectory-flow" id="trajectory-flow">
+            <div class="flow-step" id="step-features">
+              <div class="step-badge">1</div>
+              <div class="step-info">
+                <span class="step-title">Query Analysis</span>
+                <span class="step-detail" id="step-features-text">Awaiting inquiry</span>
+              </div>
+            </div>
+            <div class="flow-step" id="step-route">
+              <div class="step-badge">2</div>
+              <div class="step-info">
+                <span class="step-title">Controller Decision</span>
+                <span class="step-detail" id="step-route-text">Governor idle</span>
+              </div>
+            </div>
+            <div class="flow-step" id="step-retrieval">
+              <div class="step-badge">3</div>
+              <div class="step-info">
+                <span class="step-title">Bounded Retrieval</span>
+                <span class="step-detail" id="step-retrieval-text">0 calls made</span>
+              </div>
+            </div>
+            <div class="flow-step" id="step-sufficiency">
+              <div class="step-badge">4</div>
+              <div class="step-info">
+                <span class="step-title">Sufficiency Gate</span>
+                <span class="step-detail" id="step-sufficiency-text">Threshold: 0.72</span>
+              </div>
+            </div>
+            <div class="flow-step" id="step-terminal">
+              <div class="step-badge">5</div>
+              <div class="step-info">
+                <span class="step-title">Grounded Outcome</span>
+                <span class="step-detail" id="step-terminal-text">Idle</span>
+              </div>
+            </div>
           </div>
 
           <div class="metrics-strip">
@@ -243,6 +299,26 @@
               <span>Artifact Output:</span>
               <code id="eval-artifact-path"></code>
             </div>
+
+            <div id="eval-table-container" class="eval-table-container hidden">
+              <table class="eval-summary-table" id="eval-summary-table">
+                <thead>
+                  <tr>
+                    <th>System</th>
+                    <th>Recall@10</th>
+                    <th>MRR@10</th>
+                    <th>Lexical Proxy F1*</th>
+                    <th>Cit. Prec.</th>
+                    <th>Abstain Acc.</th>
+                    <th>Latency</th>
+                  </tr>
+                </thead>
+                <tbody id="eval-table-body"></tbody>
+              </table>
+              <div class="eval-caveat-note">
+                * Note: Lexical proxy F1 measures token overlap and is not human-reviewed factual correctness.
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -251,8 +327,8 @@
 
   <footer class="footer">
     <div class="footer-content">
-      <span>EvidenceOps Local Deployment • Localhost Loopback Only • No External Telemetry</span>
-      <span class="version-tag">Local MVP · Audit in progress</span>
+      <span>EvidenceOps Local Deployment • Localhost Loopback Only • Zero Paid APIs</span>
+      <span class="version-tag">EvidenceOps v1.0.0 • Phase 6 Hardened Release</span>
     </div>
   </footer>
 

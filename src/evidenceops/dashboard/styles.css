@@ -689,8 +689,219 @@ textarea {
 .content-grid, .content-grid > *, .sidebar-column, .card { min-width: 0; }
 .citation-header, .card-header, .footer-content { flex-wrap: wrap; gap: 0.5rem; }
 .citation-source, .trace-id-code, .eval-artifact-link code { overflow-wrap: anywhere; }
+
+/* Phase 6 Enhancements: Header Chips */
+.header-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.header-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(34, 50, 71, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.header-chip strong {
+  color: var(--accent-cyan);
+}
+
+.chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-ready);
+}
+
+/* Phase 6 Enhancements: Sample Query Pills */
+.sample-queries-wrapper {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sample-queries-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sample-pills-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sample-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.775rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sample-pill:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* Phase 6 Enhancements: Trajectory Flow */
+.trajectory-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  background: rgba(14, 21, 32, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.flow-step.active {
+  background: rgba(0, 210, 255, 0.08);
+  border-left: 2px solid var(--accent-cyan);
+}
+
+.flow-step.completed {
+  background: rgba(16, 185, 129, 0.08);
+  border-left: 2px solid var(--status-ready);
+}
+
+.flow-step.abstained {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 2px solid var(--status-warning);
+}
+
+.step-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flow-step.active .step-badge {
+  background: var(--accent-cyan);
+  color: #0c1017;
+}
+
+.flow-step.completed .step-badge {
+  background: var(--status-ready);
+  color: #0c1017;
+}
+
+.flow-step.abstained .step-badge {
+  background: var(--status-warning);
+  color: #0c1017;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-title {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.step-detail {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Phase 6 Enhancements: Collapsible Citations */
+.citation-details {
+  margin-top: 0.5rem;
+}
+
+.citation-summary {
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  cursor: pointer;
+  padding: 0.2rem 0;
+  user-select: none;
+}
+
+.citation-summary:hover {
+  text-decoration: underline;
+}
+
+/* Phase 6 Enhancements: Benchmark Evaluation Table */
+.eval-table-container {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.eval-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.eval-summary-table th,
+.eval-summary-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.eval-summary-table th {
+  color: var(--text-secondary);
+  font-weight: 600;
+  background: rgba(14, 21, 32, 0.6);
+}
+
+.eval-summary-table td {
+  color: var(--text-primary);
+}
+
+.eval-summary-table tr:hover td {
+  background: rgba(24, 35, 50, 0.4);
+}
+
+.eval-caveat-note {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
 @media (max-width: 600px) {
   .navbar { padding: 0.75rem; flex-wrap: wrap; gap: 0.75rem; }
+  .header-chips { display: none; }
   .dashboard-layout { padding: 0.75rem; }
   .card { padding: 0.75rem; }
   .metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }

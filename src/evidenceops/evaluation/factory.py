@@ -27,7 +27,7 @@ def build_benchmark_systems(
     controller_model_path: Path | str = "artifacts/models/controller_model.joblib",
 ) -> list[BaseRAGSystem]:
     """Construct all benchmark systems sharing identical resource boundaries and generators."""
-    active_settings = settings or get_settings()
+    active_settings = (settings or get_settings()).model_copy(update={"local_models_only": True})
     requested = set(system_names or ["all"])
     run_all = "all" in requested
 

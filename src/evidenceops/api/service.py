@@ -237,7 +237,8 @@ class ApiService:
                     from evidenceops.retrieval.reranker import FlashRankReranker
                     from evidenceops.retrieval.service import build_documentation_service
 
-                    doc_service = build_documentation_service(self.settings)
+                    runtime_settings = self.settings.model_copy(update={"local_models_only": True})
+                    doc_service = build_documentation_service(runtime_settings)
                     sparse_route = DocumentationRoute(doc_service, "sparse")
                     dense_route = DocumentationRoute(doc_service, "dense")
                     hybrid_route = DocumentationRoute(doc_service, "hybrid")
