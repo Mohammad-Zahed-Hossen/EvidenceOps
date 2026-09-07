@@ -153,3 +153,38 @@
      - Independent package lifecycle and versioning are established without breaking EvidenceOps.
      - Multiple consumer applications or frameworks are identified and verified.
      - Complete decoupling from EvidenceOps internal data stores (operating solely over public abstract protocols).
+
+### ADR-026: LiteBridge Core-Port-Adapter Boundary and Future Extraction Policy
+- **Context**: In Phase L0 (ADR-025), LiteBridge established a branch-first isolation and unidirectional dependency (`LiteBridge → EvidenceOps`). However, unidirectional dependency alone does not prevent LiteBridge core code from directly importing and coupling to EvidenceOps domain models, Qdrant clients, BM25 indices, LangGraph nodes, or API schemas. If LiteBridge core imports these concrete types directly, LiteBridge becomes an EvidenceOps-specific internal feature folder rather than a portable, extractable retrieval-planning and context-preparation product.
+- **Decision**:
+  1. **Product Boundary Ground Truth**: Explicitly declare that **LiteBridge is the product boundary; EvidenceOps is the first adapter and testbed**.
+  2. **Strict Inverted Dependency Hierarchy**:
+     ```text
+     LiteBridge core contracts and services
+             ↑
+     LiteBridge adapters
+             ↑
+     EvidenceOps local-retrieval adapter
+             ↑
+     EvidenceOps public services/contracts
+     ```
+     - Forbidden direction: `EvidenceOps core → LiteBridge`.
+     - Also forbidden: `LiteBridge core → EvidenceOps-specific retrieval models, Qdrant clients, BM25 internals, raw loaders, LangGraph nodes, API routes, dashboard code, generation client internals`.
+     - Only an isolated adapter module (`adapters/evidenceops_local.py`) may import verified public EvidenceOps interfaces (`LocalDocumentationService`).
+  3. **Core, Port, and Adapter Architectural Separation**:
+     - **LiteBridge Core**: Owns public contracts (`ContextPackage`, `EvidenceRecord`, policies, budget semantics), evidence ordering, citation identity (`[C1]`, `[C2]`), safe context rendering, reproducibility identity, public facade (`prepare_context()`, `answer()`), and sanitized errors. Contains zero imports of EvidenceOps internal types.
+     - **LiteBridge Ports**: Owns narrow provider-neutral protocols (e.g. `EvidenceRetriever`) returning LiteBridge-neutral candidate records (`RawEvidenceCandidate`). Exposes zero backend-specific, framework-specific, or client-specific objects. Fully testable via lightweight doubles without EvidenceOps installed or running.
+     - **LiteBridge Adapters**: Translates concrete backend integrations into LiteBridge ports. Only adapters and factories may import integration-specific code or vendor SDKs.
+     - **Composition Root**: Wires core services with adapters (`factory.py`).
+  4. **Why LiteBridge Cannot Expose EvidenceOps Types**: Exposing EvidenceOps types in LiteBridge's public contracts would permanently couple downstream users, SDK consumers, and LLM applications to EvidenceOps, defeating LiteBridge's purpose as a reusable, model-agnostic context middleware product.
+  5. **Why EvidenceOps Remains First Adapter & Testbed**: EvidenceOps provides an existing, verified local-first retrieval, sparse/dense indexing, and citation-validation pipeline that serves as an ideal zero-cloud reference implementation and testbed for LiteBridge without requiring paid APIs or remote services.
+  6. **Consequences & Accepted Trade-Off**: Writing an explicit adapter layer introduces a small translation boundary between EvidenceOps and LiteBridge ports, but guarantees complete independence of core logic, unblocks future extraction, and ensures testability without heavy runtime services.
+  7. **Rejected Alternative**: Directly importing EvidenceOps services across LiteBridge core without an adapter layer. Rejected because it permanently entangles LiteBridge with EvidenceOps schemas, Qdrant/BM25 internals, and application runtime semantics.
+  8. **Standalone Extraction Gate (Six Mandatory Preconditions)**:
+     - Public contracts contain no EvidenceOps-specific classes or types.
+     - Core unit tests run using fake ports without running or importing EvidenceOps runtime services.
+     - The EvidenceOps adapter passes the identical contract tests as at least one non-EvidenceOps connector.
+     - The package can prepare a `ContextPackage` without a provider SDK installed.
+     - Public SDK documentation does not require users to understand EvidenceOps.
+     - Moving the package requires changing only composition/import wiring, not rewriting core behavior.
+  9. **No Runtime Implementation**: This ADR is documentation and architecture governance prior to Phase L1; no implementation code, tests, dependencies, or configuration are modified in this task.

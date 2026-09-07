@@ -42,17 +42,17 @@ No LiteBridge feature may directly reach into low-level Qdrant client sockets, r
 
 | EvidenceOps Capability | Existing Owning Module(s) (Verified) | LiteBridge Future Use | Allowed Dependency Direction | L0 Rule |
 | :--- | :--- | :--- | :--- | :--- |
-| **Processed Artifacts / Ingestion** | `evidenceops.ingestion.artifacts`<br>`evidenceops.ingestion.pipeline` | Reuse `JsonProcessedDocumentStore` and `ProcessedDocumentArtifact` to load normalized document chunks and content hashes. | `LiteBridge → Ingestion Public Stores`<br>(EvidenceOps does not depend on LiteBridge) | Read-only access to persisted artifacts under `data/processed/`. No raw parser or file loader modifications. |
-| **Sparse Retrieval** | `evidenceops.retrieval.bm25`<br>`evidenceops.retrieval.sparse_store` | Reuse BM25 query execution and snapshot store (`JsonSparseIndexStore`) for exact-match technical lookups. | `LiteBridge → Sparse Store / Protocol`<br>(No reverse dependency) | Reuses existing `SparseRetriever` protocol. No index schema or tokenizer modifications. |
-| **Dense Retrieval** | `evidenceops.retrieval.dense`<br>`evidenceops.retrieval.embeddings`<br>`evidenceops.retrieval.qdrant_store` | Reuse `DenseRetrieverService` and `FastEmbedEmbeddingProvider` for semantic vector search against local Qdrant collections. | `LiteBridge → Dense Service Protocol`<br>(No reverse dependency) | No direct `qdrant_client` manipulation. Must use existing service boundaries. |
-| **Hybrid Retrieval & Reranking** | `evidenceops.retrieval.hybrid`<br>`evidenceops.retrieval.reranker`<br>`evidenceops.retrieval.service` | Primary entry point: reuse `LocalDocumentationService`, `SearchDocumentationRequest`, `DocumentationSearchResult`, `HybridRetriever`, and `FlashRankReranker`. | `LiteBridge → LocalDocumentationService`<br>(No reverse dependency) | `LocalDocumentationService` is the canonical retrieval boundary for local evidence. |
-| **Evidence Adaptation** | `evidenceops.evidence.adapter`<br>`evidenceops.evidence.context`<br>`evidenceops.evidence.sufficiency`<br>`evidenceops.evidence.conflict` | Adapt ranked `RetrievalResult` into candidate `EvidenceRecord`; reuse sufficiency heuristic and pairwise conflict verification. | `LiteBridge → Evidence Public Functions`<br>(No reverse dependency) | No modification to EvidenceOps sufficiency ($S = 0.45R + 0.25C + 0.15D + 0.15A$) or conflict formulas. |
-| **Citation Validation** | `evidenceops.evidence.citations` | Reuse sequential citation parser, syntax verification (`[C1]`, `[C2]`), and reference mapping logic. | `LiteBridge → Citation Validator`<br>(No reverse dependency) | Citation contracts and bracket formatting invariants remain identical. |
-| **Abstention / Failure Semantics** | `evidenceops.domain.enums`<br>`evidenceops.domain.models`<br>`evidenceops.domain.errors` | Reuse `AbstentionReason`, `RunStatus`, `GroundedAnswer`, and standard error hierarchy (`EvidenceOpsError`). | `LiteBridge → Domain Enums/Models`<br>(No reverse dependency) | LiteBridge errors must inherit from or wrap domain error types without leaking raw backend exceptions. |
-| **Generation Provider Contracts** | `evidenceops.generation.contracts`<br>`evidenceops.generation.providers`<br>`evidenceops.generation.ollama` | Reuse `GenerationProvider` protocol, `GenerationRequest`, `GenerationResponse`, and provider factory for downstream answer synthesis. | `LiteBridge → Generation Protocols`<br>(No reverse dependency) | Retains strict loopback-only rule for local providers. Remote providers deferred to Phase L5. |
-| **Settings & Configuration** | `evidenceops.settings` | Read application settings (`Settings`, `get_settings`) for local ports, timeouts, thresholds, and ceilings. | `LiteBridge → Settings`<br>(No reverse dependency) | LiteBridge adds no new global settings in L0. L0 inherits existing validated limits. |
-| **Evaluation Identities & Artifacts** | `evidenceops.evaluation.identity`<br>`evidenceops.evaluation.artifacts`<br>`evidenceops.evaluation.contracts` | Reuse deterministic SHA-256 fingerprinting (`generate_file_identity`), run manifest models, and benchmark contracts. | `LiteBridge → Evaluation Identity`<br>(No reverse dependency) | Ground-truth datasets and existing benchmarks remain immutable and untouched. |
-| **Observability & Tracing** | `evidenceops.observability.tracing` | Reuse `TracingService` and strict `RedactionPolicy` (SHA-256 hashing, zero raw query/text/prompt export). | `LiteBridge → Tracing Service`<br>(No reverse dependency) | No raw text or unredacted traces may cross span boundaries. |
+| **Processed Artifacts / Ingestion** | `evidenceops.ingestion.artifacts`<br>`evidenceops.ingestion.pipeline` | Reuse `JsonProcessedDocumentStore` and `ProcessedDocumentArtifact` to load normalized document chunks and content hashes. | `LiteBridge Adapter → Ingestion Public Stores`<br>(EvidenceOps does not depend on LiteBridge; core does not access directly) | Read-only access through an isolated adapter (`adapters/evidenceops_local.py`). LiteBridge core logic never accesses filesystem loaders or artifact stores directly. |
+| **Sparse Retrieval** | `evidenceops.retrieval.bm25`<br>`evidenceops.retrieval.sparse_store` | Reuse BM25 query execution and snapshot store (`JsonSparseIndexStore`) for exact-match technical lookups. | `LiteBridge Adapter → Sparse Store / Protocol`<br>(No reverse dependency; core decoupled) | Accessed solely via adapter implementing LiteBridge port. LiteBridge core never imports BM25 index schemas or tokenizers. |
+| **Dense Retrieval** | `evidenceops.retrieval.dense`<br>`evidenceops.retrieval.embeddings`<br>`evidenceops.retrieval.qdrant_store` | Reuse `DenseRetrieverService` and `FastEmbedEmbeddingProvider` for semantic vector search against local Qdrant collections. | `LiteBridge Adapter → Dense Service Protocol`<br>(No reverse dependency; core decoupled) | No direct `qdrant_client` manipulation. Accessed solely via adapter implementing LiteBridge port. |
+| **Hybrid Retrieval & Reranking** | `evidenceops.retrieval.hybrid`<br>`evidenceops.retrieval.reranker`<br>`evidenceops.retrieval.service` | Primary entry point: reuse `LocalDocumentationService`, `SearchDocumentationRequest`, `DocumentationSearchResult`, `HybridRetriever`, and `FlashRankReranker`. | `LiteBridge Adapter → LocalDocumentationService`<br>(No reverse dependency; core decoupled) | `LocalDocumentationService` is accessed solely through `EvidenceOpsLocalRetrieverAdapter`. LiteBridge core imports only LiteBridge ports. |
+| **Evidence Adaptation** | `evidenceops.evidence.adapter`<br>`evidenceops.evidence.context`<br>`evidenceops.evidence.sufficiency`<br>`evidenceops.evidence.conflict` | Adapt ranked `RetrievalResult` into candidate `EvidenceRecord`; reuse sufficiency heuristic and pairwise conflict verification. | `LiteBridge Adapter → Evidence Public Functions`<br>(No reverse dependency; core decoupled) | Translated within the adapter layer into LiteBridge-neutral records. LiteBridge core contracts never expose EvidenceOps internal candidate types. |
+| **Citation Validation** | `evidenceops.evidence.citations` | Reuse sequential citation parser, syntax verification (`[C1]`, `[C2]`), and reference mapping logic. | `LiteBridge Core / Adapter → Citation Logic`<br>(No reverse dependency) | Citation semantics and bracket formatting invariants (`[C1]`, `[C2]`) are adopted as LiteBridge core contracts without exposing EvidenceOps models. |
+| **Abstention / Failure Semantics** | `evidenceops.domain.enums`<br>`evidenceops.domain.models`<br>`evidenceops.domain.errors` | Reuse `AbstentionReason`, `RunStatus`, `GroundedAnswer`, and standard error hierarchy (`EvidenceOpsError`). | `LiteBridge Adapter / Errors → Domain Enums/Errors`<br>(No reverse dependency; core decoupled) | LiteBridge defines its own sanitized error hierarchy (`errors.py`). Adapters map EvidenceOps exceptions into LiteBridge errors. |
+| **Generation Provider Contracts** | `evidenceops.generation.contracts`<br>`evidenceops.generation.providers`<br>`evidenceops.generation.ollama` | Reuse `GenerationProvider` protocol, `GenerationRequest`, `GenerationResponse`, and provider factory for downstream answer synthesis. | `LiteBridge Provider Adapter → Generation Protocols`<br>(No reverse dependency; core decoupled) | Retains strict loopback-only rule. Generation adapters are optional Phase L5 components; `prepare_context()` never calls generation. |
+| **Settings & Configuration** | `evidenceops.settings` | Read application settings (`Settings`, `get_settings`) for local ports, timeouts, thresholds, and ceilings. | `LiteBridge Composition Root → Settings`<br>(No reverse dependency; core decoupled) | LiteBridge core accepts configuration via typed policies (`RetrievalPolicy`, `BudgetPolicy`). Application settings are wired in composition root (`factory.py`). |
+| **Evaluation Identities & Artifacts** | `evidenceops.evaluation.identity`<br>`evidenceops.evaluation.artifacts`<br>`evidenceops.evaluation.contracts` | Reuse deterministic SHA-256 fingerprinting (`generate_file_identity`), run manifest models, and benchmark contracts. | `LiteBridge Eval Adapter → Evaluation Identity`<br>(No reverse dependency) | Ground-truth datasets and benchmarks remain immutable. Evaluated separately through contract tests in Phase L8. |
+| **Observability & Tracing** | `evidenceops.observability.tracing` | Reuse `TracingService` and strict `RedactionPolicy` (SHA-256 hashing, zero raw query/text/prompt export). | `LiteBridge Composition Root → Tracing Service`<br>(No reverse dependency; core decoupled) | Telemetry hooks are wired at composition boundaries. Core contracts remain independent of tracing backends. |
 
 ---
 
@@ -203,16 +203,87 @@ LiteBridge establishes three explicit operating profiles as defined in `LiteBrid
 
 ---
 
-## G. Resume Guide
+## G. Architecture Guardrail Amendment: Product Boundary and Portability
+
+### 1. Why Unidirectional Dependency Alone Is Not Enough
+The baseline dependency constraint (`LiteBridge → EvidenceOps`, `EvidenceOps ↛ LiteBridge`) protects the stability of EvidenceOps on `main`. However, simple unidirectional dependency is insufficient on its own: without explicit port/adapter boundaries, LiteBridge core code could directly import EvidenceOps domain models, Qdrant store classes, BM25 indices, LangGraph nodes, or API schemas. Doing so would tightly couple LiteBridge to EvidenceOps internals, converting LiteBridge into an EvidenceOps-specific feature folder rather than an independent, portable product.
+
+Therefore, ground truth is explicitly defined as:
+> **LiteBridge is the product boundary. EvidenceOps is the first adapter and testbed.**
+
+The required dependency hierarchy is:
+
+```text
+LiteBridge core contracts and services
+        ↑
+LiteBridge adapters
+        ↑
+EvidenceOps local-retrieval adapter
+        ↑
+EvidenceOps public services/contracts
+```
+
+**Forbidden direction:**
+```text
+EvidenceOps core → LiteBridge
+```
+
+**Also forbidden:**
+```text
+LiteBridge core → EvidenceOps-specific retrieval models,
+                  Qdrant clients,
+                  BM25 internals,
+                  raw loaders,
+                  LangGraph nodes,
+                  API routes,
+                  dashboard code,
+                  generation client internals
+```
+
+### 2. Public Contracts Must Be LiteBridge-Owned
+All public contracts (`ContextPackage`, `EvidenceRecord`, `RetrievalPolicy`, `GenerationPolicy`, `SourcePolicy`, `BudgetPolicy`) must be defined and owned exclusively by LiteBridge (`src/evidenceops/bridge/contracts.py`). Downstream applications, SDK consumers, and external tools must interact solely with LiteBridge contracts. EvidenceOps-specific classes or types must never appear in public LiteBridge signatures or return values.
+
+### 3. EvidenceOps Is an Adapter, Not the Public SDK
+EvidenceOps provides a verified local-first retrieval, sparse/dense indexing, and evidence-verification engine. In LiteBridge, EvidenceOps functions strictly as an underlying retrieval adapter (`adapters/evidenceops_local.py`) and initial local testbed. It does not define LiteBridge's public identity or public API.
+
+### 4. Core, Port, Adapter, and Composition Separation
+- **LiteBridge Core (`contracts.py`, `errors.py`, `context_builder.py`, `service.py`):** Owns public contracts, `ContextPackage`, `EvidenceRecord`, policies, budget semantics, evidence ranking and ordering, stable citation identities (`[C1]`, `[C2]`), safe context rendering, reproducibility hashes, public facade, and sanitized error envelopes. The core must contain zero imports of EvidenceOps internal types.
+- **LiteBridge Ports (`ports.py`):** Owns provider-neutral protocols such as `EvidenceRetriever`. Returns LiteBridge-neutral candidate records (`RawEvidenceCandidate`). Exposes zero Qdrant, BM25, filesystem, HTTP-client, or provider-client types. Test doubles must be able to satisfy the port without EvidenceOps installed or running.
+- **LiteBridge Adapters (`adapters/`):** Translate concrete backend integrations into LiteBridge ports. `adapters/evidenceops_local.py` is the only initial file permitted to import public EvidenceOps services (`LocalDocumentationService`). Future connectors (`WebSearchAdapter`, `WebPageFetcherAdapter`, `StructuredApiAdapter`, `GenerationProviderAdapter`) remain strictly isolated within `adapters/`.
+- **Composition Root (`factory.py`):** Wires LiteBridge core with concrete adapters (e.g. `LiteBridge core + EvidenceOps adapter`). Contains wiring logic only, never public business logic.
+
+### 5. Standalone Extraction Gate
+LiteBridge may move to an independent package or repository only when all six conditions are met:
+1. Public contracts contain zero EvidenceOps-specific classes or types.
+2. Core unit tests run using fake ports without running or importing EvidenceOps runtime services.
+3. The EvidenceOps adapter passes the identical contract tests as at least one non-EvidenceOps connector.
+4. The package can prepare a `ContextPackage` without an LLM provider SDK installed.
+5. Public SDK documentation does not require users to understand EvidenceOps.
+6. Moving the package requires changing only composition and import wiring, not rewriting core behavior.
+
+Until these conditions are met, `experiment/litebridge-bridge` remains an incubation environment, not a permanently mixed product.
+
+### 6. Generator-Independent `prepare_context()`
+`prepare_context()` is strictly generator-independent. It executes retrieval planning, queries configured source adapters via LiteBridge ports, verifies evidence, and packages compact context without importing, configuring, starting, or invoking any generation service or LLM provider SDK. Downstream generation is an optional consumer of `ContextPackage`.
+
+### 7. Adapters, Not Core, Own Backend-Specific Logic
+No connector or provider may alter LiteBridge core contracts to accommodate vendor-specific fields, query formats, or credentials. All vendor-specific schemas, API translation, rate-limit policies, and error handling belong strictly inside isolated adapter modules.
+
+---
+
+## H. Resume Guide
 
 ```text
 Next approved implementation phase: L1 — Generator-independent context mode.
 ```
 
-### Initial Tasks for Phase L1 (from LiteBridge_SSOT.md Section 20):
-1. Create `src/evidenceops/bridge/` package namespace.
-2. Define `ContextPackage`, `RetrievalPolicy`, and `EvidenceRecord` runtime Pydantic contracts.
-3. Implement `prepare_context(query, policy)` facade that executes bounded local retrieval and evidence packaging without invoking an LLM.
-4. Adapt `LocalDocumentationService` to populate `ContextPackage` with stable sequential citations (`[C1]`, `[C2]`), token estimates, and stop reasons.
-5. Implement unit tests and fake-provider tests verifying generator-independent context preparation.
-6. Verify that no LLM generation call occurs when calling `prepare_context()`.
+### Updated Phase L1 Implementation Plan (Under Core-Port-Adapter Boundary):
+1. Create `src/evidenceops/bridge/` package namespace (deferred until L1 execution).
+2. Define LiteBridge-owned runtime Pydantic contracts (`ContextPackage`, `RetrievalPolicy`, `EvidenceRecord`) in `contracts.py`.
+3. Define LiteBridge-owned provider-neutral retrieval protocol (`EvidenceRetriever`) and candidate types in `ports.py`.
+4. Define sanitized LiteBridge error hierarchy in `errors.py`.
+5. Implement isolated `EvidenceOpsLocalRetrieverAdapter` in `adapters/evidenceops_local.py` translating `LocalDocumentationService` results into LiteBridge-neutral candidates.
+6. Implement `prepare_context(query, policy)` facade in `service.py` that executes bounded retrieval via `EvidenceRetriever` port and packages evidence into `ContextPackage` without invoking an LLM.
+7. Wire default composition in `factory.py`.
+8. Implement unit tests and fake-retriever contract tests proving that LiteBridge core executes cleanly without EvidenceOps runtime services or LLM generation calls.
+9. Verify that zero LLM generation calls or provider imports occur when invoking `prepare_context()`.

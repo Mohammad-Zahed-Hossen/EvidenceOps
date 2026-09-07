@@ -42,27 +42,32 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Phase L0 complete and verified
+### Status: Architecture guardrail amendment complete; Phase L1 pending
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch.
 
 - **Branch Name:** `experiment/litebridge-bridge`
 - **Baseline Commit:** `1c490dc65e57c3e38766d466755b95e359f10ca5`
-- **Phase L0 Completion Status:** Complete and verified (post-change quality checks passed)
+- **Phase L0 & Guardrails Status:** Complete and verified (pre-L1 architecture amendment complete)
+- **Phase L1 Status:** Not yet implemented. Phase L1 may begin only under the new core/port/adapter guardrails.
 
-- **Files Added:**
-  - `LiteBridge_SSOT.md` (authoritative specification tracked)
-  - `docs/architecture/LiteBridge_L0_Architecture_Baseline.md` (architecture baseline & contract charter)
-- **Files Modified:**
-  - `DECISIONS.md` (added ADR-025)
-  - `README.md` (added experimental branch scope notice)
-  - `STATUS.md` (added LiteBridge status section)
+- **Documents Created & Updated in this Amendment:**
+  - `LiteBridge_SSOT.md` (updated to v1.1: product identity, core-port-adapter boundary, layout, phase amendments, extraction gate)
+  - `docs/architecture/LiteBridge_L0_Architecture_Baseline.md` (updated: adapter-only capability matrix, architecture guardrail amendment, updated resume guide)
+  - `docs/architecture/LiteBridge_Phase_Gates.md` (new: non-negotiable invariants, phase-start/phase-completion checklists, phase stop rules)
+  - `AGENTS.md` (added: LiteBridge architecture guardrails)
+  - `DECISIONS.md` (added: ADR-026 on core-port-adapter boundary and extraction policy)
+  - `STATUS.md` (updated: architecture amendment status and guardrails)
+  - `README.md` (updated: accurate architecture note on experimental branch scope)
+
 - **Verification Commands & Baseline Results:**
   - `uv run pytest -ra -q`: 509 passed, 1 skipped (Windows symlink privilege)
   - `uv run ruff check src tests scripts`: All checks passed
   - `uv run ruff format --check src tests scripts`: 182 files already formatted
   - `uv run mypy src/evidenceops`: Success (no issues found in 87 source files)
   - `git diff --check`: Clean
-- **EvidenceOps No-Change Guarantee:** Zero modifications to existing EvidenceOps runtime behaviors, CLI commands, API routes, MCP tools, database schemas, evaluation datasets, or generation provider behavior. `main` branch remains protected and untouched.
-- **Explicit Exclusions:** Web search, external page fetching, external LLM adapters, context compression, and `prepare_context()` are **not** implemented in Phase L0.
-- **Explicit Next Phase:** `L1 — Generator-independent context mode`.
+
+- **EvidenceOps No-Change Guarantee:** Zero modifications to existing EvidenceOps runtime behaviors, CLI commands, API routes, MCP tools, database schemas, evaluation datasets, or generation provider behavior. `main` branch remains protected and untouched. No runtime code, dependencies, datasets, or EvidenceOps behavior changed.
+
+- **Explicit Next Approved Action:**
+  `L1 — Generator-Independent Context Mode, using a LiteBridge-owned retrieval port and an isolated EvidenceOps adapter.`

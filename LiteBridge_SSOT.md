@@ -1,11 +1,15 @@
 # LiteBridge System Specification
 
-**Status:** Approved planning baseline  
-**Version:** 1.0  
+**Status:** Approved planning baseline
+**Version:** 1.1 — Portability and anti-coupling architecture guardrails.
 **Project type:** Model-agnostic external retrieval, planning, and context-preparation layer  
 **Reference implementation:** EvidenceOps  
 **Primary repository:** `D:\Code\Assignment\EvidenceOps`  
 **Experimental branch:** `experiment/litebridge-bridge`
+
+### Document Changelog
+- **Version 1.1 (2026-09-07):** Portability and anti-coupling architecture guardrails. Established core-port-adapter boundary, extraction gate, provider-neutral product claims, and prohibited core coupling to EvidenceOps internal models.
+- **Version 1.0 (2026-09-07):** Initial system specification baseline for Phase L0.
 
 ---
 
@@ -47,6 +51,21 @@ The primary product hypothesis is:
 > A lightweight retrieval and planning layer can provide a smaller, better-supported context package to different LLMs while preserving or improving grounded-answer quality, reducing unnecessary retrieval calls, and reducing input-token usage.
 
 This is a hypothesis, not a guaranteed result. No cost, quality, latency, or token-reduction claim may be made until measured against documented baselines on a leakage-safe evaluation set.
+
+### 3.1 Product identity and accurate claims
+
+LiteBridge’s core product is a provider-neutral `ContextPackage`. Any LLM application that can accept text context can consume a `ContextPackage`. Native provider adapters are optional convenience integrations, not requirements for the core product.
+
+The precise public wording for LiteBridge is:
+
+> LiteBridge prepares compact, citation-preserving context for LLM applications. Provider-specific generation adapters are optional integrations.
+
+Key product identity rules:
+- LiteBridge’s core product is a provider-neutral `ContextPackage`.
+- Any LLM application that can accept text context can consume a `ContextPackage`.
+- Native provider adapters are optional convenience integrations, not requirements for the core product.
+- Do not claim “works with any LLM” until the package interface and tested adapters support the exact claim.
+- Do not claim cost, latency, token, or grounding improvement until Phase L8 evaluates the same workload against fixed baselines.
 
 ## 4. Goals
 
@@ -91,12 +110,49 @@ LiteBridge must not:
 
 Multimodal support may be a later branch, but it requires a separate corpus, modality-aware contracts, visual citation semantics, model evaluation, and resource plan.
 
-## 6. Relationship to EvidenceOps
+## 6. Relationship to EvidenceOps and Product Boundary
 
-EvidenceOps is the initial retrieval and evidence engine. LiteBridge must reuse it through public protocols rather than importing low-level implementation details everywhere.
+### 6.1 Architectural Authority Rule
+
+> **LiteBridge is the product boundary. EvidenceOps is the first adapter and testbed.**
+
+The required dependency direction is strictly unidirectional and inverted through adapters:
 
 ```text
-EvidenceOps
+LiteBridge core contracts and services
+        ↑
+LiteBridge adapters
+        ↑
+EvidenceOps local-retrieval adapter
+        ↑
+EvidenceOps public services/contracts
+```
+
+**Forbidden direction:**
+
+```text
+EvidenceOps core → LiteBridge
+```
+
+**Also forbidden:**
+
+```text
+LiteBridge core → EvidenceOps-specific retrieval models,
+                  Qdrant clients,
+                  BM25 internals,
+                  raw loaders,
+                  LangGraph nodes,
+                  API routes,
+                  dashboard code,
+                  generation client internals
+```
+
+Only a clearly isolated adapter may import verified public EvidenceOps interfaces. LiteBridge core contracts and services must never import or expose EvidenceOps-specific types.
+
+EvidenceOps remains the stable local-first RAG application on `main`. EvidenceOps serves as LiteBridge's initial local retrieval adapter and testbed, but EvidenceOps must not become part of LiteBridge’s public API or permanent core identity.
+
+```text
+EvidenceOps (Testbed & Local Retrieval Foundation)
   ├── ingestion and processed artifacts
   ├── BM25 sparse retrieval
   ├── FastEmbed and Qdrant dense retrieval
@@ -106,7 +162,7 @@ EvidenceOps
   ├── citation validation and abstention
   └── local evaluation and tracing
 
-LiteBridge
+LiteBridge (Product Boundary & Future Standalone Package)
   ├── query planner
   ├── source registry and connector policy
   ├── web/API retrieval orchestration
@@ -117,6 +173,70 @@ LiteBridge
 ```
 
 EvidenceOps must continue to work as a complete local RAG application. LiteBridge is an additional mode and must not break its CLI, MCP, API, dashboard, tests, or existing defaults.
+
+## Core, Port, and Adapter Boundary
+
+To preserve long-term portability and enable standalone extraction into an independent package, LiteBridge defines four distinct architectural layers:
+
+### 1. LiteBridge Core
+
+The core owns:
+
+- public contracts;
+- `ContextPackage`;
+- `EvidenceRecord`;
+- policies and budget semantics (`RetrievalPolicy`, `GenerationPolicy`, `SourcePolicy`, `BudgetPolicy`);
+- evidence ordering;
+- citation identity (`[C1]`, `[C2]`);
+- safe context rendering;
+- package reproducibility identity;
+- public facade (`prepare_context()`, `answer()`);
+- sanitized error semantics.
+
+The core must not expose or require EvidenceOps-specific types, database models, or schemas.
+
+### 2. LiteBridge Ports
+
+The ports layer owns narrow, provider-neutral protocols:
+
+```python
+class EvidenceRetriever(Protocol):
+    def retrieve(
+        self,
+        query: str,
+        limit: int,
+    ) -> Sequence[RawEvidenceCandidate]: ...
+```
+
+Mandatory port rules:
+
+- a port returns LiteBridge-neutral data;
+- a port must not expose Qdrant, BM25, filesystem, HTTP-client, provider-client, or framework-specific objects;
+- test doubles (fakes, stubs) must be able to implement the port without installing, configuring, or running EvidenceOps services.
+
+### 3. LiteBridge Adapters
+
+Adapters translate concrete integrations into LiteBridge ports:
+
+```text
+EvidenceOpsLocalRetrieverAdapter
+WebSearchAdapter              (future L3)
+WebPageFetcherAdapter         (future L3)
+StructuredApiAdapter          (future)
+GenerationProviderAdapter     (future L5)
+```
+
+Only adapters and factories may import integration-specific code or third-party vendor SDKs.
+
+### 4. Composition Root
+
+A factory/composition layer wires:
+
+```text
+LiteBridge core + EvidenceOps adapter
+```
+
+LiteBridge core itself remains completely independent of EvidenceOps implementation details.
 
 ## 7. Supported operating profiles
 
@@ -616,7 +736,9 @@ Recommended progression:
 
 The lightweight model may select retrieval actions, source routes, context budgets, or stopping decisions. It must not be described as a replacement for the LLM.
 
-## 19. Suggested repository structure
+## 19. Suggested repository structure and in-repository layout
+
+### 19.1 Target Standalone Repository Layout
 
 ```text
 LiteBridge/
@@ -671,7 +793,29 @@ LiteBridge/
     └── status/
 ```
 
-If LiteBridge remains in the EvidenceOps repository initially, use `src/evidenceops/bridge/` and preserve the same logical boundaries. Extract to a separate repository only after the bridge contracts no longer depend on EvidenceOps-specific types.
+### 19.2 In-Repository Incubation Layout
+
+During incubation within the EvidenceOps repository (`experiment/litebridge-bridge`), LiteBridge will reside conceptually under:
+
+```text
+src/evidenceops/bridge/
+├── contracts.py
+├── ports.py
+├── errors.py
+├── context_builder.py
+├── service.py
+├── adapters/
+│   └── evidenceops_local.py
+└── factory.py
+```
+
+Architectural rules for this in-repository layout:
+
+- This is only the planned logical layout; files are added strictly in their approved phase.
+- `contracts.py`, `ports.py`, `errors.py`, `context_builder.py`, and `service.py` must not import EvidenceOps retrieval/domain implementation types.
+- `adapters/evidenceops_local.py` is the only initial place permitted to import verified public EvidenceOps retrieval boundaries.
+- `factory.py` is composition-only, never public business logic.
+- Do not add placeholder Python packages, empty directories, or `.gitkeep` files until their respective phase is implemented.
 
 ## 20. Phased implementation plan
 
@@ -687,18 +831,21 @@ Exit gate: existing EvidenceOps tests pass unchanged.
 
 ### Phase L1: Generator-independent context mode
 
-- implement `ContextPackage`;
-- implement `prepare_context()` facade;
-- adapt EvidenceOps retrieval and evidence services;
+- implement LiteBridge-owned public contracts (`ContextPackage`, `RetrievalPolicy`, `EvidenceRecord`);
+- implement LiteBridge-owned retrieval port (`EvidenceRetriever`);
+- implement isolated EvidenceOps local-document adapter (`EvidenceOpsLocalRetrieverAdapter`);
+- implement generator-independent `prepare_context()` facade;
 - preserve citations, provenance, budgets, and stop reasons;
-- add fake-provider tests.
+- prove through automated tests that LiteBridge core runs against a fake retriever without importing, starting, or calling generation services.
 
-Exit gate: context preparation works without any LLM generation call.
+Exit gate: context preparation works without any LLM generation call, and core unit tests run cleanly against fake ports.
 
 ### Phase L2: Source registry and private connectors
 
 - register local document sources;
 - define source policies;
+- new local, web, and structured connectors must be adapters implementing LiteBridge ports;
+- no connector may alter LiteBridge core contracts solely for its own backend-specific fields;
 - normalize evidence across source types;
 - implement connector failure and timeout handling.
 
@@ -707,10 +854,11 @@ Exit gate: local document retrieval is source-agnostic and reproducible.
 ### Phase L3: Web search and page retrieval
 
 - add provider-neutral web search protocol;
-- implement one approved provider adapter;
+- implement approved provider adapters implementing LiteBridge ports;
 - implement safe page fetching;
 - add freshness, caching, domain allowlist, SSRF, and size controls;
-- preserve URL and page citations.
+- preserve URL and page citations;
+- no connector may alter LiteBridge core contracts for backend-specific metadata.
 
 Exit gate: web retrieval is bounded, cited, policy-controlled, and safe under malicious URL/content tests.
 
@@ -718,23 +866,27 @@ Exit gate: web retrieval is bounded, cited, policy-controlled, and safe under ma
 
 - implement heuristic source/action planner;
 - integrate query feature extraction;
+- planner output must select abstract source/route actions, not EvidenceOps classes or vendor-specific clients;
 - implement bounded decomposition and reformulation;
 - add retrieval, web, token, cost, and latency budgets.
 
-Exit gate: planner decisions are deterministic, explainable, and bounded.
+Exit gate: planner decisions are deterministic, explainable, bounded, and decoupled from backend implementation classes.
 
 ### Phase L5: External LLM provider adapters
 
 - retain Ollama;
 - add local OpenAI-compatible adapter;
 - add external OpenAI, Anthropic, and Gemini adapters behind optional dependencies/configuration;
+- generation providers consume `ContextPackage`; they must not perform retrieval or alter retrieval behavior;
+- provider SDKs must remain optional dependencies; LiteBridge core must remain installable and usable without OpenAI, Anthropic, Gemini, Ollama, or other provider SDKs;
 - normalize usage, errors, retries, timeouts, and provider identity;
 - enforce credential and privacy policy.
 
-Exit gate: the same `ContextPackage` can be passed to multiple providers without changing retrieval behavior.
+Exit gate: the same `ContextPackage` can be passed to multiple providers without changing retrieval behavior, and core remains usable without provider SDKs installed.
 
 ### Phase L6: Context compression and quality controls
 
+- compression acts only on LiteBridge `EvidenceRecord` / `ContextPackage` boundaries and preserves citation mappings;
 - implement extractive selection first;
 - add optional bounded compression;
 - preserve citation mappings through compression;
@@ -746,6 +898,8 @@ Exit gate: context reduction does not silently remove required support or create
 ### Phase L7: API, SDK, and MCP
 
 - expose safe Python SDK;
+- API and MCP layers call the LiteBridge public facade;
+- must not expose adapter internals or allow arbitrary provider/source/backend access;
 - add context and answer endpoints;
 - add narrow MCP tools;
 - add provider/source capability inspection;
@@ -756,6 +910,8 @@ Exit gate: external clients cannot access arbitrary backends, URLs, paths, crede
 ### Phase L8: Evaluation and learned controller
 
 - freeze dataset and source identities;
+- evaluate the LiteBridge core separately from the EvidenceOps adapter;
+- at minimum, evaluate with fake retriever contract tests, EvidenceOps local adapter, at least one non-EvidenceOps connector when available, and fixed baselines using identical generator/prompt/model conditions;
 - evaluate baselines;
 - train learned planner only on development data;
 - select using validation;
@@ -775,6 +931,19 @@ Exit gate: all conclusions are supported by reproducible artifacts and limitatio
 - clean release branch.
 
 Exit gate: a new developer can run local-only mode and reproduce the documented evaluation without paid credentials.
+
+## Standalone Extraction Gate
+
+LiteBridge may move to a separate repository only when all six of the following conditions are true:
+
+1. **Public contract independence:** Public contracts contain no EvidenceOps-specific classes or types.
+2. **Core unit test isolation:** Core unit tests run using fake ports without installing, configuring, or running EvidenceOps runtime services.
+3. **Multi-connector conformance:** The EvidenceOps adapter passes the same contract tests as at least one non-EvidenceOps connector.
+4. **Zero-SDK core operation:** The package can prepare a `ContextPackage` without a provider SDK installed.
+5. **Independent SDK documentation:** Public SDK documentation does not require users to understand EvidenceOps.
+6. **Pure composition extraction:** Moving the package requires changing only composition/import wiring, not rewriting core behavior.
+
+Until these conditions are met, the branch remains an incubation environment, not a permanently mixed product.
 
 ## 21. Configuration contract
 
