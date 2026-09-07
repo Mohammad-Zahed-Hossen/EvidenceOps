@@ -13,6 +13,7 @@ from evidenceops.bridge.contracts import (
     SourceKind,
     SourcePolicy,
     StopReason,
+    WebRetrievalPolicy,
 )
 from evidenceops.bridge.errors import (
     LiteBridgeError,
@@ -45,5 +46,6 @@ __all__ = [
     "SourcePolicy",
     "SourceRegistry",
     "StopReason",
+    "WebRetrievalPolicy",
     "build_litebridge",
 ]

@@ -19,12 +19,14 @@ from evidenceops.bridge.ports import RawEvidenceCandidate
 
 def test_privacy_classification_values() -> None:
     assert PrivacyClassification.PRIVATE == "private"
-    assert len(list(PrivacyClassification)) == 1
+    assert PrivacyClassification.PUBLIC_WEB == "public_web"
+    assert len(list(PrivacyClassification)) == 2
 
 
 def test_source_freshness_values() -> None:
     assert SourceFreshness.SNAPSHOT == "snapshot"
-    assert len(list(SourceFreshness)) == 1
+    assert SourceFreshness.LIVE == "live"
+    assert len(list(SourceFreshness)) == 2
 
 
 def test_source_descriptor_valid_construction() -> None:
@@ -257,3 +259,260 @@ def test_raw_evidence_candidate_requires_source_id() -> None:
             retrieval_route="hybrid",
             rank=1,
         )
+
+
+def test_web_retrieval_policy_validation() -> None:
+    from evidenceops.bridge.contracts import WebRetrievalPolicy
+
+    p_default = WebRetrievalPolicy()
+    assert p_default.allow_external_query is False
+    assert p_default.max_search_results == 5
+    assert p_default.fetch_pages is False
+    assert p_default.max_page_fetches == 0
+
+    # fetch_pages=False requires max_page_fetches == 0
+    with pytest.raises(LiteBridgeValidationError):
+        WebRetrievalPolicy(fetch_pages=False, max_page_fetches=1)
+
+    # fetch_pages=True requires max_page_fetches >= 1
+    with pytest.raises(LiteBridgeValidationError):
+        WebRetrievalPolicy(fetch_pages=True, max_page_fetches=0)
+
+    # Valid fetch_pages=True
+    p_fetch = WebRetrievalPolicy(fetch_pages=True, max_page_fetches=2)
+    assert p_fetch.fetch_pages is True
+    assert p_fetch.max_page_fetches == 2
+
+    # Bounds: max_search_results (1 to 5)
+    with pytest.raises(ValidationError):
+        WebRetrievalPolicy(max_search_results=0)
+    with pytest.raises(ValidationError):
+        WebRetrievalPolicy(max_search_results=6)
+
+    # Bounds: max_page_fetches (0 to 3)
+    with pytest.raises(ValidationError):
+        WebRetrievalPolicy(fetch_pages=True, max_page_fetches=4)
+
+
+def test_web_source_descriptor_validation() -> None:
+    from evidenceops.bridge.contracts import ExecutionProfile
+
+    # Valid web source descriptor
+    desc = SourceDescriptor(
+        source_id="tavily_web_search",
+        display_name="Tavily Web Search",
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+        adapter_id="tavily_web",
+        enabled=True,
+        privacy_classification=PrivacyClassification.PUBLIC_WEB,
+        freshness=SourceFreshness.LIVE,
+        citation_required=True,
+        max_response_chars=24000,
+        timeout_ms=5000,
+        max_retries=0,
+        supported_execution_profiles=(ExecutionProfile.HYBRID,),
+    )
+    assert desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET
+    assert desc.privacy_classification == PrivacyClassification.PUBLIC_WEB
+    assert desc.freshness == SourceFreshness.LIVE
+    assert desc.supported_execution_profiles == (ExecutionProfile.HYBRID,)
+
+    # Web descriptor must have PUBLIC_WEB
+    with pytest.raises(ValidationError):
+        SourceDescriptor(
+            source_id="tavily_web_search",
+            display_name="Tavily Web Search",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            adapter_id="tavily_web",
+            enabled=True,
+            privacy_classification=PrivacyClassification.PRIVATE,
+            freshness=SourceFreshness.LIVE,
+            citation_required=True,
+            max_response_chars=24000,
+            timeout_ms=5000,
+            max_retries=0,
+            supported_execution_profiles=(ExecutionProfile.HYBRID,),
+        )
+
+    # Web descriptor must have LIVE freshness
+    with pytest.raises(ValidationError):
+        SourceDescriptor(
+            source_id="tavily_web_search",
+            display_name="Tavily Web Search",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            adapter_id="tavily_web",
+            enabled=True,
+            privacy_classification=PrivacyClassification.PUBLIC_WEB,
+            freshness=SourceFreshness.SNAPSHOT,
+            citation_required=True,
+            max_response_chars=24000,
+            timeout_ms=5000,
+            max_retries=0,
+            supported_execution_profiles=(ExecutionProfile.HYBRID,),
+        )
+
+    # Web descriptor must support only HYBRID
+    with pytest.raises(ValidationError):
+        SourceDescriptor(
+            source_id="tavily_web_search",
+            display_name="Tavily Web Search",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            adapter_id="tavily_web",
+            enabled=True,
+            privacy_classification=PrivacyClassification.PUBLIC_WEB,
+            freshness=SourceFreshness.LIVE,
+            citation_required=True,
+            max_response_chars=24000,
+            timeout_ms=5000,
+            max_retries=0,
+            supported_execution_profiles=(ExecutionProfile.LOCAL_ONLY,),
+        )
+
+
+def test_evidence_provenance_validation_for_web_kinds() -> None:
+    # 1. Local document rejects web provenance
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.LOCAL_DOCUMENT,
+            source_id="local_src",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="hybrid",
+            rank=1,
+            canonical_url="https://docs.python.org",
+        )
+
+    # 2. Web search snippet requires canonical HTTPS URL
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url=None,
+        )
+
+    # Rejects HTTP (non-HTTPS)
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url="http://docs.python.org",
+        )
+
+    # Rejects URL with credentials
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url="https://user:pass@docs.python.org",
+        )
+
+    # Rejects URL with fragment
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url="https://docs.python.org#heading",
+        )
+
+    # Rejects URL with non-default port
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url="https://docs.python.org:8080/path",
+        )
+
+    # Rejects URL with IP literal
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url="https://127.0.0.1/path",
+        )
+
+    # Snippet rejects fetched_at_utc
+    with pytest.raises(ValidationError):
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_search",
+            rank=1,
+            canonical_url="https://docs.python.org/3/",
+            fetched_at_utc="2026-09-07T23:00:00Z",
+        )
+
+    # 3. Web page excerpt requires canonical HTTPS URL, SHA-256 content_hash, and UTC timestamp
+    with pytest.raises(ValidationError):
+        # Missing hash and timestamp
+        EvidenceRecord(
+            evidence_id="ev1",
+            citation_id="C1",
+            source_kind=SourceKind.WEB_PAGE_EXCERPT,
+            source_id="tavily_web_search",
+            document_id="doc1",
+            excerpt="content",
+            retrieval_route="web_fetch",
+            rank=1,
+            canonical_url="https://docs.python.org/3/",
+        )
+
+    valid_hash = "a" * 64
+    # Valid web page excerpt
+    rec = EvidenceRecord(
+        evidence_id="ev1",
+        citation_id="C1",
+        source_kind=SourceKind.WEB_PAGE_EXCERPT,
+        source_id="tavily_web_search",
+        document_id="doc1",
+        excerpt="content",
+        retrieval_route="web_fetch",
+        rank=1,
+        canonical_url="https://docs.python.org/3/",
+        content_hash=valid_hash,
+        fetched_at_utc="2026-09-07T23:00:00Z",
+    )
+    assert rec.canonical_url == "https://docs.python.org/3/"
+    assert rec.content_hash == valid_hash
+    assert rec.fetched_at_utc == "2026-09-07T23:00:00Z"

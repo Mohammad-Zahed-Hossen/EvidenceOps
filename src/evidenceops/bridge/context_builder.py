@@ -43,11 +43,17 @@ def render_evidence_block(citation_id: str, evidence: EvidenceRecord) -> str:
         f"Source: {evidence.source_label}",
         f"Title: {evidence.title}",
         f"Section: {evidence.section}",
-        "Content:",
-        evidence.excerpt,
-        "",
-        f"[END {citation_id}]",
     ]
+    if evidence.canonical_url:
+        lines.append(f"URL: {evidence.canonical_url}")
+    lines.extend(
+        [
+            "Content:",
+            evidence.excerpt,
+            "",
+            f"[END {citation_id}]",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -64,7 +70,7 @@ def build_context_package(
         package_id = _derive_package_id(
             query_hash=query_hash,
             policy=policy,
-            selected_ids=(),
+            selected_records=(),
             reproducibility=batch.reproducibility,
         )
         return ContextPackage(
@@ -81,6 +87,7 @@ def build_context_package(
             context_chars=0,
             estimated_tokens=0,
             retrieval_calls=batch.retrieval_calls,
+            web_calls=batch.web_calls,
             retrieval_route=batch.retrieval_route,
             timings_ms=batch.timings_ms + (("total", elapsed_ms),),
             stop_reason=StopReason.NO_EVIDENCE,
@@ -113,6 +120,9 @@ def build_context_package(
             rank=candidate.rank,
             score=candidate.score,
             source_version=candidate.source_version,
+            canonical_url=candidate.canonical_url,
+            content_hash=candidate.content_hash,
+            fetched_at_utc=candidate.fetched_at_utc,
             metadata=candidate.metadata,
         )
 
@@ -145,10 +155,11 @@ def build_context_package(
         stop_reason = StopReason.SUCCESS
         final_context_text = f"{UNTRUSTED_HEADER}\n\n" + "\n\n".join(selected_blocks)
 
+    selected_records_tuple = tuple(selected_records)
     package_id = _derive_package_id(
         query_hash=query_hash,
         policy=policy,
-        selected_ids=tuple(r.evidence_id for r in selected_records),
+        selected_records=selected_records_tuple,
         reproducibility=batch.reproducibility,
     )
 
@@ -159,13 +170,14 @@ def build_context_package(
         normalized_query=normalized_query,
         execution_profile=policy.execution_profile,
         effective_policy=policy,
-        evidence=tuple(selected_records),
+        evidence=selected_records_tuple,
         context_text=final_context_text,
         max_context_chars=policy.max_context_chars,
         max_estimated_tokens=policy.max_estimated_tokens,
         context_chars=len(final_context_text),
         estimated_tokens=estimate_tokens(final_context_text),
         retrieval_calls=batch.retrieval_calls,
+        web_calls=batch.web_calls,
         retrieval_route=batch.retrieval_route,
         timings_ms=batch.timings_ms + (("total", elapsed_ms),),
         stop_reason=stop_reason,
@@ -178,10 +190,19 @@ def _derive_package_id(
     *,
     query_hash: str,
     policy: RetrievalPolicy,
-    selected_ids: tuple[str, ...],
+    selected_records: tuple[EvidenceRecord, ...],
     reproducibility: tuple[tuple[str, str], ...],
 ) -> str:
-    """Derive deterministic package identity strictly from stable inputs (excluding timings)."""
+    """Derive deterministic package identity strictly from stable inputs."""
+    evidence_fingerprints: list[str] = []
+    for r in selected_records:
+        fp = r.evidence_id
+        if r.canonical_url:
+            fp += f"|url={r.canonical_url}"
+        if r.content_hash:
+            fp += f"|hash={r.content_hash}"
+        evidence_fingerprints.append(fp)
+
     identity_parts = [
         query_hash,
         policy.execution_profile.value,
@@ -189,8 +210,14 @@ def _derive_package_id(
         str(policy.max_evidence_items),
         str(policy.max_context_chars),
         str(policy.max_estimated_tokens),
-        ",".join(selected_ids),
+        ",".join(evidence_fingerprints),
         ",".join(f"{k}={v}" for k, v in sorted(reproducibility)),
     ]
+    if policy.web is not None:
+        identity_parts.append(
+            f"web={policy.web.allow_external_query},{policy.web.max_search_results},"
+            f"{policy.web.fetch_pages},{policy.web.max_page_fetches}"
+        )
+
     digest = hashlib.sha256(":".join(identity_parts).encode("utf-8")).hexdigest()
     return f"lb_pkg_{digest[:16]}"

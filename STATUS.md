@@ -42,35 +42,36 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Phase L2 complete and locally verified
+### Status: Phase L3 complete and locally verified
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Baseline Commit for L2:** `8125065`
-- **Phase L2 Completion Status:** Complete and verified (source-agnostic registry, local source policy, generator-independent).
+- **Baseline Commit for L3:** `5a5bde1`
+- **Phase L3 Completion Status:** Complete and verified (safe opt-in web search and page retrieval, SSRF protection, domain allowlists, generator-independent).
 - **Deliverables Implemented:**
-  - `src/evidenceops/bridge/contracts.py`: Added `PrivacyClassification` (`PRIVATE`), `SourceFreshness` (`SNAPSHOT`), `SourceDescriptor`, `SourcePolicy`, and required `source_id: str` on `EvidenceRecord`.
-  - `src/evidenceops/bridge/ports.py`: Added required `source_id: str` on `RawEvidenceCandidate`.
-  - `src/evidenceops/bridge/errors.py`: Added `LiteBridgeSourceError` and `LiteBridgeTimeoutError`.
-  - `src/evidenceops/bridge/source_registry.py`: Core in-memory allowlist source registry with deterministic single default resolution, unique slug enforcement, and strict execution profile checking.
-  - `src/evidenceops/bridge/service.py`: `LiteBridge` facade supporting registry mode and backward-compatible direct-retriever mode, single-source policy resolution, candidate source validation, core-governed reproducibility metadata merge, and sanitized timeout mapping.
-  - `src/evidenceops/bridge/adapters/evidenceops_local.py`: Isolated adapter configured with `source_id="evidenceops_local_docs"`, propagating `source_id` to candidates, and mapping upstream `TimeoutError` to `LiteBridgeTimeoutError`.
-  - `src/evidenceops/bridge/factory.py`: Composition root registering `evidenceops_local_docs` in `SourceRegistry` as default local source with `source_version=None`.
-  - `src/evidenceops/bridge/__init__.py`: Clean public exports for L2 contracts and errors.
-- **Verification Results (Post-L2):**
-  - Focused L2 tests: 59 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 567 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check (200 files) and ruff format (200 files) pass with zero errors.
-  - Type checking: Mypy passes with zero issues across 97 source files.
-  - Import audit: AST inspection proves all core modules (`contracts.py`, `ports.py`, `errors.py`, `context_builder.py`, `service.py`, `source_registry.py`) contain zero imports of `evidenceops.generation`, `evidenceops.retrieval`, `evidenceops.domain`, or external provider SDKs.
-  - Generator independence: Proven by exploding-stub tests in both direct-retriever mode and registry mode confirming `prepare_context()` succeeds while all generation providers and request constructors raise if touched.
-- **Known L2 Limitations:**
-  - Local documentation corpus only (`SourceKind.LOCAL_DOCUMENT`); single registered production source (`evidenceops_local_docs`).
-  - Strict single-source selection per call; no multi-source fan-out, query planning, or evidence fusion.
+  - `src/evidenceops/bridge/contracts.py`: Added `SourceKind.WEB_SEARCH_SNIPPET`, `SourceKind.WEB_PAGE_EXCERPT`, `PrivacyClassification.PUBLIC_WEB`, `SourceFreshness.LIVE`, `WebRetrievalPolicy`, `validate_canonical_https_url`, `supported_execution_profiles` on `SourceDescriptor`, web provenance fields on `EvidenceRecord`, and `web_calls` on `ContextPackage`.
+  - `src/evidenceops/bridge/ports.py`: Added `WebSearchHit`, `FetchedWebPage`, protocols `WebSearchProvider` and `WebPageFetcher`, web provenance fields on `RawEvidenceCandidate`, and `web_calls` on `RetrievalBatch`.
+  - `src/evidenceops/settings.py` & `.env.example`: Added 10 LiteBridge web settings with strict hostname-only domain validation and `parsed_allowed_fetch_domains`.
+  - `src/evidenceops/bridge/adapters/tavily_search.py`: Isolated `TavilySearchAdapter` translating Tavily Basic Search API into `WebSearchHit` records without exposing API keys in error representations.
+  - `src/evidenceops/bridge/adapters/safe_web_fetcher.py`: SSRF-safe `SafeWebFetcher` enforcing HTTPS-only, no credentials, port 443 only, no URL fragments, no IP literals, pre-request DNS resolution rejecting non-globally-routable IPs, manual redirect hop validation (max 3), content-type verification, response streaming byte caps, and stdlib HTML text extraction.
+  - `src/evidenceops/bridge/adapters/web_cache.py`: In-memory bounded LRU TTL `WebRetrievalCache` keyed by query and policy hash.
+  - `src/evidenceops/bridge/adapters/web_retriever.py`: Coordinated `WebRetrieverAdapter` enforcing policy-to-settings caps, caching with `web_calls=0` accounting, and graceful fallback to snippets on fetch failure.
+  - `src/evidenceops/bridge/source_registry.py`: Extended to support `ExecutionProfile.HYBRID` and validate source descriptor `supported_execution_profiles`.
+  - `src/evidenceops/bridge/service.py`: Enforces 5-part web opt-in requirements, rejects web policy under `LOCAL_ONLY`, validates candidate kinds allowing both snippets and page excerpts for web sources, forwards `web_calls` accounting, and maintains deterministic package identity.
+  - `src/evidenceops/bridge/factory.py`: Composition root conditionally registering `tavily_web_search` when enabled with API key, while preserving local-only default operation.
+  - `src/evidenceops/bridge/__init__.py`: Exported `WebRetrievalPolicy`.
+- **Verification Results (Post-L3):**
+  - Focused L3 tests: 95 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 604 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check (207 files) and ruff format (207 files) pass with zero errors.
+  - Type checking: Mypy passes with zero issues across 101 source files.
+  - Import audit: AST inspection proves core modules contain zero imports of `httpx`, `requests`, `urllib`, `socket`, `ipaddress`, EvidenceOps internals, or LLM providers; adapter modules contain zero LLM or generation imports.
+  - Generator independence: Proven by exploding-stub tests across direct retriever, local registry, and web retriever modes confirming `prepare_context()` succeeds while all generation providers raise if touched.
+- **Known L3 Limitations:**
+  - Single-source selection only per call; no multi-source query planning, fan-out, or evidence fusion across local and web simultaneously.
   - Declarative timeouts (`timeout_ms`) with zero retries; hard process cancellation is not implemented.
-  - Zero web search, page fetching, or remote API retrieval.
   - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
   - Context packaging only; answer generation (`answer()`) is not implemented.
 - **Explicit Next Approved Action:**
-  `L3 — Web Search and Page Retrieval`.
+  `L4 — Hybrid Evidence Fusion`.

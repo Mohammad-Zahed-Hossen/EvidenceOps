@@ -222,7 +222,7 @@ Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboard
 ## Project Status & Experimental Scope
 
 - **Production Baseline (`main`)**: `main` remains EvidenceOps—a complete, local-first, evidence-grounded RAG application. Current EvidenceOps on `main` does not provide web retrieval or cloud-provider middleware.
-- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: LiteBridge is being incubated on a separate branch (`experiment/litebridge-bridge`). Its public product boundary is a provider-neutral context package. Phase L2 adds an in-memory source registry, deterministic source-policy selection, and provenance tracking, with the local EvidenceOps adapter registered as the default local document source (`evidenceops_local_docs`). Sources are registry-controlled, not user-provided paths or endpoints. Web retrieval, external provider integrations, and multi-source fusion are not yet implemented. LiteBridge is not yet available as an end-user CLI, API, or dashboard feature in EvidenceOps.
+- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: LiteBridge is being incubated on a separate branch (`experiment/litebridge-bridge`). Its public product boundary is a provider-neutral context package. Phase L3 adds optional, opt-in web search and page retrieval backed by Tavily Basic Search and an SSRF-safe page fetcher with domain allowlists, DNS validation, manual hop redirect controls, and response byte caps. Default execution remains 100% local-only with zero network calls and zero API keys required. Multi-source evidence fusion (L4) and external LLM provider adapters (L5) are not yet implemented. LiteBridge is not yet available as an end-user CLI, API, or dashboard feature in EvidenceOps.
 
 ---
 

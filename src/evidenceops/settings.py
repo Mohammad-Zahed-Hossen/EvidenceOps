@@ -1,10 +1,11 @@
 """Typed local configuration for EvidenceOps."""
 
+import re
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlparse
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -69,6 +70,16 @@ class Settings(BaseSettings):
     embedding_threads: int = Field(default=4, ge=1, le=4)
     embedding_batch_size: int = Field(default=8, ge=1, le=64)
     manifest_schema_version: str = "1.0"
+    litebridge_enable_tavily_web: bool = False
+    tavily_api_key: SecretStr | None = None
+    litebridge_web_timeout_ms: int = Field(default=5000, gt=0, le=60000)
+    litebridge_web_max_results: int = Field(default=5, ge=1, le=5)
+    litebridge_web_max_page_fetches: int = Field(default=2, ge=0, le=3)
+    litebridge_web_max_response_bytes: int = Field(default=1_000_000, gt=0, le=10_000_000)
+    litebridge_web_max_redirects: int = Field(default=3, ge=0, le=5)
+    litebridge_web_cache_ttl_seconds: int = Field(default=300, gt=0, le=86400)
+    litebridge_web_cache_max_entries: int = Field(default=64, gt=0, le=1024)
+    litebridge_web_allowed_fetch_domains: str = ""
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod
@@ -125,6 +136,41 @@ class Settings(BaseSettings):
         if ".." in normalized or normalized.startswith("/"):
             raise ValueError("API evaluation root must be a safe project-relative directory")
         return value
+
+    @field_validator("litebridge_web_allowed_fetch_domains")
+    @classmethod
+    def validate_allowed_fetch_domains(cls, value: str) -> str:
+        if not value or not value.strip():
+            return ""
+        cleaned: list[str] = []
+        for raw in value.split(","):
+            entry = raw.strip().lower()
+            if not entry:
+                raise ValueError("Empty domain entry in allowed fetch domains")
+            if "*" in entry:
+                raise ValueError("Wildcard domains are not permitted in allowed fetch domains")
+            if "://" in entry or "/" in entry:
+                raise ValueError(
+                    "URLs are not permitted in allowed fetch domains; provide hostnames only"
+                )
+            if ":" in entry:
+                raise ValueError("Ports are not permitted in allowed fetch domains")
+            parts = entry.split(".")
+            if len(parts) == 4 and all(p.isdigit() for p in parts):
+                raise ValueError("IP literals are not permitted in allowed fetch domains")
+            if "[" in entry or "]" in entry:
+                raise ValueError("IP literals are not permitted in allowed fetch domains")
+            if not re.match(r"^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$", entry):
+                raise ValueError(f"Invalid domain format: '{entry}'")
+            cleaned.append(entry)
+        return ",".join(sorted(set(cleaned)))
+
+    @property
+    def parsed_allowed_fetch_domains(self) -> tuple[str, ...]:
+        """Return validated, deduplicated tuple of allowed fetch domains."""
+        if not self.litebridge_web_allowed_fetch_domains:
+            return ()
+        return tuple(self.litebridge_web_allowed_fetch_domains.split(","))
 
 
 @lru_cache(maxsize=1)

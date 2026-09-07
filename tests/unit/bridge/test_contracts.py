@@ -21,9 +21,11 @@ def test_execution_profile_values() -> None:
     assert ExecutionProfile.HOSTED == "hosted"
 
 
-def test_source_kind_is_strictly_local_document_in_l1() -> None:
+def test_source_kind_values() -> None:
     assert SourceKind.LOCAL_DOCUMENT == "local_document"
-    assert len(list(SourceKind)) == 1
+    assert SourceKind.WEB_SEARCH_SNIPPET == "web_search_snippet"
+    assert SourceKind.WEB_PAGE_EXCERPT == "web_page_excerpt"
+    assert len(list(SourceKind)) == 3
 
 
 def test_stop_reason_values() -> None:

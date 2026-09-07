@@ -66,10 +66,10 @@ class SourceRegistry:
             LiteBridgeValidationError: If more than one source ID is requested.
             LiteBridgeSourceError: If the source is unknown, disabled, or no default is registered.
         """
-        if execution_profile != ExecutionProfile.LOCAL_ONLY:
+        if execution_profile not in (ExecutionProfile.LOCAL_ONLY, ExecutionProfile.HYBRID):
             raise LiteBridgeProfileError(
                 f"Execution profile '{execution_profile.value}' is not supported; "
-                "only 'local_only' is supported in Phase L2"
+                "only 'local_only' and 'hybrid' are supported in Phase L3"
             )
 
         if source_policy is None or not source_policy.allowed_source_ids:
@@ -82,7 +82,7 @@ class SourceRegistry:
             if len(source_policy.allowed_source_ids) > 1:
                 count = len(source_policy.allowed_source_ids)
                 raise LiteBridgeValidationError(
-                    f"At most one source ID may be selected in Phase L2, got {count}"
+                    f"At most one source ID may be selected, got {count}"
                 )
             target_source_id = source_policy.allowed_source_ids[0]
 
@@ -92,5 +92,11 @@ class SourceRegistry:
 
         if not registration.descriptor.enabled:
             raise LiteBridgeSourceError(f"Source '{target_source_id}' is disabled")
+
+        if execution_profile not in registration.descriptor.supported_execution_profiles:
+            prof = execution_profile.value
+            raise LiteBridgeProfileError(
+                f"Source '{target_source_id}' does not support execution profile '{prof}'"
+            )
 
         return registration.descriptor, registration.retriever

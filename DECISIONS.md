@@ -219,3 +219,27 @@
   6. **Core-Guaranteed Reproducibility Integrity**: Core-resolved `source_id` and `adapter_id` metadata take precedence and cannot be overwritten by adapter-provided reproducibility metadata. `ContextPackage.package_id` deterministically incorporates `source_id` and excludes timing values.
   7. **Declarative Timeout and Zero Retries**: `timeout_ms` and `max_retries=0` are declarative contract properties. If an upstream service raises `TimeoutError`, it is mapped to a sanitized `LiteBridgeTimeoutError` without unsafe thread cancellation, process termination, or retries. Existing `LiteBridgeTimeoutError` instances pass through unwrapped.
   8. **Deferred Capabilities**: Multi-source planning/fusion (Phase L4), web search and page retrieval (Phase L3), hosted/hybrid execution profiles, and LLM answer generation remain strictly out of scope.
+
+### ADR-029: LiteBridge Phase L3 Safe Web Search and Page Retrieval
+- **Context**: Phase L3 implements an optional, opt-in web search and safe page-retrieval capability. The default LiteBridge behavior must remain fully local and generator-independent with zero paid API keys, zero network calls, and zero external dependencies required. Web retrieval introduces external attack surfaces (SSRF, data leakage, unbounded latency, rate limits), requiring strict defense-in-depth boundaries.
+- **Decision**:
+  1. **Default Local-Only Invariant**: Default `build_litebridge()` operates 100% locally with zero network calls, zero API keys required, and no web source registered.
+  2. **Strict Opt-In Web Retrieval Guardrails**: Web retrieval is activated only when all 5 conditions are simultaneously satisfied:
+     - `ExecutionProfile.HYBRID` requested;
+     - `tavily_web_search` source explicitly selected in `SourcePolicy`;
+     - `WebRetrievalPolicy(allow_external_query=True, ...)` provided;
+     - `LITEBRIDGE_ENABLE_TAVILY_WEB=true` configured in settings;
+     - `TAVILY_API_KEY` present and non-blank in factory composition.
+     If any condition is missing, web retrieval is rejected before any network call.
+  3. **Core-Port-Adapter Decoupling**: Core modules (`contracts.py`, `ports.py`, `errors.py`, `service.py`, `context_builder.py`, `source_registry.py`) contain zero imports of `httpx`, `requests`, `urllib`, `socket`, `ipaddress`, EvidenceOps internals, or LLM providers. All networking, HTTP transport, and SSRF controls are isolated in `adapters/`.
+  4. **Strict SSRF Protection in Page Fetcher**: `SafeWebFetcher` enforces HTTPS-only, no credentials, default port 443 only, no URL fragments, and no IP literals. Pre-request DNS resolution asserts that all resolved IP addresses are globally routable, rejecting private, loopback, link-local, multicast, and reserved addresses.
+  5. **Strict Domain Allowlist**: Domain entries in `LITEBRIDGE_WEB_ALLOWED_FETCH_DOMAINS` are parsed once into lowercase, trimmed, deduplicated exact hostnames. Wildcards, URLs, ports, IPs, and empty entries are rejected. An empty allowlist safely disables page fetching while preserving search snippets.
+  6. **Manual Hop Redirect Validation**: `SafeWebFetcher` operates with `follow_redirects=False` and `trust_env=False`. Each redirect hop (max 3) is independently validated against SSRF and allowlist rules before issuing the next request.
+  7. **Policy-to-Settings Clamping**: `WebRetrieverAdapter` clamps caller-requested web limits against configured maximums:
+     `effective_results = min(policy.web.max_search_results, settings.litebridge_web_max_results)`
+     `effective_page_fetches = min(policy.web.max_page_fetches, settings.litebridge_web_max_page_fetches)`
+     A caller can never increase configured resource limits.
+  8. **Candidate Source-Kind Validation**: `service.py` validates candidate source kinds against the source descriptor: local document descriptors permit only `LOCAL_DOCUMENT`; web search descriptors permit both `WEB_SEARCH_SNIPPET` and `WEB_PAGE_EXCERPT`.
+  9. **Bounded In-Memory TTL Caching**: `WebRetrievalCache` caches query/policy batches with bounded LRU eviction and TTL. Cache hits return candidates with `web_calls=0`.
+  10. **Package ID Determinism**: `package_id` deterministically incorporates `canonical_url` and `content_hash` of selected web evidence, but strictly excludes `fetched_at_utc`, network timings, and cache status.
+  11. **Deferred Capabilities**: Multi-source planning/fusion (Phase L4), external provider LLM adapters (Phase L5), and compression remain strictly deferred.

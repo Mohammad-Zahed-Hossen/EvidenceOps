@@ -9,6 +9,7 @@ from evidenceops.bridge.contracts import (
     ContextPackage,
     ExecutionProfile,
     RetrievalPolicy,
+    SourceDescriptor,
     SourceKind,
     SourcePolicy,
 )
@@ -51,10 +52,21 @@ class LiteBridge:
         """Prepare a bounded, citation-preserving context package without invoking an LLM."""
         effective_policy = policy if policy is not None else RetrievalPolicy()
 
-        if effective_policy.execution_profile != ExecutionProfile.LOCAL_ONLY:
+        if effective_policy.execution_profile not in (
+            ExecutionProfile.LOCAL_ONLY,
+            ExecutionProfile.HYBRID,
+        ):
             raise LiteBridgeProfileError(
                 f"Execution profile '{effective_policy.execution_profile.value}' is not supported "
-                "in Phase L2; only 'local_only' is supported."
+                "in Phase L3; only 'local_only' and 'hybrid' are supported."
+            )
+
+        if (
+            effective_policy.execution_profile == ExecutionProfile.LOCAL_ONLY
+            and effective_policy.web is not None
+        ):
+            raise LiteBridgeValidationError(
+                "Web retrieval policy cannot be specified under 'local_only' execution profile"
             )
 
         normalized_query, _, _ = normalize_query(query)
@@ -62,21 +74,42 @@ class LiteBridge:
         resolved_source_id: str | None = None
         resolved_adapter_id: str | None = None
         resolved_source_version: str | None = None
+        resolved_descriptor: SourceDescriptor | None = None
 
         if self._source_registry is not None:
             descriptor, active_retriever = self._source_registry.resolve(
                 source_policy, effective_policy.execution_profile
             )
+            resolved_descriptor = descriptor
             resolved_source_id = descriptor.source_id
             resolved_adapter_id = descriptor.adapter_id
             resolved_source_version = descriptor.source_version
         else:
+            if effective_policy.execution_profile != ExecutionProfile.LOCAL_ONLY:
+                prof = effective_policy.execution_profile.value
+                raise LiteBridgeProfileError(
+                    f"Execution profile '{prof}' is not supported with direct retriever; "
+                    "only 'local_only' is supported."
+                )
             if source_policy is not None and source_policy.allowed_source_ids:
                 raise LiteBridgeSourceError(
                     "Cannot specify allowed_source_ids with direct retriever"
                 )
             assert self._retriever is not None
             active_retriever = self._retriever
+
+        # If web source is resolved, enforce consent and profile requirements
+        if (
+            resolved_descriptor is not None
+            and resolved_descriptor.source_kind == SourceKind.WEB_SEARCH_SNIPPET
+        ):
+            if effective_policy.execution_profile != ExecutionProfile.HYBRID:
+                raise LiteBridgeProfileError("Web source requires 'hybrid' execution profile")
+            if effective_policy.web is None or not effective_policy.web.allow_external_query:
+                raise LiteBridgeValidationError(
+                    "External web retrieval requires WebRetrievalPolicy "
+                    "with allow_external_query=True"
+                )
 
         start_time = time.perf_counter()
         try:
@@ -91,23 +124,62 @@ class LiteBridge:
         except Exception as err:
             source_name = resolved_source_id or "direct_retriever"
             raise LiteBridgeRetrievalError(
-                f"Local retrieval failed for source '{source_name}': {err}"
+                f"Retrieval failed for source '{source_name}': {err}"
             ) from err
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
-        for candidate in batch.candidates:
-            if candidate.source_kind != SourceKind.LOCAL_DOCUMENT:
-                k = candidate.source_kind
-                raise LiteBridgeRetrievalError(
-                    f"Candidate source_kind '{k}' is not permitted in Phase L2; "
-                    f"only '{SourceKind.LOCAL_DOCUMENT.value}' is allowed"
-                )
-            if resolved_source_id is not None and candidate.source_id != resolved_source_id:
-                cid, sid = candidate.source_id, resolved_source_id
-                raise LiteBridgeRetrievalError(
-                    f"Candidate source_id '{cid}' does not match resolved source '{sid}'"
-                )
+        # Validate candidate source kinds (Correction #2)
+        if resolved_descriptor is not None:
+            if resolved_descriptor.source_kind == SourceKind.LOCAL_DOCUMENT:
+                permitted_kinds = {SourceKind.LOCAL_DOCUMENT}
+            elif resolved_descriptor.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
+                permitted_kinds = {SourceKind.WEB_SEARCH_SNIPPET, SourceKind.WEB_PAGE_EXCERPT}
+            else:
+                permitted_kinds = {resolved_descriptor.source_kind}
+
+            for candidate in batch.candidates:
+                if candidate.source_kind not in permitted_kinds:
+                    k_val = (
+                        candidate.source_kind.value
+                        if hasattr(candidate.source_kind, "value")
+                        else str(candidate.source_kind)
+                    )
+                    raise LiteBridgeRetrievalError(
+                        f"Candidate source_kind '{k_val}' is not permitted "
+                        f"for source '{resolved_source_id}'"
+                    )
+                if candidate.source_id != resolved_source_id:
+                    cid, sid = candidate.source_id, resolved_source_id
+                    raise LiteBridgeRetrievalError(
+                        f"Candidate source_id '{cid}' does not match resolved source '{sid}'"
+                    )
+        else:
+            for candidate in batch.candidates:
+                if candidate.source_kind == SourceKind.LOCAL_DOCUMENT:
+                    pass
+                elif candidate.source_kind in (
+                    SourceKind.WEB_SEARCH_SNIPPET,
+                    SourceKind.WEB_PAGE_EXCERPT,
+                ):
+                    if (
+                        effective_policy.execution_profile != ExecutionProfile.HYBRID
+                        or effective_policy.web is None
+                        or not effective_policy.web.allow_external_query
+                    ):
+                        raise LiteBridgeRetrievalError(
+                            "Web candidate returned without valid HYBRID profile "
+                            "and web policy consent"
+                        )
+                else:
+                    k_val = (
+                        candidate.source_kind.value
+                        if hasattr(candidate.source_kind, "value")
+                        else str(candidate.source_kind)
+                    )
+                    raise LiteBridgeRetrievalError(
+                        f"Candidate source_kind '{k_val}' is not permitted"
+                    )
 
         repro_dict: dict[str, str] = {}
         for k, v in batch.reproducibility:

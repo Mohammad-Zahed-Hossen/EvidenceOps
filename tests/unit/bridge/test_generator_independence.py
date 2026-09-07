@@ -175,3 +175,118 @@ def test_registry_backed_prepare_context_succeeds_when_generation_stubs_explode(
     assert pkg.evidence[0].evidence_id == "chunk_1"
     assert pkg.evidence[0].source_id == source_id
     assert "Evidence text without LLM generation." in pkg.context_text
+
+
+def test_adapter_modules_have_zero_llm_or_generation_imports() -> None:
+    """AST audit proving LiteBridge adapters have zero LLM/generation dependencies."""
+    adapters_dir = (
+        Path(__file__).resolve().parents[3] / "src" / "evidenceops" / "bridge" / "adapters"
+    )
+    assert adapters_dir.exists()
+
+    forbidden_roots = {
+        "evidenceops.generation",
+        "langgraph",
+        "ollama",
+        "openai",
+        "anthropic",
+        "google",
+    }
+
+    adapter_files = list(adapters_dir.glob("*.py"))
+    # Minimum expected adapters: local, tavily, fetcher, retriever, cache
+    assert len(adapter_files) >= 4
+
+    for file_path in adapter_files:
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    for forbidden in forbidden_roots:
+                        assert not alias.name.startswith(forbidden), (
+                            f"Forbidden import '{alias.name}' found in "
+                            f"adapter file {file_path.name}"
+                        )
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                for forbidden in forbidden_roots:
+                    assert not module.startswith(forbidden), (
+                        f"Forbidden import-from '{module}' found in adapter file {file_path.name}"
+                    )
+
+
+def test_web_backed_prepare_context_succeeds_when_generation_stubs_explode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Prove prepare_context with web retrieval never touches any generation provider."""
+    from evidenceops.bridge.contracts import (
+        ExecutionProfile,
+        SourcePolicy,
+        WebRetrievalPolicy,
+    )
+
+    def exploding_generation(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError(
+            "CRITICAL VIOLATION: Generation component was touched in prepare_context!"
+        )
+
+    import evidenceops.generation.contracts as gen_contracts
+    import evidenceops.generation.ollama as gen_ollama
+    import evidenceops.generation.providers as gen_providers
+
+    monkeypatch.setattr(gen_contracts, "GenerationRequest", exploding_generation)
+    monkeypatch.setattr(gen_ollama, "OllamaGenerationProvider", exploding_generation)
+    monkeypatch.setattr(gen_providers, "create_generation_provider", exploding_generation)
+
+    source_id = "tavily_web_search"
+    c_web = RawEvidenceCandidate(
+        candidate_id="cand_web_1",
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+        source_id=source_id,
+        document_id="https://fastapi.tiangolo.com/",
+        text="FastAPI web snippet without LLMs",
+        retrieval_route="web_search",
+        rank=1,
+        canonical_url="https://fastapi.tiangolo.com/",
+    )
+
+    class FakeWebRetriever:
+        def retrieve(self, query: str, policy: RetrievalPolicy) -> RetrievalBatch:
+            return RetrievalBatch(
+                candidates=(c_web,),
+                retrieval_calls=1,
+                web_calls=1,
+                retrieval_route="web_search",
+            )
+
+    desc = SourceDescriptor(
+        source_id=source_id,
+        display_name="Tavily Web Search",
+        source_kind=SourceKind.WEB_SEARCH_SNIPPET,
+        adapter_id="tavily_web",
+        enabled=True,
+        privacy_classification=PrivacyClassification.PUBLIC_WEB,
+        freshness=SourceFreshness.LIVE,
+        citation_required=True,
+        max_response_chars=10000,
+        timeout_ms=5000,
+        max_retries=0,
+        supported_execution_profiles=(ExecutionProfile.HYBRID,),
+    )
+    registry = SourceRegistry()
+    registry.register(desc, FakeWebRetriever())
+    bridge = LiteBridge(source_registry=registry)
+
+    policy = RetrievalPolicy(
+        execution_profile=ExecutionProfile.HYBRID,
+        web=WebRetrievalPolicy(allow_external_query=True),
+    )
+    pkg = bridge.prepare_context(
+        "query",
+        policy=policy,
+        source_policy=SourcePolicy(allowed_source_ids=(source_id,)),
+    )
+
+    assert pkg.web_calls == 1
+    assert len(pkg.evidence) == 1
+    assert "FastAPI web snippet without LLMs" in pkg.context_text
