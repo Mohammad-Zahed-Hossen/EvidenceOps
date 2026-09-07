@@ -22,17 +22,18 @@ CPU-safe profile validation, and portfolio documentation are recorded in [the Ph
 - [x] Phase 5: FastAPI backend and recruiter-facing observability dashboard.
 - [x] Phase 6: release hardening, reproducibility, recruiter dashboard UX, documentation, and portfolio packaging.
 
-## Verified results (Phase 6)
+## Verified results (Final Polish & Paused Release Candidate)
 
-- Comprehensive test suite: 495 passed tests, 1 Windows symlink skip, 0 failures.
-- Code quality & formatting: Ruff check (179 files), ruff format (179 files), and Mypy (86 files) pass with zero errors. Test coverage: 90.08% (exceeds 75% requirement).
-- Deterministic smoke suite: 7 operational query cases covering direct gate, exact identifier sparse retrieval, semantic documentation query, multi-hop bounded retrieval, clean abstention on unsupported facts, sanitized dependency failure mapping, and concurrency serialization (`tests/unit/api/test_phase6_smoke.py`).
+- Comprehensive test suite: 509 passed tests, 1 Windows symlink skip, 0 failures.
+- Code quality & formatting: Ruff check (181 files), ruff format (181 files), and Mypy (87 files) pass with zero errors. Test coverage: > 90% (exceeds 75% requirement).
+- Local generation provider boundary: Framework-independent `GenerationProvider` protocol with default `OllamaGenerationProvider` and strictly loopback-only `OpenAICompatibleLocalProvider` (LM Studio / vLLM on `127.0.0.1` / `localhost`). External hosts, HTTPS, and API keys are strictly rejected.
+- Evaluation split-family integrity: Deterministic `fact_family_id` partition across 52 distinct families eliminating all cross-split fact leakage between dev, val, and test splits (60/20/20). Dev-only controller training enforced; learned controller achieves 100% agreement with heuristic controller on the 20-item test split.
 - Recruiter dashboard UX: 5-stage chronological visual trajectory flow, interactive sample benchmark pills, collapsible citation cards with safe URL rendering, structured evaluation comparison table, zero `.innerHTML`, and responsive layout down to 390 px.
 - Strict security & model isolation: `local_models_only=True` enforced at API and evaluation boundaries, loopback binding `127.0.0.1:8080`, strict sanitized error envelopes without raw tracebacks, and complete span telemetry redaction.
-- CPU-safe profile validation: 8 GB RAM target verified; total operational footprint under 1.4 GB (API ~62 MB, Qdrant ~45 MB, Ollama ~1.2 GB), with bounded query concurrency = 1 and max 3 retrieval calls.
+- CPU-safe profile validation: 8 GB RAM target verified; total measured EvidenceOps process-component footprint under 1.4 GB (API ~62 MB, Qdrant ~45 MB, Ollama ~1.2 GB), with bounded query concurrency = 1 and max 3 retrieval calls.
 - Automated lifecycle: One-click launcher scripts (`EvidenceOps.bat` and `scripts/run_app.ps1`) orchestrate Qdrant, Ollama, and FastAPI, opening dedicated app mode and cleanly terminating/unloading models on exit.
 
 ## Next action
 
-Repository is fully packaged in a portfolio-ready release state.
+Work is paused. Repository is packaged as an honest, defensible portfolio release candidate.
 Awaiting user instructions for Git operations or portfolio presentation.

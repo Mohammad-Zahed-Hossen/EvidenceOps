@@ -63,8 +63,9 @@ class EvaluationSample(BaseModel):
     requires_abstention: bool = False
     target_doc_ids: list[str] = Field(default_factory=list)
     provenance_notes: str = ""
+    fact_family_id: str = Field(default="", min_length=1)
 
-    @field_validator("id", "question")
+    @field_validator("id", "question", "fact_family_id")
     @classmethod
     def validate_non_empty_strings(cls, v: str) -> str:
         if not v.strip():
@@ -73,8 +74,16 @@ class EvaluationSample(BaseModel):
 
     @model_validator(mode="after")
     def validate_sample_consistency(self) -> EvaluationSample:
-        if self.type == QuestionType.UNANSWERABLE and not self.requires_abstention:
-            raise ValueError("Question of type UNANSWERABLE requires requires_abstention=True")
+        if self.type == QuestionType.UNANSWERABLE:
+            if not self.requires_abstention:
+                raise ValueError("Question of type UNANSWERABLE requires requires_abstention=True")
+            if self.gold_chunk_ids or self.gold_citations or self.target_doc_ids:
+                raise ValueError(
+                    "Question of type UNANSWERABLE must not have "
+                    "supporting chunks, citations, or target docs"
+                )
+        if not self.fact_family_id.strip():
+            raise ValueError("EvaluationSample requires a non-empty fact_family_id")
         return self
 
 

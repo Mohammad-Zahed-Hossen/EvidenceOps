@@ -48,6 +48,7 @@ def test_evaluation_sample_valid() -> None:
         requires_abstention=False,
         target_doc_ids=["doc1"],
         provenance_notes="Hand-verified fact.",
+        fact_family_id="ff_q001",
     )
     assert sample.id == "q001"
     assert sample.type == QuestionType.SINGLE_FACT
@@ -70,6 +71,7 @@ def test_evaluation_sample_unanswerable_requires_abstention() -> None:
             requires_abstention=False,  # invalid!
             target_doc_ids=[],
             provenance_notes="Not in corpus.",
+            fact_family_id="ff_unans",
         )
 
 
@@ -85,6 +87,7 @@ def test_validate_evaluation_dataset_rejects_duplicate_ids() -> None:
         gold_answer="Ans 1",
         requires_abstention=False,
         target_doc_ids=["d1"],
+        fact_family_id="ff_s1",
     )
     s2 = EvaluationSample(
         id="dup1",
@@ -97,6 +100,7 @@ def test_validate_evaluation_dataset_rejects_duplicate_ids() -> None:
         gold_answer="Ans 2",
         requires_abstention=False,
         target_doc_ids=["d1"],
+        fact_family_id="ff_s2",
     )
     with pytest.raises(ValueError, match="Duplicate sample ID"):
         validate_evaluation_dataset([s1, s2])

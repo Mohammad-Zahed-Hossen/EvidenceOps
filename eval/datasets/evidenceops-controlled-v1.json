@@ -3,7 +3,7 @@
     "id": "q001",
     "question": "What parameter in FastAPI path operation decorators is used to declare the HTTP response status code?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
     ],
@@ -30,13 +30,14 @@
     "target_doc_ids": [
       "fastapi_status_codes.md"
     ],
-    "provenance_notes": "Tests exact parameter status_code in FastAPI decorators."
+    "provenance_notes": "Tests exact parameter status_code in FastAPI decorators.",
+    "fact_family_id": "ff_fastapi_status_code"
   },
   {
     "id": "q002",
     "question": "Which function does FastAPI use to declare a dependency in path operation function parameters?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc"
     ],
@@ -58,13 +59,14 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Tests exact identifier Depends in FastAPI."
+    "provenance_notes": "Tests exact identifier Depends in FastAPI.",
+    "fact_family_id": "ff_fastapi_depends"
   },
   {
     "id": "q003",
     "question": "In Qdrant payload filtering, which condition matches if none of the listed conditions are satisfied, equivalent to (NOT A) AND (NOT B)?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
     ],
@@ -86,13 +88,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Tests exact boolean filter keyword must_not."
+    "provenance_notes": "Tests exact boolean filter keyword must_not.",
+    "fact_family_id": "ff_qdrant_condition_none"
   },
   {
     "id": "q004",
     "question": "What full-text match condition in Qdrant matches fields containing any of the query terms instead of requiring all terms?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
     ],
@@ -114,13 +117,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Tests exact match filter condition text_any."
+    "provenance_notes": "Tests exact match filter condition text_any.",
+    "fact_family_id": "ff_qdrant_fulltext_any"
   },
   {
     "id": "q005",
     "question": "Which base class in pydantic-settings attempts to populate model fields from environment variables when not passed as keyword arguments?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
     ],
@@ -142,13 +146,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Tests exact base class BaseSettings in pydantic-settings."
+    "provenance_notes": "Tests exact base class BaseSettings in pydantic-settings.",
+    "fact_family_id": "ff_pydantic_base_settings"
   },
   {
     "id": "q006",
     "question": "What is the endpoint in the Ollama REST API used to generate a text response for a given prompt?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
     ],
@@ -170,13 +175,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Tests exact API route /api/generate."
+    "provenance_notes": "Tests exact API route /api/generate.",
+    "fact_family_id": "ff_ollama_endpoints"
   },
   {
     "id": "q007",
     "question": "What class in the FlashRank library is initialized to perform document reranking?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
     ],
@@ -198,7 +204,8 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Tests exact class name Ranker in FlashRank."
+    "provenance_notes": "Tests exact class name Ranker in FlashRank.",
+    "fact_family_id": "ff_flashrank_init"
   },
   {
     "id": "q008",
@@ -226,13 +233,14 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Tests exact async interface methods for LangGraph checkpointers."
+    "provenance_notes": "Tests exact async interface methods for LangGraph checkpointers.",
+    "fact_family_id": "ff_langgraph_async_checkpoint"
   },
   {
     "id": "q009",
     "question": "How does FastAPI resolve and share dependencies when using sub-dependencies across a single request?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
     ],
@@ -254,7 +262,8 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Tests sub-dependency caching behavior."
+    "provenance_notes": "Tests sub-dependency caching behavior.",
+    "fact_family_id": "ff_fastapi_depends"
   },
   {
     "id": "q010",
@@ -282,7 +291,8 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Tests FlashRank model trade-offs."
+    "provenance_notes": "Tests FlashRank model trade-offs.",
+    "fact_family_id": "ff_flashrank_tinybert"
   },
   {
     "id": "q011",
@@ -310,7 +320,8 @@
     "target_doc_ids": [
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Tests exact parameter distance in VectorParams."
+    "provenance_notes": "Tests exact parameter distance in VectorParams.",
+    "fact_family_id": "ff_qdrant_vector_distance"
   },
   {
     "id": "q012",
@@ -338,7 +349,8 @@
     "target_doc_ids": [
       "fastembed_quickstart.md"
     ],
-    "provenance_notes": "Tests exact class TextEmbedding in FastEmbed."
+    "provenance_notes": "Tests exact class TextEmbedding in FastEmbed.",
+    "fact_family_id": "ff_fastembed_passage_embedding"
   },
   {
     "id": "q013",
@@ -366,13 +378,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Tests exact option seed in Ollama."
+    "provenance_notes": "Tests exact option seed in Ollama.",
+    "fact_family_id": "ff_ollama_seed_temp"
   },
   {
     "id": "q014",
     "question": "How does FastAPI support database session cleanup in dependencies?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
     ],
@@ -394,7 +407,8 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Tests yield dependencies in FastAPI."
+    "provenance_notes": "Tests yield dependencies in FastAPI.",
+    "fact_family_id": "ff_fastapi_status_code"
   },
   {
     "id": "q015",
@@ -422,13 +436,14 @@
     "target_doc_ids": [
       "fastembed_quickstart.md"
     ],
-    "provenance_notes": "Tests default embedding model in FastEmbed."
+    "provenance_notes": "Tests default embedding model in FastEmbed.",
+    "fact_family_id": "ff_fastembed_default_model"
   },
   {
     "id": "q016",
     "question": "What configuration class in pydantic-settings is used to specify env_file and env_prefix?",
     "type": "single_fact",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
     ],
@@ -450,7 +465,8 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Tests SettingsConfigDict in pydantic-settings."
+    "provenance_notes": "Tests SettingsConfigDict in pydantic-settings.",
+    "fact_family_id": "ff_pydantic_env_config"
   },
   {
     "id": "q017",
@@ -478,7 +494,8 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Tests exact class MemorySaver in LangGraph persistence."
+    "provenance_notes": "Tests exact class MemorySaver in LangGraph persistence.",
+    "fact_family_id": "ff_langgraph_memory_saver"
   },
   {
     "id": "q018",
@@ -506,7 +523,8 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Tests exact filter is_empty in Qdrant."
+    "provenance_notes": "Tests exact filter is_empty in Qdrant.",
+    "fact_family_id": "ff_qdrant_is_empty"
   },
   {
     "id": "q019",
@@ -534,13 +552,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Tests /api/chat endpoint in Ollama."
+    "provenance_notes": "Tests /api/chat endpoint in Ollama.",
+    "fact_family_id": "ff_ollama_endpoints"
   },
   {
     "id": "q020",
     "question": "In pydantic-settings, what config parameter adds a common string prefix to all environment variable lookups?",
     "type": "single_fact",
-    "split": "val",
+    "split": "test",
     "gold_chunk_ids": [
       "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
     ],
@@ -562,13 +581,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Tests env_prefix in pydantic-settings."
+    "provenance_notes": "Tests env_prefix in pydantic-settings.",
+    "fact_family_id": "ff_pydantic_env_config"
   },
   {
     "id": "q021",
     "question": "What special constant represents the termination node in a LangGraph StateGraph?",
     "type": "single_fact",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
     ],
@@ -590,13 +610,14 @@
     "target_doc_ids": [
       "langgraph_thinking_in_graphs.md"
     ],
-    "provenance_notes": "Tests END constant in LangGraph."
+    "provenance_notes": "Tests END constant in LangGraph.",
+    "fact_family_id": "ff_langgraph_end_constant"
   },
   {
     "id": "q022",
     "question": "What parameter in Qdrant VectorParams defines the vector dimensionality for collection points?",
     "type": "single_fact",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
     ],
@@ -618,13 +639,14 @@
     "target_doc_ids": [
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Tests size parameter in Qdrant collections."
+    "provenance_notes": "Tests size parameter in Qdrant collections.",
+    "fact_family_id": "ff_qdrant_vector_dimension"
   },
   {
     "id": "q023",
     "question": "What request parameter in Ollama /api/generate forces JSON structured output?",
     "type": "single_fact",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
     ],
@@ -646,13 +668,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Tests format='json' parameter in Ollama."
+    "provenance_notes": "Tests format='json' parameter in Ollama.",
+    "fact_family_id": "ff_ollama_format_json"
   },
   {
     "id": "q024",
     "question": "What class in FlashRank encapsulates a batch reranking request with query and passages?",
     "type": "single_fact",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
     ],
@@ -674,13 +697,14 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Tests RerankRequest in FlashRank."
+    "provenance_notes": "Tests RerankRequest in FlashRank.",
+    "fact_family_id": "ff_flashrank_rerank_request"
   },
   {
     "id": "q025",
     "question": "What parameter in FastAPI dependencies disables automatic per-request dependency result caching?",
     "type": "single_fact",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
     ],
@@ -702,13 +726,14 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Tests use_cache parameter in FastAPI Depends."
+    "provenance_notes": "Tests use_cache parameter in FastAPI Depends.",
+    "fact_family_id": "ff_fastapi_depends_cache"
   },
   {
     "id": "q026",
     "question": "What Ollama endpoint is called to compute vector embeddings from text?",
     "type": "single_fact",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "ece61b5be455fea5c3eaa10dccb96c5b5f612e5597c55f39a711021fa8f000e8"
     ],
@@ -730,13 +755,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Tests /api/embeddings endpoint in Ollama."
+    "provenance_notes": "Tests /api/embeddings endpoint in Ollama.",
+    "fact_family_id": "ff_ollama_embeddings"
   },
   {
     "id": "q027",
     "question": "In Qdrant collections, what configuration object specifies HNSW graph indexing parameters?",
     "type": "single_fact",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
     ],
@@ -758,13 +784,14 @@
     "target_doc_ids": [
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Tests hnsw_config in Qdrant."
+    "provenance_notes": "Tests hnsw_config in Qdrant.",
+    "fact_family_id": "ff_qdrant_hnsw_indexing"
   },
   {
     "id": "q028",
     "question": "What class in pydantic-settings or pydantic is used to mask sensitive values in logs and string outputs?",
     "type": "single_fact",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
     ],
@@ -786,13 +813,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Tests SecretStr in pydantic-settings."
+    "provenance_notes": "Tests SecretStr in pydantic-settings.",
+    "fact_family_id": "ff_pydantic_secret_str"
   },
   {
     "id": "q029",
     "question": "In LangGraph, what parameter identifies the specific conversation session when saving or retrieving state checkpoints?",
     "type": "single_fact",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
     ],
@@ -814,13 +842,14 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Tests thread_id in LangGraph persistence."
+    "provenance_notes": "Tests thread_id in LangGraph persistence.",
+    "fact_family_id": "ff_langgraph_thread_id"
   },
   {
     "id": "q030",
     "question": "What Qdrant filter condition is used to match points satisfying at least one condition from a list (OR logic)?",
     "type": "single_fact",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b"
     ],
@@ -842,7 +871,8 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Tests should clause in Qdrant filtering."
+    "provenance_notes": "Tests should clause in Qdrant filtering.",
+    "fact_family_id": "ff_qdrant_should_clause"
   },
   {
     "id": "q031",
@@ -881,7 +911,8 @@
       "fastapi_status_codes.md",
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Multi-hop combining FastAPI status codes and Depends."
+    "provenance_notes": "Multi-hop combining FastAPI status codes and Depends.",
+    "fact_family_id": "ff_fastapi_depends_status_multihop"
   },
   {
     "id": "q032",
@@ -920,7 +951,8 @@
       "qdrant_collections.md",
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Multi-hop across Qdrant collection setup and filtering conditions."
+    "provenance_notes": "Multi-hop across Qdrant collection setup and filtering conditions.",
+    "fact_family_id": "ff_qdrant_negative_criteria"
   },
   {
     "id": "q033",
@@ -959,13 +991,14 @@
       "fastembed_quickstart.md",
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Multi-hop across FastEmbed model size and Qdrant collection vector params."
+    "provenance_notes": "Multi-hop across FastEmbed model size and Qdrant collection vector params.",
+    "fact_family_id": "ff_fastembed_qdrant_integration"
   },
   {
     "id": "q034",
     "question": "How do LangGraph StateGraph execution nodes pass updated state to be saved by a Checkpointer?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
       "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
@@ -998,13 +1031,14 @@
       "langgraph_thinking_in_graphs.md",
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Multi-hop across LangGraph graph topology and persistence checkpointing."
+    "provenance_notes": "Multi-hop across LangGraph graph topology and persistence checkpointing.",
+    "fact_family_id": "ff_langgraph_state_edges"
   },
   {
     "id": "q035",
     "question": "How does pydantic-settings load environment variables to configure Ollama connection settings and timeouts?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
       "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
@@ -1036,7 +1070,8 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Multi-hop across BaseSettings and SettingsConfigDict."
+    "provenance_notes": "Multi-hop across BaseSettings and SettingsConfigDict.",
+    "fact_family_id": "ff_pydantic_env_config"
   },
   {
     "id": "q036",
@@ -1074,13 +1109,14 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Multi-hop across FlashRank request construction and reranking output."
+    "provenance_notes": "Multi-hop across FlashRank request construction and reranking output.",
+    "fact_family_id": "ff_qdrant_flashrank_pipeline"
   },
   {
     "id": "q037",
     "question": "How does FastAPI manage clean resource tear-down when a dependency yields a database session shared by multiple endpoints?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539",
       "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
@@ -1112,7 +1148,8 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Multi-hop across FastAPI dependency caching and yield cleanup."
+    "provenance_notes": "Multi-hop across FastAPI dependency caching and yield cleanup.",
+    "fact_family_id": "ff_fastapi_depends"
   },
   {
     "id": "q038",
@@ -1150,7 +1187,8 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Multi-hop across Ollama generate request and streaming termination metrics."
+    "provenance_notes": "Multi-hop across Ollama generate request and streaming termination metrics.",
+    "fact_family_id": "ff_ollama_streaming"
   },
   {
     "id": "q039",
@@ -1188,13 +1226,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Multi-hop across Qdrant boolean clauses and nested payload filters."
+    "provenance_notes": "Multi-hop across Qdrant boolean clauses and nested payload filters.",
+    "fact_family_id": "ff_qdrant_nested_filters"
   },
   {
     "id": "q040",
     "question": "How do LangGraph conditional edges route state to either a follow-up node or END based on state evaluation?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
       "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
@@ -1227,7 +1266,8 @@
       "langgraph_thinking_in_graphs.md",
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Multi-hop across LangGraph conditional edge routing and checkpointer finalization."
+    "provenance_notes": "Multi-hop across LangGraph conditional edge routing and checkpointer finalization.",
+    "fact_family_id": "ff_langgraph_state_edges"
   },
   {
     "id": "q041",
@@ -1265,13 +1305,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Multi-hop across Ollama generate options and reproducibility controls."
+    "provenance_notes": "Multi-hop across Ollama generate options and reproducibility controls.",
+    "fact_family_id": "ff_ollama_seed_temp"
   },
   {
     "id": "q042",
     "question": "How does pydantic-settings prioritize values when a setting is defined in both a .env file and environment variables?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
       "c99b5c3a3a0b47bf4d9f8d572ce8e485bdf9a8ba1aacfc913745e0efb387752f"
@@ -1303,13 +1344,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Multi-hop across pydantic-settings data sources and precedence hierarchy."
+    "provenance_notes": "Multi-hop across pydantic-settings data sources and precedence hierarchy.",
+    "fact_family_id": "ff_pydantic_env_config"
   },
   {
     "id": "q043",
     "question": "How can Qdrant combine full-text keyword search using text_any with vector distance ranking?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563",
       "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
@@ -1341,13 +1383,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Multi-hop across Qdrant vector search integration and text_any full-text filtering."
+    "provenance_notes": "Multi-hop across Qdrant vector search integration and text_any full-text filtering.",
+    "fact_family_id": "ff_qdrant_fulltext_any"
   },
   {
     "id": "q044",
     "question": "How do FlashRank model weights and ONNX runtime optimizations minimize inference memory?",
     "type": "multi_hop",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed",
       "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
@@ -1379,7 +1422,8 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Multi-hop across FlashRank architecture and ONNX quantization benefits."
+    "provenance_notes": "Multi-hop across FlashRank architecture and ONNX quantization benefits.",
+    "fact_family_id": "ff_flashrank_init"
   },
   {
     "id": "q045",
@@ -1417,13 +1461,14 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Multi-hop across LangGraph checkpoint creation and historical inspection."
+    "provenance_notes": "Multi-hop across LangGraph checkpoint creation and historical inspection.",
+    "fact_family_id": "ff_langgraph_history_replay"
   },
   {
     "id": "q046",
     "question": "How do FastEmbed embeddings integrate into Qdrant collection creation with Euclidean distance?",
     "type": "multi_hop",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2",
       "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0"
@@ -1456,13 +1501,14 @@
       "fastembed_quickstart.md",
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Multi-hop across FastEmbed generation and Qdrant Euclidean vector params."
+    "provenance_notes": "Multi-hop across FastEmbed generation and Qdrant Euclidean vector params.",
+    "fact_family_id": "ff_fastembed_qdrant_integration"
   },
   {
     "id": "q047",
     "question": "How does FastAPI handle dependency injection when combining sub-dependencies with custom response status codes?",
     "type": "multi_hop",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1",
       "7723facdc24bfd56963d7f6cf6bd33b0916d02117ba673fd2eb2274eb63f7539"
@@ -1495,13 +1541,14 @@
       "fastapi_status_codes.md",
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Multi-hop across FastAPI status_code decorator and hierarchical sub-dependencies."
+    "provenance_notes": "Multi-hop across FastAPI status_code decorator and hierarchical sub-dependencies.",
+    "fact_family_id": "ff_fastapi_depends_status_multihop"
   },
   {
     "id": "q048",
     "question": "How do Qdrant must and must_not clauses combine to filter products by category while excluding discontinued items?",
     "type": "multi_hop",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
       "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
@@ -1533,13 +1580,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Multi-hop across Qdrant positive and negative filter clauses."
+    "provenance_notes": "Multi-hop across Qdrant positive and negative filter clauses.",
+    "fact_family_id": "ff_qdrant_must_not_filtering"
   },
   {
     "id": "q049",
     "question": "How does Ollama /api/chat accept system instructions and multi-turn messages to control output format?",
     "type": "multi_hop",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79",
       "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49"
@@ -1571,13 +1619,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Multi-hop across Ollama chat message roles and structured formatting."
+    "provenance_notes": "Multi-hop across Ollama chat message roles and structured formatting.",
+    "fact_family_id": "ff_ollama_chat_system"
   },
   {
     "id": "q050",
     "question": "How does LangGraph persist execution checkpoints across conditional branch routing?",
     "type": "multi_hop",
-    "split": "val",
+    "split": "test",
     "gold_chunk_ids": [
       "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9",
       "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
@@ -1610,7 +1659,8 @@
       "langgraph_thinking_in_graphs.md",
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Multi-hop across LangGraph conditional edges and checkpoint captures."
+    "provenance_notes": "Multi-hop across LangGraph conditional edges and checkpoint captures.",
+    "fact_family_id": "ff_langgraph_state_edges"
   },
   {
     "id": "q051",
@@ -1648,13 +1698,14 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Multi-hop across FastAPI dependency injection and yield exception handling."
+    "provenance_notes": "Multi-hop across FastAPI dependency injection and yield exception handling.",
+    "fact_family_id": "ff_fastapi_depends"
   },
   {
     "id": "q052",
     "question": "How do Qdrant collection HNSW indexing parameters affect search performance when combined with payload filters?",
     "type": "multi_hop",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "83d53528fad14c9e1feb98ec1d481efc0cc9e684efa8e91b78d336e02a8a05b0",
       "a45068d753b9a533d6d8c19e3dddf9c5d33555ab5f1a564dce04e1777be31563"
@@ -1687,13 +1738,14 @@
       "qdrant_collections.md",
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Multi-hop across Qdrant HNSW configuration and payload filter indexing."
+    "provenance_notes": "Multi-hop across Qdrant HNSW configuration and payload filter indexing.",
+    "fact_family_id": "ff_qdrant_hnsw_indexing"
   },
   {
     "id": "q053",
     "question": "How does FlashRank rerank passages initially filtered by Qdrant text_any queries?",
     "type": "multi_hop",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579",
       "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
@@ -1726,13 +1778,14 @@
       "qdrant_payload_filtering.md",
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Multi-hop across Qdrant keyword filtering and FlashRank neural reranking."
+    "provenance_notes": "Multi-hop across Qdrant keyword filtering and FlashRank neural reranking.",
+    "fact_family_id": "ff_qdrant_flashrank_pipeline"
   },
   {
     "id": "q054",
     "question": "How does pydantic-settings parse nested settings models populated from environment variables?",
     "type": "multi_hop",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c",
       "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
@@ -1764,13 +1817,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Multi-hop across BaseSettings nested models and SettingsConfigDict delimiter rules."
+    "provenance_notes": "Multi-hop across BaseSettings nested models and SettingsConfigDict delimiter rules.",
+    "fact_family_id": "ff_pydantic_nested_settings"
   },
   {
     "id": "q055",
     "question": "In LangGraph, how does an asynchronous checkpointer retrieve state for a thread_id when restarting an interrupted graph run?",
     "type": "multi_hop",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be",
       "84b5b842015adcf4714ad5cf7ff7ea371011b943476b9b127161cc9f23582582"
@@ -1802,13 +1856,14 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Multi-hop across LangGraph session management and async checkpointer retrieval."
+    "provenance_notes": "Multi-hop across LangGraph session management and async checkpointer retrieval.",
+    "fact_family_id": "ff_langgraph_async_checkpoint"
   },
   {
     "id": "q056",
     "question": "What is the difference between text and text_any match conditions in Qdrant full-text filtering?",
     "type": "contrastive",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "b6981e342577ef52f4899481934f546163d0ffc1dc10a0e8d623bfd0fd458579"
     ],
@@ -1835,7 +1890,8 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Contrastive between text and text_any in Qdrant."
+    "provenance_notes": "Contrastive between text and text_any in Qdrant.",
+    "fact_family_id": "ff_qdrant_fulltext_any"
   },
   {
     "id": "q057",
@@ -1868,7 +1924,8 @@
     "target_doc_ids": [
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Contrastive distance metrics in Qdrant VectorParams."
+    "provenance_notes": "Contrastive distance metrics in Qdrant VectorParams.",
+    "fact_family_id": "ff_qdrant_vector_distance"
   },
   {
     "id": "q058",
@@ -1901,13 +1958,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Contrastive boolean clauses in Qdrant."
+    "provenance_notes": "Contrastive boolean clauses in Qdrant.",
+    "fact_family_id": "ff_qdrant_should_clause"
   },
   {
     "id": "q059",
     "question": "What is the difference between /api/generate and /api/chat endpoints in the Ollama API?",
     "type": "contrastive",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
       "0dbcfa6fba3912ce2ffbab395154f9e49b4e63edd9e9f75936d30ee42fb83a79"
@@ -1939,7 +1997,8 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Contrastive endpoints in Ollama API."
+    "provenance_notes": "Contrastive endpoints in Ollama API.",
+    "fact_family_id": "ff_ollama_endpoints"
   },
   {
     "id": "q060",
@@ -1977,7 +2036,8 @@
     "target_doc_ids": [
       "fastembed_quickstart.md"
     ],
-    "provenance_notes": "Contrastive architecture between FastEmbed and PyTorch."
+    "provenance_notes": "Contrastive architecture between FastEmbed and PyTorch.",
+    "fact_family_id": "ff_fastembed_passage_embedding"
   },
   {
     "id": "q061",
@@ -2010,13 +2070,14 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Contrastive checkpointer storage in LangGraph."
+    "provenance_notes": "Contrastive checkpointer storage in LangGraph.",
+    "fact_family_id": "ff_langgraph_memory_saver"
   },
   {
     "id": "q062",
     "question": "How does normal dependency execution contrast with yield dependencies in FastAPI?",
     "type": "contrastive",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "993f1ac5879ef827542be7368f32ad02f1ae2e9984019f1b779988b1ec3ba8dc",
       "48e0560233426ecc794c0ad27a083d5c61c704ac0e1e9a368fe5b55fb95d53db"
@@ -2048,7 +2109,8 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Contrastive dependency execution modes in FastAPI."
+    "provenance_notes": "Contrastive dependency execution modes in FastAPI.",
+    "fact_family_id": "ff_fastapi_depends"
   },
   {
     "id": "q063",
@@ -2081,7 +2143,8 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Contrastive FlashRank models."
+    "provenance_notes": "Contrastive FlashRank models.",
+    "fact_family_id": "ff_flashrank_tinybert"
   },
   {
     "id": "q064",
@@ -2119,7 +2182,8 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Contrastive positive and negative filtering in Qdrant."
+    "provenance_notes": "Contrastive positive and negative filtering in Qdrant.",
+    "fact_family_id": "ff_qdrant_must_not_filtering"
   },
   {
     "id": "q065",
@@ -2152,7 +2216,8 @@
     "target_doc_ids": [
       "fastapi_dependencies.md"
     ],
-    "provenance_notes": "Contrastive use_cache settings in FastAPI."
+    "provenance_notes": "Contrastive use_cache settings in FastAPI.",
+    "fact_family_id": "ff_fastapi_depends_cache"
   },
   {
     "id": "q066",
@@ -2185,13 +2250,14 @@
     "target_doc_ids": [
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Contrastive vector metrics in Qdrant."
+    "provenance_notes": "Contrastive vector metrics in Qdrant.",
+    "fact_family_id": "ff_qdrant_vector_distance"
   },
   {
     "id": "q067",
     "question": "How does a cyclic graph contrast with an acyclic graph in LangGraph StateGraph design?",
     "type": "contrastive",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
     ],
@@ -2218,13 +2284,14 @@
     "target_doc_ids": [
       "langgraph_thinking_in_graphs.md"
     ],
-    "provenance_notes": "Contrastive graph topologies in LangGraph."
+    "provenance_notes": "Contrastive graph topologies in LangGraph.",
+    "fact_family_id": "ff_langgraph_state_edges"
   },
   {
     "id": "q068",
     "question": "What is the difference between streaming and non-streaming responses in the Ollama /api/generate endpoint?",
     "type": "contrastive",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "a5a44f861631c6291bc0fd27224fc713304606d018eb7d59c603ce1b512bfd49",
       "b9d8fc459b2ca7e32f0d03180bcff9bf18daf80c3fda47761a90846076b2bc50"
@@ -2256,7 +2323,8 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Contrastive streaming options in Ollama."
+    "provenance_notes": "Contrastive streaming options in Ollama.",
+    "fact_family_id": "ff_ollama_streaming"
   },
   {
     "id": "q069",
@@ -2294,13 +2362,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Contrastive configuration precedence in pydantic-settings."
+    "provenance_notes": "Contrastive configuration precedence in pydantic-settings.",
+    "fact_family_id": "ff_pydantic_base_settings"
   },
   {
     "id": "q070",
     "question": "What is the operational difference between dense retrieval and cross-encoder reranking?",
     "type": "contrastive",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "c21b39ad20dec1a90535c3bbf2dd2a2d515e2d595e08da6289d72140d15d6bb2",
       "c95322c8d72f6596972c879f7e0d61f571317dad9b2ce7295dac67951d9b83ed"
@@ -2333,13 +2402,14 @@
       "fastembed_quickstart.md",
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Contrastive retrieval vs reranking paradigms."
+    "provenance_notes": "Contrastive retrieval vs reranking paradigms.",
+    "fact_family_id": "ff_qdrant_flashrank_pipeline"
   },
   {
     "id": "q071",
     "question": "How does filtering on a flat payload field contrast with filtering on a nested object field in Qdrant?",
     "type": "contrastive",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
       "ebc6f11049f7c19bab3914476ff6ab89365a58b240f688cfcfb7d615324440fa"
@@ -2371,13 +2441,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Contrastive flat vs nested filtering in Qdrant."
+    "provenance_notes": "Contrastive flat vs nested filtering in Qdrant.",
+    "fact_family_id": "ff_qdrant_nested_filters"
   },
   {
     "id": "q072",
     "question": "How does SecretStr contrast with plain str fields in pydantic-settings?",
     "type": "contrastive",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "a5317b5b100b88a16d557fc68aff1e9791742a0afc217ece6ee90bfb64a3a838"
     ],
@@ -2404,7 +2475,8 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Contrastive security types in pydantic-settings."
+    "provenance_notes": "Contrastive security types in pydantic-settings.",
+    "fact_family_id": "ff_pydantic_secret_str"
   },
   {
     "id": "q073",
@@ -2437,13 +2509,14 @@
     "target_doc_ids": [
       "langgraph_thinking_in_graphs.md"
     ],
-    "provenance_notes": "Contrastive graph edges in LangGraph."
+    "provenance_notes": "Contrastive graph edges in LangGraph.",
+    "fact_family_id": "ff_langgraph_state_edges"
   },
   {
     "id": "q074",
     "question": "How does Qdrant's is_empty condition contrast with a direct match condition?",
     "type": "contrastive",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "9287fe8d98bd83825f0534806e6eb3f0aa83297212915e52135c8044d78cfe7b",
       "a0aea6e97366d7bfee07d76af18c355d41e19e751cbb9a90d2534f6e1b86776d"
@@ -2475,13 +2548,14 @@
     "target_doc_ids": [
       "qdrant_payload_filtering.md"
     ],
-    "provenance_notes": "Contrastive direct match vs emptiness in Qdrant."
+    "provenance_notes": "Contrastive direct match vs emptiness in Qdrant.",
+    "fact_family_id": "ff_qdrant_is_empty"
   },
   {
     "id": "q075",
     "question": "How does FastEmbed's default model BAAI/bge-small-en-v1.5 contrast with larger models like bge-large-en-v1.5?",
     "type": "contrastive",
-    "split": "test",
+    "split": "dev",
     "gold_chunk_ids": [
       "112c92bf71442506777abf37f96b3cc01af551fb99f4cafb48921e51ea5f34e2"
     ],
@@ -2508,13 +2582,14 @@
     "target_doc_ids": [
       "fastembed_quickstart.md"
     ],
-    "provenance_notes": "Contrastive embedding models in FastEmbed."
+    "provenance_notes": "Contrastive embedding models in FastEmbed.",
+    "fact_family_id": "ff_fastembed_default_model"
   },
   {
     "id": "q076",
     "question": "In Pydantic v2, how is configuration defined on BaseSettings compared to the legacy Pydantic v1 Config class?",
     "type": "temporal_ambiguous",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
     ],
@@ -2541,13 +2616,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Temporal migration from Pydantic v1 Config to Pydantic v2 SettingsConfigDict."
+    "provenance_notes": "Temporal migration from Pydantic v1 Config to Pydantic v2 SettingsConfigDict.",
+    "fact_family_id": "ff_pydantic_base_settings"
   },
   {
     "id": "q077",
     "question": "In modern FastAPI, which import path is recommended for HTTP status constants instead of passing magic integer numbers?",
     "type": "temporal_ambiguous",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
     ],
@@ -2574,13 +2650,14 @@
     "target_doc_ids": [
       "fastapi_status_codes.md"
     ],
-    "provenance_notes": "Temporal best practice for FastAPI status code constants."
+    "provenance_notes": "Temporal best practice for FastAPI status code constants.",
+    "fact_family_id": "ff_fastapi_status_code"
   },
   {
     "id": "q078",
     "question": "How does modern pydantic-settings package distribution differ from early Pydantic where BaseSettings was in the core package?",
     "type": "temporal_ambiguous",
-    "split": "dev",
+    "split": "val",
     "gold_chunk_ids": [
       "62b9c4f666835e255e77aba361f000ec68cf49b1019323ec2113f0829568ee1c"
     ],
@@ -2607,13 +2684,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Temporal package extraction of pydantic-settings."
+    "provenance_notes": "Temporal package extraction of pydantic-settings.",
+    "fact_family_id": "ff_pydantic_base_settings"
   },
   {
     "id": "q079",
     "question": "In LangGraph, how does the current StateGraph graph compilation replace earlier linear chain abstractions?",
     "type": "temporal_ambiguous",
-    "split": "dev",
+    "split": "test",
     "gold_chunk_ids": [
       "a41002d6177ce79f511566f5a541bb4c777a8e3ebf0908ce2e504a00810cbdf9"
     ],
@@ -2640,7 +2718,8 @@
     "target_doc_ids": [
       "langgraph_thinking_in_graphs.md"
     ],
-    "provenance_notes": "Temporal architectural shift to StateGraph."
+    "provenance_notes": "Temporal architectural shift to StateGraph.",
+    "fact_family_id": "ff_langgraph_state_edges"
   },
   {
     "id": "q080",
@@ -2673,7 +2752,8 @@
     "target_doc_ids": [
       "qdrant_collections.md"
     ],
-    "provenance_notes": "Temporal evolution of Qdrant vector params."
+    "provenance_notes": "Temporal evolution of Qdrant vector params.",
+    "fact_family_id": "ff_qdrant_vector_dimension"
   },
   {
     "id": "q081",
@@ -2706,13 +2786,14 @@
     "target_doc_ids": [
       "ollama_api_reference.md"
     ],
-    "provenance_notes": "Temporal evolution of Ollama structured output formatting."
+    "provenance_notes": "Temporal evolution of Ollama structured output formatting.",
+    "fact_family_id": "ff_ollama_format_json"
   },
   {
     "id": "q082",
     "question": "How does env_file_encoding in SettingsConfigDict ensure consistent cross-platform .env reading in Pydantic v2?",
     "type": "temporal_ambiguous",
-    "split": "val",
+    "split": "test",
     "gold_chunk_ids": [
       "07fc927dce404cb440fcf8ca0a35df6d8c7462ae62d13a3bd87c73bcb173f018"
     ],
@@ -2734,13 +2815,14 @@
     "target_doc_ids": [
       "pydantic_settings.md"
     ],
-    "provenance_notes": "Temporal cross-platform configuration in SettingsConfigDict."
+    "provenance_notes": "Temporal cross-platform configuration in SettingsConfigDict.",
+    "fact_family_id": "ff_pydantic_env_config"
   },
   {
     "id": "q083",
     "question": "In LangGraph persistence, how does modern thread_id configuration replace manual state passing between invocations?",
     "type": "temporal_ambiguous",
-    "split": "val",
+    "split": "dev",
     "gold_chunk_ids": [
       "c05f3126424a9bd8be26feff8f8263b84ca3d061ef6e932356a29474f37e70be"
     ],
@@ -2762,13 +2844,14 @@
     "target_doc_ids": [
       "langgraph_persistence.md"
     ],
-    "provenance_notes": "Temporal session handling in LangGraph."
+    "provenance_notes": "Temporal session handling in LangGraph.",
+    "fact_family_id": "ff_langgraph_thread_id"
   },
   {
     "id": "q084",
     "question": "In FastAPI, why is declaring response status codes in decorators preferred over manually modifying response headers?",
     "type": "temporal_ambiguous",
-    "split": "test",
+    "split": "val",
     "gold_chunk_ids": [
       "c9e22d15327bc00e936183b3e060fb7e3eafce409f8f5fba1c2fef4f46bec8e1"
     ],
@@ -2795,13 +2878,14 @@
     "target_doc_ids": [
       "fastapi_status_codes.md"
     ],
-    "provenance_notes": "Temporal OpenAPI alignment in FastAPI decorators."
+    "provenance_notes": "Temporal OpenAPI alignment in FastAPI decorators.",
+    "fact_family_id": "ff_fastapi_status_code"
   },
   {
     "id": "q085",
     "question": "How does FlashRank's standalone ONNX architecture represent a shift away from heavy PyTorch deployment patterns?",
     "type": "temporal_ambiguous",
-    "split": "test",
+    "split": "val",
     "gold_chunk_ids": [
       "027c6e9d3e6d4f0379abdca080c4db061ae230e085ec88c95cbf6233dba1dee9"
     ],
@@ -2828,7 +2912,8 @@
     "target_doc_ids": [
       "flashrank_docs.md"
     ],
-    "provenance_notes": "Temporal shift from PyTorch to ONNX in local reranking."
+    "provenance_notes": "Temporal shift from PyTorch to ONNX in local reranking.",
+    "fact_family_id": "ff_flashrank_init"
   },
   {
     "id": "q086",
@@ -2841,7 +2926,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Redis clustering or Sentinel documentation."
+    "provenance_notes": "Corpus does not contain Redis clustering or Sentinel documentation.",
+    "fact_family_id": "ff_unanswerable_redis"
   },
   {
     "id": "q087",
@@ -2854,7 +2940,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Celery or RabbitMQ information."
+    "provenance_notes": "Corpus does not contain Celery or RabbitMQ information.",
+    "fact_family_id": "ff_unanswerable_celery"
   },
   {
     "id": "q088",
@@ -2867,7 +2954,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Kubernetes or Calico CNI documentation."
+    "provenance_notes": "Corpus does not contain Kubernetes or Calico CNI documentation.",
+    "fact_family_id": "ff_unanswerable_kubernetes"
   },
   {
     "id": "q089",
@@ -2880,7 +2968,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Strawberry GraphQL or WebSocket documentation."
+    "provenance_notes": "Corpus does not contain Strawberry GraphQL or WebSocket documentation.",
+    "fact_family_id": "ff_unanswerable_strawberry"
   },
   {
     "id": "q090",
@@ -2893,7 +2982,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain PyTorch CUDA memory management."
+    "provenance_notes": "Corpus does not contain PyTorch CUDA memory management.",
+    "fact_family_id": "ff_unanswerable_pytorch"
   },
   {
     "id": "q091",
@@ -2906,7 +2996,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Apache Kafka documentation."
+    "provenance_notes": "Corpus does not contain Apache Kafka documentation.",
+    "fact_family_id": "ff_unanswerable_kafka"
   },
   {
     "id": "q092",
@@ -2919,7 +3010,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Alembic migration documentation."
+    "provenance_notes": "Corpus does not contain Alembic migration documentation.",
+    "fact_family_id": "ff_unanswerable_alembic"
   },
   {
     "id": "q093",
@@ -2932,7 +3024,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain ZFS filesystem documentation."
+    "provenance_notes": "Corpus does not contain ZFS filesystem documentation.",
+    "fact_family_id": "ff_unanswerable_zfs"
   },
   {
     "id": "q094",
@@ -2945,7 +3038,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain PostgreSQL CDC or Elasticsearch documentation."
+    "provenance_notes": "Corpus does not contain PostgreSQL CDC or Elasticsearch documentation.",
+    "fact_family_id": "ff_unanswerable_postgresql"
   },
   {
     "id": "q095",
@@ -2958,7 +3052,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Envoy proxy or gRPC-Web documentation."
+    "provenance_notes": "Corpus does not contain Envoy proxy or gRPC-Web documentation.",
+    "fact_family_id": "ff_unanswerable_envoy"
   },
   {
     "id": "q096",
@@ -2971,7 +3066,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Juniper router or BGP protocol documentation."
+    "provenance_notes": "Corpus does not contain Juniper router or BGP protocol documentation.",
+    "fact_family_id": "ff_unanswerable_juniper"
   },
   {
     "id": "q097",
@@ -2984,7 +3080,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Rust tracing documentation."
+    "provenance_notes": "Corpus does not contain Rust tracing documentation.",
+    "fact_family_id": "ff_unanswerable_rust_tracing"
   },
   {
     "id": "q098",
@@ -2997,7 +3094,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain Linux kernel memory tuning documentation."
+    "provenance_notes": "Corpus does not contain Linux kernel memory tuning documentation.",
+    "fact_family_id": "ff_unanswerable_linux_vm"
   },
   {
     "id": "q099",
@@ -3010,7 +3108,8 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain AWS CDK or CloudFront documentation."
+    "provenance_notes": "Corpus does not contain AWS CDK or CloudFront documentation.",
+    "fact_family_id": "ff_unanswerable_aws_cdk"
   },
   {
     "id": "q100",
@@ -3023,6 +3122,7 @@
     "gold_answer": "I am unable to answer this question based on the provided corpus as it does not contain relevant information.",
     "requires_abstention": true,
     "target_doc_ids": [],
-    "provenance_notes": "Corpus does not contain RocksDB storage engine tuning."
+    "provenance_notes": "Corpus does not contain RocksDB storage engine tuning.",
+    "fact_family_id": "ff_unanswerable_rocksdb"
   }
 ]

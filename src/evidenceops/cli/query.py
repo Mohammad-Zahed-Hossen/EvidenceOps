@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from evidenceops.controller.features import RegexFeatureExtractor
 from evidenceops.domain.enums import RunStatus
 from evidenceops.domain.errors import EvidenceOpsError
-from evidenceops.generation.ollama import OllamaClient
+from evidenceops.generation.providers import create_generation_provider
 from evidenceops.graph.composition import DocumentationRoute
 from evidenceops.graph.service import QueryRequest, QueryService
 from evidenceops.retrieval.reranker import FlashRankReranker
@@ -152,11 +152,7 @@ def main(argv: list[str] | None = None) -> int:
             < 0.20
         )
         doc_service = None if direct else build_documentation_service(settings)
-        ollama_client = OllamaClient(
-            base_url=settings.ollama_base_url,
-            model=settings.ollama_model,
-            timeout_seconds=settings.ollama_timeout_seconds,
-        )
+        generator = create_generation_provider(settings)
 
         query_service = QueryService(
             sparse_retriever=DocumentationRoute(doc_service, "sparse") if doc_service else None,
@@ -164,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
             hybrid_retriever=DocumentationRoute(doc_service, "hybrid") if doc_service else None,
             reranker=FlashRankReranker(model_name=settings.flashrank_model, local_files_only=True),
             settings=settings,
-            generator_client=ollama_client,
+            generator_client=generator,
         )
 
         response = query_service.execute_query(request)

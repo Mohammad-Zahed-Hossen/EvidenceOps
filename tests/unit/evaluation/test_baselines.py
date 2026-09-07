@@ -39,6 +39,7 @@ def sample_question() -> EvaluationSample:
         gold_answer="Status code is 200 OK [C1].",
         requires_abstention=False,
         target_doc_ids=["doc1"],
+        fact_family_id="ff_status_code",
     )
 
 

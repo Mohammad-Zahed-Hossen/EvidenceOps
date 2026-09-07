@@ -13,7 +13,11 @@ from tests.unit.test_phase3_retrieval import Retriever, result
 
 def sample():
     return EvaluationSample(
-        id="q", question="documented parameter", type="single_fact", split="dev"
+        id="q",
+        question="documented parameter",
+        type="single_fact",
+        split="dev",
+        fact_family_id="ff_sample",
     )
 
 

@@ -13,7 +13,7 @@ from evidenceops.evaluation.systems import (
     NaiveDenseRAG,
     TwoStepHybrid,
 )
-from evidenceops.generation.ollama import OllamaClient
+from evidenceops.generation.providers import create_generation_provider
 from evidenceops.graph.composition import DocumentationRoute
 from evidenceops.graph.service import QueryService
 from evidenceops.retrieval.reranker import FlashRankReranker
@@ -36,11 +36,7 @@ def build_benchmark_systems(
     dense_route = DocumentationRoute(documents, "dense")
     hybrid_route = DocumentationRoute(documents, "hybrid")
     reranker = FlashRankReranker(active_settings.flashrank_model, local_files_only=True)
-    generator = OllamaClient(
-        base_url=active_settings.ollama_base_url,
-        model=active_settings.ollama_model,
-        timeout_seconds=active_settings.ollama_timeout_seconds,
-    )
+    generator = create_generation_provider(active_settings)
 
     heuristic_ctrl = HeuristicRetrievalController()
 

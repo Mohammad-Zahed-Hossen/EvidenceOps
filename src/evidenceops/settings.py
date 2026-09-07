@@ -26,11 +26,16 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "evidenceops_chunks_bge_small_v1"
     qdrant_timeout_seconds: int = Field(default=10, gt=0, le=60)
+    generator_provider: str = Field(default="ollama")
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_model: str = Field(default="qwen2.5:1.5b", min_length=1, max_length=128)
     ollama_timeout_seconds: int = Field(default=60, gt=0, le=60)
     ollama_temperature: float = Field(default=0.0, ge=0.0, le=0.0)
     ollama_max_tokens: int = Field(default=256, ge=1, le=512)
+    openai_compatible_base_url: str = "http://localhost:1234/v1"
+    openai_compatible_model: str = Field(default="local-model", min_length=1, max_length=128)
+    openai_compatible_timeout_seconds: int = Field(default=60, gt=0, le=60)
+    openai_compatible_max_tokens: int = Field(default=256, ge=1, le=512)
     local_models_only: bool = False
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_dimension: int = Field(default=384, gt=0, le=65536)
@@ -78,6 +83,32 @@ class Settings(BaseSettings):
             or parsed.fragment
         ):
             raise ValueError("local service URLs require a local HTTP endpoint without credentials")
+        return value
+
+    @field_validator("generator_provider")
+    @classmethod
+    def validate_generator_provider(cls, value: str) -> str:
+        allowed = {"ollama", "openai_compatible"}
+        if value not in allowed:
+            raise ValueError(f"generator_provider must be one of {allowed}")
+        return value
+
+    @field_validator("openai_compatible_base_url")
+    @classmethod
+    def validate_openai_compatible_base_url(cls, value: str) -> str:
+        parsed = urlparse(value)
+        if (
+            parsed.hostname not in {"localhost", "127.0.0.1"}
+            or parsed.scheme != "http"
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError(
+                "openai_compatible_base_url must be a local loopback HTTP endpoint "
+                "(http://127.0.0.1 or http://localhost) without credentials or queries"
+            )
         return value
 
     @field_validator("api_host")

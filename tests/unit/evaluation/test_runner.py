@@ -52,6 +52,7 @@ def test_benchmark_runner_execution() -> None:
             gold_answer="Fact statement [C1].",
             requires_abstention=False,
             target_doc_ids=["d1"],
+            fact_family_id=f"ff_{i}",
         )
         for i in range(5)
     ]

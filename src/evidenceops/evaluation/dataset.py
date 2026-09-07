@@ -26,12 +26,39 @@ def load_evaluation_dataset(dataset_path: Path | str) -> list[EvaluationSample]:
 
 
 def validate_evaluation_dataset(samples: list[EvaluationSample]) -> None:
-    """Validate structural and semantic consistency of a dataset collection."""
+    """Validate structural and semantic consistency of a dataset collection.
+
+    Rejects datasets with:
+    - duplicate sample IDs;
+    - cross-split fact-family leakage (any fact_family_id appearing in multiple splits);
+    - unanswerable items containing supporting evidence.
+    """
     seen_ids: set[str] = set()
+    family_to_splits: dict[str, set[DatasetSplit]] = {}
+
     for sample in samples:
         if sample.id in seen_ids:
             raise ValueError(f"Duplicate sample ID detected: {sample.id}")
         seen_ids.add(sample.id)
+
+        family = sample.fact_family_id.strip()
+        if not family:
+            raise ValueError(f"Sample {sample.id} is missing a non-empty fact_family_id")
+
+        if family not in family_to_splits:
+            family_to_splits[family] = set()
+        family_to_splits[family].add(sample.split)
+
+    leaked_families = {fam: splits for fam, splits in family_to_splits.items() if len(splits) > 1}
+    if leaked_families:
+        leak_details = "; ".join(
+            f"'{fam}' in {[s.value for s in sorted(splits)]}"
+            for fam, splits in sorted(leaked_families.items())
+        )
+        raise ValueError(
+            "Cross-split fact-family leakage detected! "
+            f"The following fact families appear in multiple splits: {leak_details}"
+        )
 
 
 def split_dataset(samples: list[EvaluationSample]) -> dict[DatasetSplit, list[EvaluationSample]]:

@@ -1,12 +1,12 @@
 {
   "dataset_id": "evidenceops-controlled-v1",
   "dataset_version": "1.0.1",
-  "sha256_hash": "bd62ad02c92ccaf4452f2b28e4097334f93c7668ec2118702837db7ff02529c0",
+  "sha256_hash": "a09edf8eae079d0006afc436076997583aa1ab3b7867a64539289ed1166ce315",
   "sample_count": 100,
   "split_counts": {
-    "dev": 60,
     "val": 20,
-    "test": 20
+    "test": 20,
+    "dev": 60
   },
   "type_counts": {
     "single_fact": 30,
@@ -15,5 +15,5 @@
     "temporal_ambiguous": 10,
     "unanswerable": 15
   },
-  "created_at": "2026-09-06T16:20:23.726126+00:00"
+  "created_at": "2026-09-07T05:48:07.785174+00:00"
 }

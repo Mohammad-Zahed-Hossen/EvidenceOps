@@ -67,7 +67,7 @@ EvidenceOps relies entirely on open-source, local-first tools without paid cloud
 
 | Subsystem | Technology | Execution Profile |
 | :--- | :--- | :--- |
-| **Generation** | Ollama (`qwen2.5:1.5b`) | Native local process (`127.0.0.1:11434`), temperature 0.0 |
+| **Generation** | Ollama (`qwen2.5:1.5b`, default) or local OpenAI-compatible endpoint | Native local process (`127.0.0.1`), temperature 0.0 |
 | **Dense Embeddings** | FastEmbed (`bge-small-en-v1.5`) | In-process ONNX runtime, CPU-only (~130 MB cache) |
 | **Sparse Index** | `rank-bm25` | Deterministic local JSON snapshots under `data/bm25/` |
 | **Vector Database** | Qdrant | Docker container on loopback (`127.0.0.1:6333`) |
@@ -77,6 +77,10 @@ EvidenceOps relies entirely on open-source, local-first tools without paid cloud
 | **Observability & UI** | Vanilla HTML5 / CSS3 / ES6 | Same-origin, zero-CDN, zero-external-font, zero `.innerHTML` |
 | **Tracing** | OpenTelemetry SDK / Jaeger | Strictly redacted spans (SHA-256 hashes, zero raw text) |
 | **Tool Interface** | Model Context Protocol (FastMCP)| Local STDIO transport with 3 allowlisted tools |
+
+### Local Generation Provider Boundary
+
+EvidenceOps supports Ollama by default and optionally a local OpenAI-compatible chat endpoint (such as LM Studio or vLLM running on `127.0.0.1` or `localhost`). It does not support every LLM automatically and does not ship cloud-provider integrations. User-supplied endpoints in API requests, remote IP addresses, public DNS hosts, HTTPS, and API keys are strictly rejected.
 
 ---
 
@@ -181,7 +185,7 @@ uv run evidenceops-mcp
 ## Evaluation & Benchmark Reproducibility
 
 EvidenceOps includes a rigorous, frozen 100-item evaluation benchmark comparing adaptive retrieval against standard industry baselines:
-- **Dataset**: `eval/datasets/eval_dataset_v1.json` (60 dev / 20 validation / 20 test).
+- **Dataset**: `eval/datasets/evidenceops-controlled-v1.json` (60 dev / 20 validation / 20 test), partitioned with a deterministic `fact_family_id` integrity guard ensuring zero cross-split fact leakage.
 - **Baselines**: `NaiveDenseRAG`, `BM25RAG`, `TwoStepHybridRAG`, and `EvidenceOpsAdaptive`.
 - **Metrics**: Recall@K, MRR, nDCG, Citation Precision, Citation Recall, Lexical Fact Proxy, and Abstention Precision.
 - **Statistical Significance**: Paired sign-flip permutation tests with 95% bootstrap confidence intervals ($B = 500$).
@@ -189,7 +193,7 @@ EvidenceOps includes a rigorous, frozen 100-item evaluation benchmark comparing 
 ### Running Benchmarks
 ```powershell
 # Execute reproducible evaluation runner
-uv run evidenceops-eval --dataset-path eval/datasets/eval_dataset_v1.json --systems adaptive,bm25,dense,hybrid
+uv run evidenceops-eval --dataset-path eval/datasets/evidenceops-controlled-v1.json --systems adaptive,bm25,dense,hybrid
 ```
 Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboards under `eval/runs/<run_id>/`.
 
@@ -208,8 +212,10 @@ Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboard
 
 ## Known Limitations
 
+- **Text-Only Scope**: EvidenceOps is strictly a text and technical documentation RAG platform; it does not include OCR, image retrieval, vision-language models, or Docling integration (which is an independent external application).
 - **Expert Review Status**: Gold evaluation labels are machine-generated with heuristic verification; expert human review remains marked as **pending**.
-- **Sample Size**: The held-out test split contains 20 items. While statistically tested with bootstrap confidence intervals, larger sample sizes are recommended for definitive production claims.
+- **Sample Size & Held-out Power**: The held-out test split contains 20 items. While isolated by fact family and statistically tested with bootstrap confidence intervals, larger sample sizes are recommended for definitive production claims.
+- **Learned Controller Parity**: The learned controller achieves parity with the heuristic policy (100% agreement on initial routing across the 20-item test split). The transparent heuristic controller is retained as default without exaggerated claims of superiority.
 - **Local LLM Nuances**: The 1.5B parameter model (`qwen2.5:1.5b`) is tuned for CPU speed; it occasionally requires the built-in citation repair pass to conform to strict citation formatting.
 - **In-Memory Run History**: The API caches the last 100 query runs in memory; history resets on server restart.
 

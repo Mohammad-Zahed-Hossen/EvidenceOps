@@ -61,3 +61,4 @@ dashboard/.env*
 Thumbs.db
 .vscode/
 .idea/
+scratch/

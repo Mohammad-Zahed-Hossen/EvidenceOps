@@ -29,6 +29,7 @@ def dev_sample_single_fact() -> EvaluationSample:
         gold_answer="Returns 201 [C1].",
         requires_abstention=False,
         target_doc_ids=["doc1"],
+        fact_family_id="ff_dev_single",
     )
 
 
@@ -45,6 +46,7 @@ def dev_sample_unanswerable() -> EvaluationSample:
         gold_answer="Cannot answer.",
         requires_abstention=True,
         target_doc_ids=[],
+        fact_family_id="ff_dev_unans",
     )
 
 
@@ -61,6 +63,7 @@ def test_sample() -> EvaluationSample:
         gold_answer="Ollama settings.",
         requires_abstention=False,
         target_doc_ids=["doc_ollama"],
+        fact_family_id="ff_test_ollama",
     )
 
 

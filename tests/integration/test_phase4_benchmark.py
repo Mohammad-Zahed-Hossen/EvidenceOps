@@ -70,6 +70,7 @@ def test_benchmark_runner_pipeline_with_mock_systems(tmp_path: Path) -> None:
         gold_answer="The default code is 200 [C1].",
         requires_abstention=False,
         target_doc_ids=["fastapi_doc"],
+        fact_family_id="ff_val_1",
     )
 
     baseline = DeterministicDummySystem(

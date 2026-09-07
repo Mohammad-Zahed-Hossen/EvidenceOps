@@ -38,6 +38,7 @@ def sample_dataset() -> list[EvaluationSample]:
             requires_abstention=(i % 2 != 0),
             target_doc_ids=[f"doc_{i}"] if i % 2 == 0 else [],
             provenance_notes="Test sample.",
+            fact_family_id=f"ff_{i}",
         )
         for i in range(10)
     ]

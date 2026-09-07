@@ -127,3 +127,6 @@ class OllamaClient(GeneratorClient):
     def close(self) -> None:
         if self._client is not None and not self._client.is_closed:
             self._client.close()
+
+
+OllamaGenerationProvider = OllamaClient

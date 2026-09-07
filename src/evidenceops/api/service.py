@@ -231,7 +231,7 @@ class ApiService:
             with self._query_service_lock:
                 if self._query_service is None:
                     from evidenceops.controller.heuristic import HeuristicRetrievalController
-                    from evidenceops.generation.ollama import OllamaClient
+                    from evidenceops.generation.providers import create_generation_provider
                     from evidenceops.graph.composition import DocumentationRoute
                     from evidenceops.graph.service import QueryService
                     from evidenceops.retrieval.reranker import FlashRankReranker
@@ -245,11 +245,7 @@ class ApiService:
                     reranker = FlashRankReranker(
                         self.settings.flashrank_model, local_files_only=True
                     )
-                    generator = OllamaClient(
-                        base_url=self.settings.ollama_base_url,
-                        model=self.settings.ollama_model,
-                        timeout_seconds=self.settings.ollama_timeout_seconds,
-                    )
+                    generator = create_generation_provider(self.settings)
                     controller = HeuristicRetrievalController()
 
                     self._query_service = QueryService(

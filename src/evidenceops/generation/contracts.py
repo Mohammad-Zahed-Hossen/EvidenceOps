@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from pydantic import ConfigDict, Field
 
@@ -20,8 +20,19 @@ class GenerationResponse(DomainModel):
     latency_ms: float = Field(default=0.0, ge=0.0)
 
 
-class GeneratorClient(Protocol):
-    """Protocol for local LLM generation."""
+class GenerationRequest(DomainModel):
+    """Structured request for a generation provider."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    messages: list[dict[str, str]]
+    temperature: float = Field(default=0.0, ge=0.0, le=0.0)
+    max_tokens: int | None = Field(default=None, ge=1, le=512)
+
+
+@runtime_checkable
+class GenerationProvider(Protocol):
+    """Protocol for local LLM generation providers."""
 
     def generate(
         self,
@@ -31,6 +42,14 @@ class GeneratorClient(Protocol):
     ) -> GenerationResponse:
         """Generate a completion from messages."""
         ...
+
+    def close(self) -> None:
+        """Release underlying client resources."""
+        ...
+
+
+# GeneratorClient is retained as an alias for full backward compatibility
+GeneratorClient = GenerationProvider
 
 
 class QueryReformulator(Protocol):
