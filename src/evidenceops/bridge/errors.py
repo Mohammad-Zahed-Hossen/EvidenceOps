@@ -33,3 +33,15 @@ class LiteBridgeRetrievalError(LiteBridgeError):
     """Raised when underlying retrieval fails, without exposing raw backend traces."""
 
     default_code = "retrieval_error"
+
+
+class LiteBridgeSourceError(LiteBridgeError):
+    """Raised when source registration, lookup, or resolution fails."""
+
+    default_code = "source_error"
+
+
+class LiteBridgeTimeoutError(LiteBridgeRetrievalError):
+    """Raised when retrieval exceeds its deadline or times out."""
+
+    default_code = "timeout_error"

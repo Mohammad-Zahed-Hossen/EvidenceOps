@@ -16,6 +16,7 @@ class RawEvidenceCandidate(BaseModel):
 
     candidate_id: str = Field(min_length=1)
     source_kind: SourceKind = SourceKind.LOCAL_DOCUMENT
+    source_id: str = Field(min_length=1)
     document_id: str = Field(min_length=1)
     chunk_id: str | None = None
     title: str = ""

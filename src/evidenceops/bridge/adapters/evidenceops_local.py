@@ -6,7 +6,7 @@ import time
 from typing import Any
 
 from evidenceops.bridge.contracts import RetrievalPolicy, SourceKind
-from evidenceops.bridge.errors import LiteBridgeRetrievalError
+from evidenceops.bridge.errors import LiteBridgeRetrievalError, LiteBridgeTimeoutError
 from evidenceops.bridge.ports import EvidenceRetriever, RawEvidenceCandidate, RetrievalBatch
 from evidenceops.domain.errors import EvidenceOpsError
 from evidenceops.retrieval.service import (
@@ -21,10 +21,12 @@ class EvidenceOpsLocalRetrieverAdapter(EvidenceRetriever):
     def __init__(
         self,
         service: Any,
+        source_id: str = "evidenceops_local_docs",
         adapter_id: str = "evidenceops_local",
         reproducibility: tuple[tuple[str, str], ...] = (),
     ) -> None:
         self._service = service
+        self._source_id = source_id
         self._adapter_id = adapter_id
         self._reproducibility = reproducibility
 
@@ -38,6 +40,10 @@ class EvidenceOpsLocalRetrieverAdapter(EvidenceRetriever):
                 top_k=policy.max_evidence_items,
             )
             raw_results: tuple[DocumentationSearchResult, ...] = self._service.search(req)
+        except TimeoutError as err:
+            raise LiteBridgeTimeoutError(
+                f"EvidenceOps local retrieval timed out for source '{self._source_id}'"
+            ) from err
         except EvidenceOpsError as err:
             raise LiteBridgeRetrievalError(
                 f"EvidenceOps local retrieval failed: {err.message}"
@@ -54,6 +60,7 @@ class EvidenceOpsLocalRetrieverAdapter(EvidenceRetriever):
             candidate = RawEvidenceCandidate(
                 candidate_id=res.chunk_id,
                 source_kind=SourceKind.LOCAL_DOCUMENT,
+                source_id=self._source_id,
                 document_id=res.document_id,
                 chunk_id=res.chunk_id,
                 title=res.title,
@@ -66,7 +73,10 @@ class EvidenceOpsLocalRetrieverAdapter(EvidenceRetriever):
             )
             candidates.append(candidate)
 
-        repro_metadata = (("adapter_id", self._adapter_id),) + self._reproducibility
+        repro_metadata = (
+            ("source_id", self._source_id),
+            ("adapter_id", self._adapter_id),
+        ) + self._reproducibility
 
         return RetrievalBatch(
             candidates=tuple(candidates),

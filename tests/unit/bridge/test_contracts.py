@@ -75,6 +75,7 @@ def test_evidence_record_immutability_and_tuples() -> None:
         evidence_id="chunk_1",
         citation_id="C1",
         source_kind=SourceKind.LOCAL_DOCUMENT,
+        source_id="evidenceops_local_docs",
         document_id="doc_1",
         chunk_id="chunk_1",
         title="Test Doc",

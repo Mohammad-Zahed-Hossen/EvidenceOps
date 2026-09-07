@@ -202,3 +202,20 @@
   8. **Deterministic Package Identity**: `package_id` is derived strictly from stable inputs (normalized query hash, policy, selected evidence IDs, reproducibility metadata) and strictly excludes non-deterministic execution timings or timestamps.
   9. **Single-Inheritance Error Hierarchy**: All LiteBridge errors inherit strictly from `LiteBridgeError(Exception)` without multiple-inheritance complexities. Underlying causes are preserved via `__cause__` while keeping public representations sanitized.
   10. **Deferred Capabilities**: Web search, external page fetching, external LLM adapters, context compression, and API/MCP tools remain strictly deferred to subsequent phases.
+
+### ADR-028: LiteBridge Phase L2 Source Registry and Private Local Source Policy
+- **Context**: Phase L2 extends LiteBridge with source-registry and source-selection capabilities so that LiteBridge can safely identify, configure, and select registered document sources while preserving the generator-independent Core-Port-Adapter boundary established in L0/L1.
+- **Decision**:
+  1. **Source Agnostic Core Boundary**: LiteBridge core owns the public domain contracts `SourceDescriptor`, `SourcePolicy`, `PrivacyClassification`, `SourceFreshness`, and the operational `SourceRegistry`. Core has zero imports of EvidenceOps models, Qdrant/BM25 internals, database drivers, or LLM generation providers.
+  2. **Allowlist-Based In-Memory Source Registry**: Sources are registered in-memory via `SourceDescriptor` and `EvidenceRetriever`. Sources cannot be arbitrary user-supplied filesystem paths, URLs, database connection strings, or raw queries.
+  3. **Strict Single-Source Selection in L2**: Exactly one local source is resolved per `prepare_context()` call:
+     - Empty `SourcePolicy` or `None` resolves the deterministic registered default source (`evidenceops_local_docs`).
+     - A single allowed source ID in `SourcePolicy` resolves that registered source if enabled.
+     - Specifying more than one source ID is rejected prior to retrieval with `LiteBridgeValidationError`.
+     - Specifying an unknown or disabled source raises `LiteBridgeSourceError` prior to retrieval.
+     - No multi-source fan-out, planning, or evidence fusion is performed in L2.
+  4. **Direct-Retriever Compatibility**: `LiteBridge(retriever=...)` remains supported for backward compatibility and testing. Direct-retriever mode permits `source_policy=None` or empty `SourcePolicy()`; specifying an explicit source ID in direct-retriever mode raises `LiteBridgeSourceError`.
+  5. **Required Provenance Identity**: `source_id: str` is required (with no fake public defaults) on `RawEvidenceCandidate` and `EvidenceRecord`. Returned candidate `source_id` is validated against the resolved source ID (mismatches raise `LiteBridgeRetrievalError`).
+  6. **Core-Guaranteed Reproducibility Integrity**: Core-resolved `source_id` and `adapter_id` metadata take precedence and cannot be overwritten by adapter-provided reproducibility metadata. `ContextPackage.package_id` deterministically incorporates `source_id` and excludes timing values.
+  7. **Declarative Timeout and Zero Retries**: `timeout_ms` and `max_retries=0` are declarative contract properties. If an upstream service raises `TimeoutError`, it is mapped to a sanitized `LiteBridgeTimeoutError` without unsafe thread cancellation, process termination, or retries. Existing `LiteBridgeTimeoutError` instances pass through unwrapped.
+  8. **Deferred Capabilities**: Multi-source planning/fusion (Phase L4), web search and page retrieval (Phase L3), hosted/hybrid execution profiles, and LLM answer generation remain strictly out of scope.

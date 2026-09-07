@@ -102,6 +102,7 @@ def build_context_package(
             evidence_id=candidate.candidate_id,
             citation_id=citation_id,
             source_kind=candidate.source_kind,
+            source_id=candidate.source_id,
             document_id=candidate.document_id,
             chunk_id=candidate.chunk_id,
             title=candidate.title,

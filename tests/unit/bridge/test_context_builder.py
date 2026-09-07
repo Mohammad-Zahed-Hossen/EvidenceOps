@@ -47,6 +47,7 @@ def test_render_evidence_block_formatting() -> None:
         evidence_id="ev_1",
         citation_id="C1",
         source_kind=SourceKind.LOCAL_DOCUMENT,
+        source_id="evidenceops_local_docs",
         document_id="doc_1",
         chunk_id="chunk_1",
         title="Sample Title",
@@ -82,6 +83,7 @@ def test_build_context_package_all_fit_success() -> None:
     policy = RetrievalPolicy(max_evidence_items=3)
     c1 = RawEvidenceCandidate(
         candidate_id="c1",
+        source_id="evidenceops_local_docs",
         document_id="doc1",
         chunk_id="chunk1",
         title="Title 1",
@@ -94,6 +96,7 @@ def test_build_context_package_all_fit_success() -> None:
     )
     c2 = RawEvidenceCandidate(
         candidate_id="c2",
+        source_id="evidenceops_local_docs",
         document_id="doc2",
         chunk_id="chunk2",
         title="Title 2",
@@ -120,6 +123,7 @@ def test_build_context_package_partial_fit_budget_exceeded() -> None:
     # Set context chars small enough that only 1 candidate fits with header/footer
     c1 = RawEvidenceCandidate(
         candidate_id="c1",
+        source_id="evidenceops_local_docs",
         document_id="doc1",
         chunk_id="chunk1",
         title="Title 1",
@@ -132,6 +136,7 @@ def test_build_context_package_partial_fit_budget_exceeded() -> None:
     )
     c2 = RawEvidenceCandidate(
         candidate_id="c2",
+        source_id="evidenceops_local_docs",
         document_id="doc2",
         chunk_id="chunk2",
         title="Title 2",
@@ -159,6 +164,7 @@ def test_build_context_package_none_fit_budget_exceeded() -> None:
     # Set budget so low that not even the first candidate fits
     c1 = RawEvidenceCandidate(
         candidate_id="c1",
+        source_id="evidenceops_local_docs",
         document_id="doc1",
         chunk_id="chunk1",
         title="Title 1",
@@ -184,6 +190,7 @@ def test_package_id_is_independent_of_timings() -> None:
     policy = RetrievalPolicy()
     c1 = RawEvidenceCandidate(
         candidate_id="c1",
+        source_id="evidenceops_local_docs",
         document_id="doc1",
         chunk_id="chunk1",
         title="Title 1",

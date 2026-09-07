@@ -6,18 +6,25 @@ from evidenceops.bridge.contracts import (
     ContextPackage,
     EvidenceRecord,
     ExecutionProfile,
+    PrivacyClassification,
     RetrievalPolicy,
+    SourceDescriptor,
+    SourceFreshness,
     SourceKind,
+    SourcePolicy,
     StopReason,
 )
 from evidenceops.bridge.errors import (
     LiteBridgeError,
     LiteBridgeProfileError,
     LiteBridgeRetrievalError,
+    LiteBridgeSourceError,
+    LiteBridgeTimeoutError,
     LiteBridgeValidationError,
 )
 from evidenceops.bridge.factory import build_litebridge
 from evidenceops.bridge.service import LiteBridge
+from evidenceops.bridge.source_registry import SourceRegistry
 
 __all__ = [
     "ContextPackage",
@@ -27,9 +34,16 @@ __all__ = [
     "LiteBridgeError",
     "LiteBridgeProfileError",
     "LiteBridgeRetrievalError",
+    "LiteBridgeSourceError",
+    "LiteBridgeTimeoutError",
     "LiteBridgeValidationError",
+    "PrivacyClassification",
     "RetrievalPolicy",
+    "SourceDescriptor",
+    "SourceFreshness",
     "SourceKind",
+    "SourcePolicy",
+    "SourceRegistry",
     "StopReason",
     "build_litebridge",
 ]

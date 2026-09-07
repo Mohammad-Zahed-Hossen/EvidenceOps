@@ -42,37 +42,35 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Phase L1 complete and locally verified
+### Status: Phase L2 complete and locally verified
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Baseline Commit for L1:** `c75407f`
-- **Phase L1 Completion Status:** Complete and verified (zero LLM generation calls, core decoupled).
+- **Baseline Commit for L2:** `8125065`
+- **Phase L2 Completion Status:** Complete and verified (source-agnostic registry, local source policy, generator-independent).
 - **Deliverables Implemented:**
-  - `src/evidenceops/bridge/contracts.py`: LiteBridge-owned immutable public contracts (`ContextPackage`, `EvidenceRecord`, `RetrievalPolicy`, `ExecutionProfile`, `SourceKind`, `StopReason`) using frozen Pydantic models and tuple fields.
-  - `src/evidenceops/bridge/ports.py`: Provider-neutral retrieval protocol (`EvidenceRetriever`), `RawEvidenceCandidate`, and `RetrievalBatch`.
-  - `src/evidenceops/bridge/errors.py`: Sanitized single-inheritance error hierarchy (`LiteBridgeError`).
-  - `src/evidenceops/bridge/context_builder.py`: Pure context rendering with untrusted-data boundary, whole-item budget enforcement, deterministic token estimation, and stable `package_id`.
-  - `src/evidenceops/bridge/service.py`: `LiteBridge` facade with `prepare_context()` depending strictly on `EvidenceRetriever` port.
-  - `src/evidenceops/bridge/adapters/evidenceops_local.py`: Isolated adapter translating EvidenceOps `LocalDocumentationService` to LiteBridge port.
-  - `src/evidenceops/bridge/factory.py`: Composition root wiring adapter into LiteBridge with neutral reproducibility metadata.
-  - `src/evidenceops/bridge/__init__.py`: Clean public exports.
-- **Verification Results (Post-L1):**
-  - Focused L1 tests: 26 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 535 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check (197 files) and ruff format (197 files) pass with zero errors.
-  - Type checking: Mypy passes with zero issues across 96 source files.
-  - Import audit: AST inspection proves core files (`contracts.py`, `ports.py`, `errors.py`, `context_builder.py`, `service.py`) contain zero imports of `evidenceops.generation`, `evidenceops.retrieval`, `evidenceops.domain`, or external provider SDKs.
-  - Generator independence: Proven by exploding-stub test confirming `prepare_context()` succeeds while all generation providers and request constructors raise if touched.
-- **Known L1 Limitations:**
-  - Local documentation corpus only (`SourceKind.LOCAL_DOCUMENT`).
-  - Exactly one retrieval call per request; no multi-step iterative retrieval.
-  - No query planner or learned routing policy.
+  - `src/evidenceops/bridge/contracts.py`: Added `PrivacyClassification` (`PRIVATE`), `SourceFreshness` (`SNAPSHOT`), `SourceDescriptor`, `SourcePolicy`, and required `source_id: str` on `EvidenceRecord`.
+  - `src/evidenceops/bridge/ports.py`: Added required `source_id: str` on `RawEvidenceCandidate`.
+  - `src/evidenceops/bridge/errors.py`: Added `LiteBridgeSourceError` and `LiteBridgeTimeoutError`.
+  - `src/evidenceops/bridge/source_registry.py`: Core in-memory allowlist source registry with deterministic single default resolution, unique slug enforcement, and strict execution profile checking.
+  - `src/evidenceops/bridge/service.py`: `LiteBridge` facade supporting registry mode and backward-compatible direct-retriever mode, single-source policy resolution, candidate source validation, core-governed reproducibility metadata merge, and sanitized timeout mapping.
+  - `src/evidenceops/bridge/adapters/evidenceops_local.py`: Isolated adapter configured with `source_id="evidenceops_local_docs"`, propagating `source_id` to candidates, and mapping upstream `TimeoutError` to `LiteBridgeTimeoutError`.
+  - `src/evidenceops/bridge/factory.py`: Composition root registering `evidenceops_local_docs` in `SourceRegistry` as default local source with `source_version=None`.
+  - `src/evidenceops/bridge/__init__.py`: Clean public exports for L2 contracts and errors.
+- **Verification Results (Post-L2):**
+  - Focused L2 tests: 59 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 567 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check (200 files) and ruff format (200 files) pass with zero errors.
+  - Type checking: Mypy passes with zero issues across 97 source files.
+  - Import audit: AST inspection proves all core modules (`contracts.py`, `ports.py`, `errors.py`, `context_builder.py`, `service.py`, `source_registry.py`) contain zero imports of `evidenceops.generation`, `evidenceops.retrieval`, `evidenceops.domain`, or external provider SDKs.
+  - Generator independence: Proven by exploding-stub tests in both direct-retriever mode and registry mode confirming `prepare_context()` succeeds while all generation providers and request constructors raise if touched.
+- **Known L2 Limitations:**
+  - Local documentation corpus only (`SourceKind.LOCAL_DOCUMENT`); single registered production source (`evidenceops_local_docs`).
+  - Strict single-source selection per call; no multi-source fan-out, query planning, or evidence fusion.
+  - Declarative timeouts (`timeout_ms`) with zero retries; hard process cancellation is not implemented.
   - Zero web search, page fetching, or remote API retrieval.
   - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
   - Context packaging only; answer generation (`answer()`) is not implemented.
-  - Character-based deterministic token estimation (`ceil(chars / 4)`), not exact tokenizer counts.
-  - Extractive whole-item selection only; no LLM-based context compression.
 - **Explicit Next Approved Action:**
-  `L2 — Source registry and private connectors`.
+  `L3 — Web Search and Page Retrieval`.
