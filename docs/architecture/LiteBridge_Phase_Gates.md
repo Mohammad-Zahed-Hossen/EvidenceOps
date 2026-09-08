@@ -66,6 +66,15 @@ Stop immediately and fail the gate if any of the following occur:
 - **Phase L4 (Planner & Budgets):** STOP if the planner executes multi-hop or multi-action loops (Phase L4 is strictly single-action; decomposition, multi-hop, and fusion are deferred), invokes an LLM generator, emits non-deterministic decisions, leaks backend-specific class names, duplicates context/token limits across policies, falsely claims hard pre-emption for local synchronous wall-clock, or charges external cost on cache hits.
 - **Phase L5 (Provider Adapters):** STOP if provider SDKs (OpenAI, Anthropic, Gemini) are added as dependencies, if `prepare_context()` calls or imports generation adapters, if private document evidence can be exported to hosted providers without explicit per-call `GenerationPolicy(allow_private_evidence_export=True)` consent, if local endpoints accept non-loopback IPs or unsafe URLs, if nonblank model validation is bypassed, if provider exceptions leak into `GroundedAnswer` or warnings, or if malformed/unknown citation-like tokens fail to fail closed.
 - **Phase L6 (Context Compression):** STOP if compression performs abstractive rewriting, invokes an LLM, invokes retrieval or planner logic, drops exact duplicates when `allow_evidence_drop=False`, measures ceilings against unrendered excerpts instead of the final rendered context, uses floating-point arithmetic for basis points, alters retrieval metadata (`stop_reason`, `planner_decision`, `budget_used`, call counts), renumbers citations, breaks ordered sentence concatenation, or fails to report `TARGET_UNACHIEVABLE` when targets cannot safely be met.
-- **Phase L7 (API & MCP Surfaces):** STOP if API or MCP surfaces accept arbitrary URLs, filesystem paths, credentials, raw SQL, or raw backend filter payloads.
+- **Phase L7 — API, SDK, and MCP Interfaces:** STOP if API, SDK, or MCP surfaces accept arbitrary URLs, filesystem paths, credentials, raw SQL, or raw backend filter payloads, or if started before independent audit clearance.
 - **Phase L8 (Evaluation & Benchmarks):** STOP if test split data leaks into development/training splits, or if metrics compare different generator models, prompts, or temperatures.
 - **Phase L9 (Hardening & Audit):** STOP if security, provider failure, credential redaction, or memory reclamation audits are non-reproducible.
+
+---
+
+## E. Audit Gates and Remediation Status
+
+### Phase L4–L6 Independent Audit Remediation
+- **Audit Findings Remediated:** F01–F10 (planner routing diagnostics, budget preflight, boundary parsing, whitespace/separator preservation, deterministic package identity lineage, explicit provider selection defaults, loopback error sanitization/IPv6 support, answer ID policy precision, and Core-Port-Adapter boundary isolation).
+- **Remediation Status:** Completed pending independent re-audit.
+- **Phase L7 Gate Status:** **BLOCKED**. Phase L7 — API, SDK, and MCP Interfaces must not begin until an independent read-only re-audit explicitly certifies that all findings (F01–F10) have been satisfied and clears the gate.

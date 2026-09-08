@@ -1,13 +1,14 @@
 # LiteBridge System Specification
 
 **Status:** Approved planning baseline
-**Version:** 1.1 — Portability and anti-coupling architecture guardrails.
+**Version:** 1.3 — Independent audit remediation (F01–F10) baseline.
 **Project type:** Model-agnostic external retrieval, planning, and context-preparation layer  
 **Reference implementation:** EvidenceOps  
 **Primary repository:** `D:\Code\Assignment\EvidenceOps`  
 **Experimental branch:** `experiment/litebridge-bridge`
 
 ### Document Changelog
+- **Version 1.3 (2026-09-08):** Phase L4–L6 independent audit remediation baseline (F01–F10). Enforces explicit generation provider selection (`provider_id=None` default failing closed to `PROVIDER_UNAVAILABLE` / `PROVIDER_NOT_CONFIGURED` with zero provider calls); derives deterministic descendant package IDs for empty and no-reduction compression paths; incorporates complete source descriptor identity, planner reason codes, and compression policy into deterministic package IDs; enforces preflight budget checks for web/cost sources; returns truthful `LOCAL_SOURCE_UNAVAILABLE` / `SOURCE_UNAVAILABLE` diagnostics; sanitizes loopback error messages with bracketed IPv6 support; unifies sentence boundaries in a shared pure parser preserving original separators; and isolates Core-Port-Adapter boundary with lazy factory imports. Remediations completed pending independent re-audit.
 - **Version 1.2 (2026-09-08):** Phase L6 deterministic extractive context compression and quality controls baseline. Extractive sentence/whole-item compression, final rendered context target checks, conservative deduplication, integer basis points, and citation preservation.
 - **Version 1.1 (2026-09-07):** Portability and anti-coupling architecture guardrails. Established core-port-adapter boundary, extraction gate, provider-neutral product claims, and prohibited core coupling to EvidenceOps internal models.
 - **Version 1.0 (2026-09-07):** Initial system specification baseline for Phase L0.
@@ -314,13 +315,19 @@ class LiteBridge:
         self,
         query: str,
         policy: RetrievalPolicy | None = None,
+        source_policy: SourcePolicy | None = None,
+    ) -> ContextPackage: ...
+
+    def compress_context(
+        self,
+        context_package: ContextPackage,
+        compression_policy: CompressionPolicy | None = None,
     ) -> ContextPackage: ...
 
     def answer(
         self,
-        query: str,
-        policy: RetrievalPolicy | None = None,
-        generation: GenerationPolicy | None = None,
+        context_package: ContextPackage,
+        generation_policy: GenerationPolicy | None = None,
     ) -> GroundedAnswer: ...
 ```
 
@@ -523,9 +530,29 @@ Optional fields:
 
 The package must not contain secrets, raw internal exceptions, arbitrary provider payloads, hidden chain-of-thought, or unbounded document dumps.
 
+### 12.1 Deterministic package identity and lineage
+
+`ContextPackage.package_id` must be derived deterministically using SHA-256 over stable contract inputs, strictly excluding non-deterministic execution timings or timestamps:
+- Query hash (`normalized_query_hash`);
+- Planner decision route and reason codes (`planner_decision.reason_codes`);
+- Resolved source descriptor identity: `source_id`, `source_kind`, `privacy_classification`, and `estimated_external_cost_microusd`;
+- Effective retrieval and budget policy parameters (`max_context_chars`, `max_estimated_tokens`, `max_retrieval_calls`, `max_web_calls`, `max_wall_clock_ms`, `max_estimated_external_cost_microusd`);
+- Selected evidence items in stable rank order (`evidence_id`, `source_id`, `source_kind`, `document_id`, `chunk_id`, `excerpt_hash`, `citation_id`, `canonical_url`, `content_hash`);
+- Stop reason and reproducibility metadata.
+
+When context compression is performed:
+- Any explicit compression pass—including empty packages (`evidence=()`) and no-reduction outcomes where all evidence is retained—must derive a deterministic descendant `package_id` that is distinct from its parent package ID.
+- Repeated identical compression passes over the same input must yield identical descendant `package_id`s.
+- The descendant hash incorporates the parent `package_id`, complete `compression_policy` parameters (`strategy`, `target_ratio_basis_points`, `target_max_tokens`, `target_max_chars`, `min_sentence_chars`, `preserve_item_ordering`, `allow_evidence_drop`, `deduplicate_exact_retrieval_copies`), retained evidence, and stable report metrics.
+
 ## 13. External LLM integration
 
 LiteBridge must support a provider-neutral generation interface.
+
+Generation is strictly optional and decoupled from `prepare_context()`. Generation requires explicit caller selection:
+- `GenerationPolicy.provider_id` defaults to `None`.
+- If `provider_id` is omitted or empty, `answer()` fails closed with status `PROVIDER_UNAVAILABLE`, abstention reason `PROVIDER_NOT_CONFIGURED`, and exactly zero provider calls.
+- LiteBridge must never silently fall back to an arbitrary or unconfigured provider.
 
 Required provider categories:
 
@@ -906,7 +933,7 @@ Exit gate: the same `ContextPackage` can be passed to multiple providers without
 
 Exit gate: context reduction does not silently remove required support or create unsupported claims.
 
-### Phase L7: API, SDK, and MCP
+### Phase L7: API, SDK, and MCP Interfaces
 
 - expose safe Python SDK;
 - API and MCP layers call the LiteBridge public facade;

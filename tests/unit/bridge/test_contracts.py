@@ -40,6 +40,7 @@ def test_stop_reason_values() -> None:
         "unsupported_profile",
         "invalid_query",
         "retrieval_failed",
+        "source_unavailable",
     }
     assert {s.value for s in StopReason} == expected
 

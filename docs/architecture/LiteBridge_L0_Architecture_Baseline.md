@@ -293,10 +293,19 @@ Phase L6 implements a deterministic, extractive context compression layer (`comp
 - **Citation Preservation:** Retained evidence retains original citation identifiers (`[C1]`, `[C3]`) without renumbering.
 - **Preserved Retrieval Metadata:** Original retrieval `stop_reason`, `planner_decision`, `budget_used`, and call counts are immutable and preserved verbatim. Unmet compression targets are recorded as `CompressionOutcome.TARGET_UNACHIEVABLE`.
 
+### 12. Architecture Amendment: Phase L4–L6 Independent Audit Remediation (F01–F10)
+Following an independent architecture and security audit of Phases L4–L6, the following architectural enforcements were formalized:
+- **Explicit Generation Provider Selection:** `GenerationPolicy.provider_id` defaults to `None`. LiteBridge never guesses or falls back to an unconfigured provider. Missing provider selection immediately fails closed with `PROVIDER_UNAVAILABLE` and `PROVIDER_NOT_CONFIGURED` without invoking any provider.
+- **Deterministic Package Identity Lineage:** `ContextPackage.package_id` deterministically incorporates planner `reason_codes`, complete stable source descriptor identity (`source_id`, `source_kind`, `privacy_classification`, `estimated_external_cost_microusd`), and complete compression policy fields. Explicit compression runs on empty packages (`evidence=()`) or no-reduction outcomes derive deterministic descendant IDs distinct from their parent, with repeated runs yielding identical IDs.
+- **Truthful Planning Diagnostics & Budget Preflight:** Disabled local sources emit `LOCAL_SOURCE_UNAVAILABLE` and `SOURCE_UNAVAILABLE`. Preflight budget evaluation rejects external/cost queries when no budget is allocated.
+- **Pure Boundary Parsing & Separator Preservation:** Sentence boundaries are parsed via a shared pure parser (`parse_sentence_boundaries()`) that preserves original whitespace and separators for all selected boundaries without synthetic space insertions.
+- **Loopback Sanitization & IPv6 Formatting:** Loopback error messages are strictly sanitized and IPv6 loopback addresses format as bracketed `[::1]`.
+- **Core-Port-Adapter Decoupling:** Core modules maintain zero direct imports of EvidenceOps retrieval services, with factory dependencies loaded lazily.
+
 ---
 
 ## H. Resume Guide
 
 ```text
-Next approved implementation phase: L7 — API, SDK, and MCP Interfaces.
+Next phase status: L4–L6 independent audit remediation completed pending independent re-audit. Phase L7 — API, SDK, and MCP Interfaces remains blocked until cleared by the next read-only audit.
 ```

@@ -44,9 +44,15 @@ def validate_loopback_url(raw_url: str, provider_name: str) -> str:
         )
 
     if parsed.path and parsed.path not in ("", "/"):
-        raise LiteBridgeValidationError(
-            f"{provider_name} base URL must not contain subpaths, got '{parsed.path}'"
-        )
+        raise LiteBridgeValidationError(f"{provider_name} base URL must not contain subpaths")
+
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise LiteBridgeValidationError(f"{provider_name} base URL has invalid port") from exc
+
+    if port is not None and not (1 <= port <= 65535):
+        raise LiteBridgeValidationError(f"{provider_name} base URL port out of range (1..65535)")
 
     host = parsed.hostname
     if not host:
@@ -77,8 +83,9 @@ def validate_loopback_url(raw_url: str, provider_name: str) -> str:
     if not is_valid_loopback:
         raise LiteBridgeValidationError(
             f"{provider_name} requires local loopback endpoint "
-            f"('127.0.0.1', '[::1]', or 'localhost' resolving to loopback), got '{host}'"
+            "('127.0.0.1', '[::1]', or 'localhost' resolving to loopback)"
         )
 
-    port_suffix = f":{parsed.port}" if parsed.port else ""
-    return f"http://{host}{port_suffix}"
+    port_suffix = f":{port}" if port else ""
+    formatted_host = f"[{host}]" if ":" in host and not host.startswith("[") else host
+    return f"http://{formatted_host}{port_suffix}"

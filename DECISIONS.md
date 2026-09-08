@@ -274,8 +274,8 @@
      - Post-execution wall-clock reporting: synchronous local retrieval measures elapsed wall-clock time and reports `StopReason.BUDGET_EXCEEDED` alongside a sanitized fixed warning if the budget was exceeded after retrieval completed. Wall-clock control is not falsely labeled as universally hard pre-emption.
   6. **Accurate Web Call Cost Accounting**: External cost is charged only for actual web calls: `estimated_external_cost_microusd = descriptor.estimated_external_cost_microusd * actual_web_calls`. In-memory cache hits incur zero external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
   7. **Backward-Compatible Defaults**: Default `RetrievalPolicy()` uses `BudgetPolicy()` (local only, `max_web_calls=0`). Under `HYBRID` profile with `web.allow_external_query=True`, `RetrievalPolicy` automatically defaults `budget` to permit 1 web call and up to 1,000,000 uUSD unless explicitly configured, preserving 100% backward compatibility with L1–L3 calls.
-  8. **Deterministic Package Identity**: `package_id` deterministically incorporates `planner_decision` route and reasons, `effective_budget` parameters, and `source_descriptor` identity, while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
-  9. **Consequences & Exit Gate**: Phase L4 is certified complete. Phase L5 (`External LLM Provider Adapters`) is unblocked.
+  8. **Deterministic Package Identity**: `package_id` deterministically incorporates `planner_decision` route and `reason_codes`, `effective_budget` parameters, and complete stable `source_descriptor` identity (`source_id`, `source_kind`, `privacy_classification`, `estimated_external_cost_microusd`), while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
+  9. **Consequences & Exit Gate**: Phase L4 was certified complete. Phase L5 (`External LLM Provider Adapters`) was unblocked.
 
 ### ADR-032: LiteBridge L5 Optional Generation Providers and Syntactic Citation-Gated Answers
 - **Context**: Phase L5 introduces optional answer generation to LiteBridge. Many RAG systems tightly couple generation into the retrieval pipeline, depend on heavyweight vendor SDKs (introducing security and transitive dependency bloat), or hallucinate ungrounded citations without validation. LiteBridge requires answer generation that consumes an already-built immutable ContextPackage while keeping prepare_context() 100% generator-independent, maintaining zero paid API keys by default, and validating citations fail-closed.
@@ -295,7 +295,7 @@
   7. **Sanitized Failure & Deterministic Identity**:
      - answer() never raises unhandled provider exceptions and never exposes raw upstream error text, URLs, paths, or secrets in GroundedAnswer or warnings. Failures return structured GroundedAnswer with sanitized abstention text.
      - answer_id is derived deterministically from package ID, provider ID, model ID, normalized policy, final answer text, status, and cited IDs (excluding timings and usage).
-  8. **Consequences & Exit Gate**: Phase L5 is certified complete and verified with 100% mocked transports. Phase L6 (Context Compression and Quality Controls) is unblocked.
+  8. **Consequences & Exit Gate**: Phase L5 was certified complete and verified with 100% mocked transports. Phase L6 (Context Compression and Quality Controls) was unblocked.
 
 ### ADR-033: LiteBridge L6 Deterministic Extractive Context Compression and Quality Controls
 - **Context**: Phase L6 introduces context compression and quality controls to LiteBridge. Many compression approaches use LLM-based abstractive summarizers (introducing non-determinism, hallucination risk, token costs, and high latency) or naive token-truncation algorithms that sever sentences mid-phrase, drop citations, or falsify budget adherence by checking unrendered excerpts instead of the full prompt context. LiteBridge requires an explainable, deterministic, citation-preserving extractive compression mechanism that adheres to strict safety boundaries.
@@ -309,4 +309,35 @@
   7. **Preserved Retrieval Metadata**: Retrieval `stop_reason`, `planner_decision`, `budget_used`, `retrieval_calls`, and `web_calls` are immutable and preserved verbatim from the parent package. An unmet compression target is a compression outcome (`CompressionOutcome.TARGET_UNACHIEVABLE`), not a retrieval failure.
   8. **Deterministic Package Identity**: Compressed package `package_id` deterministically incorporates the parent package ID, normalized compression policy, retained evidence IDs/citations/excerpt hashes, and stable report fields.
   9. **Ordered Boundary Concatenation Check**: Quality verification proves that compressed text is an ordered, non-overlapping sequence of original complete sentences without unsafe fragment assembly.
-  10. **Consequences & Exit Gate**: Phase L6 is certified complete and verified. Phase L7 (API, SDK, and MCP Interfaces) is unblocked.
+  10. **Consequences & Audit Gate**: Phase L6 implementation completed. An independent read-only architecture and security audit identified 10 findings (F01–F10) across Phases L4–L6, holding the exit gate until remediated. Phase L7 remains blocked pending independent re-audit.
+
+### ADR-034: LiteBridge L4–L6 Independent Audit Remediation (F01–F10)
+- **Context**: An independent audit of Phases L4–L6 identified 10 technical findings (F01–F10) spanning planner routing diagnostics, budget preflight enforcement, sentence boundary parsing and separator preservation, deterministic package and descendant identity lineage, explicit provider selection defaults, loopback error sanitization and IPv6 bracketed formatting, floating-point answer ID precision, and Core-Port-Adapter boundary isolation.
+- **Decision**:
+  1. **F01 & F09: Truthful Routing Diagnostics and Budget Preflight**:
+     - Added `PlannerReason.LOCAL_SOURCE_UNAVAILABLE` and `StopReason.SOURCE_UNAVAILABLE` when a locally routed source is disabled or unavailable.
+     - Preflight budget check in `BudgetGuard` immediately rejects queries with `INSUFFICIENT_RETRIEVAL_BUDGET` whenever an external source or external cost descriptor is routed with zero allowed budget, preventing silent budget bypass.
+  2. **F02 & F03: Conservative Boundary Parser and Separator Preservation**:
+     - Replaced fragmented splitting logic with a shared pure parser `parse_sentence_boundaries()`.
+     - Preserves original whitespace and separators for all selected boundaries without synthetic space insertions.
+     - Handles multiline list item continuations, structured indentation, and inline punctuation safely.
+     - Quality control assertions in `quality_controls.py` share the same pure parser, eliminating boundary disagreements.
+  3. **F04 & F10: Deterministic Package Identity and Descendant Lineage**:
+     - Resolved ADR-031 descriptor-identity claim by incorporating full stable source descriptor identity (`source_id`, `source_kind`, `privacy_classification`, `estimated_external_cost_microusd`) and planner `reason_codes` into `_derive_package_id()`.
+     - Explicitly compressed empty packages (`evidence=()`) and no-reduction packages derive deterministic descendant package IDs distinct from their parent, with repeated identical runs yielding the same descendant ID.
+     - Complete compression policy fields are hashed into descendant IDs.
+  4. **F05: Explicit Generation Provider Selection**:
+     - `GenerationPolicy.provider_id` defaults to `None`.
+     - `LiteBridge.answer()` fails closed with status `PROVIDER_UNAVAILABLE`, abstention reason `PROVIDER_NOT_CONFIGURED`, and zero provider calls when no provider is explicitly specified.
+  5. **F06: Loopback Sanitization and IPv6 Support**:
+     - Sanitized loopback error messages, removing raw exceptions and user-controlled strings.
+     - Robust integer port parsing inside try/except with 1..65535 boundary enforcement.
+     - Formats IPv6 loopback host as bracketed `[::1]`.
+  6. **F07: Deterministic Answer ID Policy Inputs**:
+     - `derive_answer_id()` uses full float precision `str(policy.temperature)` and explicitly includes `policy.timeout_ms`.
+  7. **F08: Core-Port-Adapter Boundary Isolation**:
+     - Eliminated eager imports of EvidenceOps retrieval services in `bridge/__init__.py` using module-level `__getattr__`.
+     - `bridge/factory.py` delegates documentation service creation lazily, ensuring core modules contain zero direct EvidenceOps retrieval dependencies at load time.
+  8. **Consequences & Status**:
+     - Remediations for F01–F10 are implemented and verified by 18 focused regression tests and full test suite (218 bridge tests, 728 total tests).
+     - Status: **Remediation completed pending independent re-audit**. Phase L7 — API, SDK, and MCP Interfaces remains blocked until cleared by the next read-only audit.

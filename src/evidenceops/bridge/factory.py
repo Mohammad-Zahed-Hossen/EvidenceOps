@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from evidenceops.bridge.adapters.anthropic_generation import AnthropicGenerationAdapter
 from evidenceops.bridge.adapters.evidenceops_local import EvidenceOpsLocalRetrieverAdapter
@@ -24,15 +24,22 @@ from evidenceops.bridge.errors import LiteBridgeSourceError, LiteBridgeValidatio
 from evidenceops.bridge.generation_registry import GenerationProviderRegistry
 from evidenceops.bridge.service import LiteBridge
 from evidenceops.bridge.source_registry import SourceRegistry
-from evidenceops.retrieval.service import build_documentation_service
-from evidenceops.settings import Settings, get_settings
 
 if TYPE_CHECKING:
-    pass
+    from evidenceops.settings import Settings
+
+
+def build_documentation_service(*args: Any, **kwargs: Any) -> Any:
+    """Lazy loader for build_documentation_service to preserve core boundary isolation."""
+    from evidenceops.retrieval.service import build_documentation_service as _bds
+
+    return _bds(*args, **kwargs)
 
 
 def build_litebridge(settings: Settings | None = None) -> LiteBridge:
     """Compose production LiteBridge backed by registered local documentation retriever."""
+    from evidenceops.settings import get_settings
+
     effective_settings = settings or get_settings()
     doc_service = build_documentation_service(effective_settings)
 

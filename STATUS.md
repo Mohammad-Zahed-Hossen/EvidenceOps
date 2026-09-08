@@ -42,37 +42,29 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Complete and verified — deterministic extractive context compression and quality controls (Phase L6)
+### Status: L4–L6 independent audit remediation completed pending independent re-audit
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Phase L6 (Deterministic Extractive Context Compression and Quality Controls).
-- **Phase L6 Completion Status:**
-  - **Deterministic Extractive Compression**: `compress_context()` operates exclusively via complete sentence selection or whole-item retention/dropping. Zero abstractive summarization, zero token cuts mid-sentence, zero rephrasing, and zero LLM calls.
-  - **Strict Generator & Retrieval Independence**: `compress_context()` consumes an already-built `ContextPackage` without invoking retrieval, planning, budget computation, or generation. Proven by AST/import audits and exploding mock tests.
-  - **Conservative Deduplication Policy**: Exact retrieval duplicate copies (`source_id`, `source_kind`, `document_id`, `chunk_id`, exact normalized excerpt) are only dropped when callers explicitly configure both `allow_evidence_drop=True` AND `deduplicate_exact_retrieval_copies=True`. Defaults are strictly `False`, preserving all evidence.
-  - **Final Rendered Context Target Evaluation**: Targets are measured against the full rendered context string (including `UNTRUSTED_CONTENT` wrapper boundaries, headers, citation tags, and closing markers), preventing false budget claims.
-  - **Integer Arithmetic for Basis Points**: `(original_tokens - compressed_tokens) * 10_000 // original_tokens` ensures deterministic ratio reporting without floating-point drift.
-  - **Citation & Provenance Invariants**: Retained evidence keeps original citation IDs (`[C1]`, `[C3]`) without renumbering. Downstream L5 answers citing dropped citations fail closed with `INVALID_CITATIONS`.
-  - **Preserved Retrieval Metadata**: Original retrieval `stop_reason`, `planner_decision`, `budget_used`, and call counters are preserved verbatim. Unmet compression targets are recorded as `CompressionOutcome.TARGET_UNACHIEVABLE`.
-  - **Ordered Boundary Concatenation Check**: Quality verification enforces that compressed text is an ordered, non-overlapping sequence of original complete sentences.
-- **Deliverables:**
-  - `src/evidenceops/bridge/contracts.py`: Added `CompressionStrategy`, `CompressionOutcome`, `CompressionAction`, `CompressionPolicy`, `CompressionTraceEntry`, `CompressionReport`, and updated `ContextPackage`.
-  - `src/evidenceops/bridge/context_builder.py`: Added `render_context_text(...)` and incorporated stable compression fields into deterministic `_derive_package_id(...)`.
-  - `src/evidenceops/bridge/compressor.py`: Deterministic extractive compressor with conservative sentence splitting and adversarial boundary handling.
-  - `src/evidenceops/bridge/quality_controls.py`: Comprehensive quality verification proving non-empty evidence, provenance preservation, non-renumbered citations, non-blank excerpts, ordered boundary concatenation, wrapper boundaries, and unaltered retrieval metadata.
-  - `src/evidenceops/bridge/service.py`: Added `LiteBridge.compress_context(...)` facade method.
-  - `src/evidenceops/bridge/__init__.py`: Exported public L6 contracts and functions.
+- **Current Baseline:** Phase L4–L6 Audit Remediation (Findings F01–F10).
+- **Remediation Summary:**
+  - **F01 & F09 (Planner routing diagnostics & budget preflight):** Added `PlannerReason.LOCAL_SOURCE_UNAVAILABLE` and `StopReason.SOURCE_UNAVAILABLE`; `BudgetGuard` preflight rejects queries routing to web or cost-incurring sources with zero budget.
+  - **F02 & F03 (Sentence boundary parser & separator preservation):** Implemented pure `parse_sentence_boundaries()` shared between compressor and quality controls, preserving original separators without synthetic space joins.
+  - **F04 & F10 (Deterministic package identity & descendant lineage):** `_derive_package_id()` hashes planner reason codes, complete stable source descriptor identity, and complete compression policy fields; empty package and no-reduction compression paths derive deterministic descendant IDs distinct from parent.
+  - **F05 (Explicit generation provider selection):** `GenerationPolicy.provider_id` defaults to `None`; `LiteBridge.answer()` fails closed with `PROVIDER_UNAVAILABLE` and `PROVIDER_NOT_CONFIGURED` without provider invocations.
+  - **F06 (Loopback sanitization & IPv6 support):** Sanitized loopback error messages and added bracketed IPv6 formatting `[::1]` with safe port range validation.
+  - **F07 (Deterministic answer ID):** Hashing uses full float precision `str(policy.temperature)` and includes `timeout_ms`.
+  - **F08 (Core-Port-Adapter boundary isolation):** Replaced eager imports of EvidenceOps retrieval services in `bridge/__init__.py` and `bridge/factory.py` with lazy resolution.
 - **Verification Results:**
-  - Focused bridge tests: 198 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 707 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors (233 files).
+  - Focused bridge tests: 218 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 727 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors (228 files clean).
   - Type checking: Mypy passes with zero issues (112 source files).
-  - AST audit: Proves zero LLM/planner/retrieval imports or invocations in compression modules.
+  - AST audit: Proves zero direct EvidenceOps retrieval/model imports in LiteBridge core modules.
 - **Known Limitations & Deferred Milestones:**
   - Public API, SDK packaging, and MCP interfaces are planned for Phase L7.
-  - Multi-hop retrieval and multi-source evidence fusion are deferred to future phases.
+  - Multi-hop retrieval and multi-source evidence fusion remain deferred.
   - Direct web page retrieval remains a Deferred Security Milestone.
 - **Next Phase:**
-  `L7 — API, SDK, and MCP Interfaces` (UNBLOCKED).
+  `Phase L7 — API, SDK, and MCP Interfaces` remains **BLOCKED** pending independent re-audit certification of findings F01–F10.

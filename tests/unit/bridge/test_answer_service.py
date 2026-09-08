@@ -245,13 +245,14 @@ def test_hosted_provider_allowed_with_explicit_export_flags() -> None:
     assert provider.last_request.query == "test query"
 
 
-def test_local_provider_allows_local_evidence_by_default() -> None:
+def test_local_provider_allows_local_evidence_when_selected() -> None:
     provider = MockProvider("local_ollama", output_text="Local answer [C1]")
     registry = GenerationProviderRegistry([provider])
     bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
 
     pkg = _make_package(evidence_kinds=(SourceKind.LOCAL_DOCUMENT,))
-    answer = bridge.answer(pkg)
+    policy = GenerationPolicy(provider_id="local_ollama")
+    answer = bridge.answer(pkg, policy)
 
     assert answer.status == GenerationStatus.SUCCESS
     assert answer.citation_valid is True
@@ -269,7 +270,8 @@ def test_provider_failure_sanitized_in_answer() -> None:
     bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
 
     pkg = _make_package()
-    answer = bridge.answer(pkg)
+    policy = GenerationPolicy(provider_id="local_ollama")
+    answer = bridge.answer(pkg, policy)
 
     assert answer.status == GenerationStatus.PROVIDER_UNAVAILABLE
     assert answer.abstention_reason == GenerationAbstentionReason.PROVIDER_FAILURE
@@ -285,7 +287,8 @@ def test_invalid_citations_fail_closed() -> None:
     bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
 
     pkg = _make_package()
-    answer = bridge.answer(pkg)
+    policy = GenerationPolicy(provider_id="local_ollama")
+    answer = bridge.answer(pkg, policy)
 
     assert answer.status == GenerationStatus.INVALID_CITATIONS
     assert answer.abstention_reason == GenerationAbstentionReason.INVALID_CITATIONS
@@ -300,7 +303,7 @@ def test_context_package_never_mutated() -> None:
     bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
     pkg = _make_package()
     original_dict = pkg.model_dump()
-    _ = bridge.answer(pkg)
+    _ = bridge.answer(pkg, GenerationPolicy(provider_id="local_ollama"))
     assert pkg.model_dump() == original_dict
 
 
@@ -321,7 +324,7 @@ def test_answer_generation_on_compressed_package_succeeds_for_retained_citation(
     assert compressed.evidence[0].citation_id == "C1"
 
     # Answer citing retained C1 succeeds
-    answer = bridge.answer(compressed)
+    answer = bridge.answer(compressed, GenerationPolicy(provider_id="local_ollama"))
     assert answer.status == GenerationStatus.SUCCESS
     assert answer.citation_valid is True
     assert answer.cited_evidence_ids == ("ev_1",)
@@ -342,7 +345,7 @@ def test_answer_generation_on_compressed_package_fails_closed_for_dropped_citati
     assert compressed.evidence[0].citation_id == "C1"
 
     # Answer citing dropped C2 fails closed because C2 is no longer in the package!
-    answer = bridge.answer(compressed)
+    answer = bridge.answer(compressed, GenerationPolicy(provider_id="local_ollama"))
     assert answer.status == GenerationStatus.INVALID_CITATIONS
     assert answer.citation_valid is False
     assert answer.cited_evidence_ids == ()

@@ -300,6 +300,7 @@ class LiteBridge:
             elapsed_ms=elapsed_ms,
             planner_decision=decision,
             budget_used=budget_used,
+            source_descriptor=resolved_descriptor,
         )
 
         # Post-execution wall-clock evaluation
@@ -375,6 +376,32 @@ class LiteBridge:
 
         # 2. Resolve provider from registry
         provider_id = policy.provider_id
+        if not provider_id:
+            text = "No generation provider was specified."
+            reason = GenerationAbstentionReason.PROVIDER_NOT_CONFIGURED
+            answer_id = derive_answer_id(
+                context_package_id=context_package.package_id,
+                provider_id=None,
+                model_id=None,
+                policy=policy,
+                text=text,
+                status=GenerationStatus.PROVIDER_UNAVAILABLE,
+                cited_evidence_ids=(),
+                abstention_reason=reason,
+            )
+            return GroundedAnswer(
+                answer_id=answer_id,
+                context_package_id=context_package.package_id,
+                provider_id=None,
+                model_id=None,
+                status=GenerationStatus.PROVIDER_UNAVAILABLE,
+                text=text,
+                cited_evidence_ids=(),
+                citation_valid=False,
+                abstention_reason=reason,
+                warnings=("Generation provider was not specified in generation policy.",),
+            )
+
         try:
             provider = self._generation_registry.resolve(provider_id)
         except LiteBridgeProviderUnavailableError:

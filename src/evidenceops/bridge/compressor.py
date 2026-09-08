@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
 from evidenceops.bridge.context_builder import (
     _derive_package_id,
@@ -41,83 +42,128 @@ ABBREVIATIONS = {
 }
 
 
-def split_sentences_conservative(text: str) -> list[str]:
-    """Split text into complete sentences conservatively.
+@dataclass(frozen=True)
+class BoundarySpan:
+    """Complete boundary span with text and its trailing original separator."""
 
-    If sentence boundaries are ambiguous (abbreviations, numbers, bullet lists,
-    lowercase starts, quotes), falls back to keeping the entire paragraph or chunk unbroken.
-    """
+    text: str
+    separator: str
+
+
+def parse_sentence_boundaries(text: str) -> list[BoundarySpan]:
+    """Deterministically parse text into complete boundary spans and trailing separators."""
     if not text or not text.strip():
         return []
 
-    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
-    if len(paragraphs) > 1:
-        # Multiple paragraphs: process each paragraph separately
-        all_sentences: list[str] = []
-        for p in paragraphs:
-            all_sentences.extend(split_sentences_conservative(p))
-        return all_sentences
+    # Check for paragraph breaks (\n\n+)
+    paragraphs = re.split(r"(\n\n+)", text)
+    para_pairs: list[tuple[str, str]] = []
+    i = 0
+    while i < len(paragraphs):
+        p_text = paragraphs[i]
+        p_sep = paragraphs[i + 1] if i + 1 < len(paragraphs) else ""
+        if p_text:
+            para_pairs.append((p_text, p_sep))
+        i += 2
 
-    clean_text = text.strip()
+    all_boundaries: list[BoundarySpan] = []
+    for p_text, p_sep in para_pairs:
+        p_boundaries = _parse_block_boundaries(p_text, p_sep)
+        all_boundaries.extend(p_boundaries)
 
-    # Check for bullet lists / numbered lists
-    lines = [ln.strip() for ln in clean_text.splitlines() if ln.strip()]
-    if len(lines) > 1 and any(
-        ln.startswith(("-", "*", "•")) or re.match(r"^\d+[\.\)]\s+", ln) for ln in lines
-    ):
-        # Bullet list: treat each non-empty line as a boundary if clean, or keep paragraph whole
-        return lines
+    return all_boundaries
 
-    # Find sentence boundaries: match terminal punctuation (., ?, !) optionally followed
-    # by quote (" or '), followed by whitespace, followed by an uppercase letter, digit, or quote.
-    # To avoid variable-width lookbehind limitations, find split indices using re.finditer.
-    split_indices: list[int] = []
-    pattern = re.compile(r'([.?!]["\']?)\s+([A-Z0-9"\'])')
-    for match in pattern.finditer(clean_text):
-        # The split point is immediately after match.group(1)
-        split_idx = match.start() + len(match.group(1))
-        split_indices.append(split_idx)
+
+def _parse_block_boundaries(block: str, block_sep: str) -> list[BoundarySpan]:
+    """Parse a single paragraph block into boundary spans with separators."""
+    clean_block = block.strip()
+    if not clean_block:
+        return []
+
+    lines = clean_block.splitlines(keepends=True)
+    has_bullet = any(re.match(r"^(\s*[-*•]\s+|\s*\d+[\.\)]\s+)", ln) for ln in lines)
+
+    if has_bullet and len(lines) > 1:
+        items: list[tuple[str, str]] = []
+        current_lines: list[str] = []
+
+        for line in lines:
+            is_bullet = bool(re.match(r"^(\s*[-*•]\s+|\s*\d+[\.\)]\s+)", line))
+            if is_bullet:
+                if current_lines:
+                    item_raw = "".join(current_lines)
+                    sep = "\n"
+                    if item_raw.endswith("\r\n"):
+                        sep = "\r\n"
+                        item_content = item_raw[:-2]
+                    elif item_raw.endswith("\n"):
+                        sep = "\n"
+                        item_content = item_raw[:-1]
+                    else:
+                        item_content = item_raw
+                    items.append((item_content, sep))
+                    current_lines = []
+                current_lines.append(line)
+            else:
+                current_lines.append(line)
+
+        if current_lines:
+            item_raw = "".join(current_lines)
+            sep = ""
+            if item_raw.endswith("\r\n"):
+                sep = "\r\n"
+                item_content = item_raw[:-2]
+            elif item_raw.endswith("\n"):
+                sep = "\n"
+                item_content = item_raw[:-1]
+            else:
+                item_content = item_raw
+            effective_sep = block_sep if block_sep else sep
+            items.append((item_content, effective_sep))
+
+        return [BoundarySpan(text=t, separator=s) for t, s in items]
+
+    split_indices: list[tuple[int, str, int]] = []
+    pattern = re.compile(r'([.?!]["\']?)(\s+)([A-Z0-9"\'])')
+    for match in pattern.finditer(clean_block):
+        sent_end = match.start(2)
+        sep = match.group(2)
+        next_start = match.start(3)
+        split_indices.append((sent_end, sep, next_start))
 
     if not split_indices:
-        return [clean_text]
+        return [BoundarySpan(text=clean_block, separator=block_sep)]
 
-    raw_splits: list[str] = []
-    prev_idx = 0
-    for s_idx in split_indices:
-        raw_splits.append(clean_text[prev_idx:s_idx].strip())
-        prev_idx = s_idx
-    if prev_idx < len(clean_text):
-        raw_splits.append(clean_text[prev_idx:].strip())
+    boundaries: list[BoundarySpan] = []
+    prev_start = 0
 
-    raw_splits = [s for s in raw_splits if s]
-    if len(raw_splits) <= 1:
-        return [clean_text]
-
-    # Validate each boundary against abbreviation false-positives
-    recombined: list[str] = []
-    current = raw_splits[0]
-
-    for part in raw_splits[1:]:
-        tokens = current.lower().split()
+    for sent_end, sep, next_start in split_indices:
+        candidate_text = clean_block[prev_start:sent_end].strip()
+        tokens = candidate_text.lower().split()
         last_token = tokens[-1] if tokens else ""
         if (
             last_token in ABBREVIATIONS
             or re.match(r"^[a-z]\.$", last_token)
             or re.search(r"\d\.$", last_token)
         ):
-            current = f"{current} {part}"
-        else:
-            recombined.append(current)
-            current = part
+            continue
 
-    recombined.append(current)
+        boundaries.append(BoundarySpan(text=candidate_text, separator=sep))
+        prev_start = next_start
 
-    # If any sentence starts with a lowercase letter or seems broken, fallback to whole text
-    for s in recombined[1:]:
-        if s and s[0].islower():
-            return [clean_text]
+    remaining = clean_block[prev_start:].strip()
+    if remaining:
+        boundaries.append(BoundarySpan(text=remaining, separator=block_sep))
+    elif boundaries:
+        last_b = boundaries[-1]
+        boundaries[-1] = BoundarySpan(text=last_b.text, separator=block_sep)
 
-    return recombined
+    return boundaries if boundaries else [BoundarySpan(text=clean_block, separator=block_sep)]
+
+
+def split_sentences_conservative(text: str) -> list[str]:
+    """Conservatively split text into recognized sentence and bullet boundaries."""
+    return [b.text for b in parse_sentence_boundaries(text)]
 
 
 def _calculate_query_overlap_score(sentence: str, query_tokens: set[str]) -> int:
@@ -141,7 +187,7 @@ def compress_context_package(
     if not isinstance(policy, CompressionPolicy):
         raise LiteBridgeValidationError("policy must be an instance of CompressionPolicy")
 
-    # 1. If package has no evidence, return NO_REDUCTION
+    # 1. If package has no evidence, return NO_REDUCTION with deterministic descendant ID
     if not package.evidence:
         report = CompressionReport(
             source_package_id=package.package_id,
@@ -160,7 +206,20 @@ def compress_context_package(
             trace=(),
             warnings=package.warnings,
         )
-        return package.model_copy(update={"compression_report": report})
+        new_package_id = _derive_package_id(
+            query_hash=package.query_hash,
+            policy=package.effective_policy,
+            selected_records=(),
+            reproducibility=package.reproducibility,
+            planner_decision=package.planner_decision,
+            compression_report=report,
+            compression_policy=policy,
+        )
+        compressed_pkg = package.model_copy(
+            update={"package_id": new_package_id, "compression_report": report}
+        )
+        verify_compressed_package_quality(package, compressed_pkg, policy)
+        return compressed_pkg
 
     orig_chars = package.context_chars
     orig_tokens = package.estimated_tokens
@@ -207,7 +266,20 @@ def compress_context_package(
             trace=trace_entries,
             warnings=package.warnings,
         )
-        return package.model_copy(update={"compression_report": report})
+        new_package_id = _derive_package_id(
+            query_hash=package.query_hash,
+            policy=package.effective_policy,
+            selected_records=package.evidence,
+            reproducibility=package.reproducibility,
+            planner_decision=package.planner_decision,
+            compression_report=report,
+            compression_policy=policy,
+        )
+        compressed_pkg = package.model_copy(
+            update={"package_id": new_package_id, "compression_report": report}
+        )
+        verify_compressed_package_quality(package, compressed_pkg, policy)
+        return compressed_pkg
 
     # 3. Identify exact retrieval duplicates
     # Rule: deduplicate ONLY when policy.deduplicate_exact_retrieval_copies is True
@@ -259,30 +331,33 @@ def compress_context_package(
             seen_fingerprints[fp] = rec.evidence_id
 
         # 4. Perform extractive sentence selection on the evidence record
-        sentences = split_sentences_conservative(rec.excerpt)
-        orig_s_count = len(sentences)
+        boundaries = parse_sentence_boundaries(rec.excerpt)
+        orig_s_count = len(boundaries)
 
         if orig_s_count <= policy.max_sentences_per_evidence:
-            # Keep all sentences
+            # Keep all boundaries
             retained_excerpt = rec.excerpt
             action = CompressionAction.KEPT_WHOLE
             reason = "Retained all original sentences within sentence ceiling limit."
         else:
-            # Score sentences by token overlap, preserving order
-            scored_sentences: list[tuple[int, int, str]] = []  # (score, orig_idx, text)
-            for idx, s in enumerate(sentences):
-                score = _calculate_query_overlap_score(s, query_tokens)
-                scored_sentences.append((score, idx, s))
+            # Score boundaries by token overlap, preserving order
+            scored_boundaries: list[tuple[int, int, BoundarySpan]] = []
+            for idx, b in enumerate(boundaries):
+                score = _calculate_query_overlap_score(b.text, query_tokens)
+                scored_boundaries.append((score, idx, b))
 
             # Select top max_sentences_per_evidence by highest score, breaking ties by orig_idx
-            # Sort by (-score, orig_idx)
-            top_selected = sorted(scored_sentences, key=lambda x: (-x[0], x[1]))[
+            top_selected = sorted(scored_boundaries, key=lambda x: (-x[0], x[1]))[
                 : policy.max_sentences_per_evidence
             ]
-            # Restore original appearance order
             ordered_selected = sorted(top_selected, key=lambda x: x[1])
 
-            retained_excerpt = " ".join(s for _, _, s in ordered_selected)
+            parts: list[str] = []
+            for j, (_, _, b) in enumerate(ordered_selected):
+                parts.append(b.text)
+                if j < len(ordered_selected) - 1:
+                    parts.append(b.separator if b.separator else " ")
+            retained_excerpt = "".join(parts)
             action = CompressionAction.EXTRACTED
             reason = f"Extracted top {len(ordered_selected)} sentences based on query overlap."
 
@@ -390,6 +465,7 @@ def compress_context_package(
         reproducibility=package.reproducibility,
         planner_decision=package.planner_decision,
         compression_report=report,
+        compression_policy=policy,
     )
 
     compressed_package = ContextPackage(

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from evidenceops.bridge.contracts import (
     CompressionAction,
     CompressionOutcome,
@@ -28,9 +30,17 @@ from evidenceops.bridge.errors import (
     LiteBridgeTimeoutError,
     LiteBridgeValidationError,
 )
-from evidenceops.bridge.factory import build_litebridge
 from evidenceops.bridge.service import LiteBridge
 from evidenceops.bridge.source_registry import SourceRegistry
+
+
+def __getattr__(name: str) -> Any:
+    if name == "build_litebridge":
+        from evidenceops.bridge.factory import build_litebridge
+
+        return build_litebridge
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 __all__ = [
     "CompressionAction",

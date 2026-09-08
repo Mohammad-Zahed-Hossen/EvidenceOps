@@ -49,6 +49,7 @@ class StopReason(StrEnum):
     UNSUPPORTED_PROFILE = "unsupported_profile"
     INVALID_QUERY = "invalid_query"
     RETRIEVAL_FAILED = "retrieval_failed"
+    SOURCE_UNAVAILABLE = "source_unavailable"
 
 
 class BudgetPolicy(BaseModel):
@@ -82,6 +83,7 @@ class PlannerReason(StrEnum):
     FRESHNESS_CUE = "freshness_cue"
     EXTERNAL_QUERY_NOT_ALLOWED = "external_query_not_allowed"
     WEB_SOURCE_UNAVAILABLE = "web_source_unavailable"
+    LOCAL_SOURCE_UNAVAILABLE = "local_source_unavailable"
     WEB_CALL_BUDGET_EXHAUSTED = "web_call_budget_exhausted"
     EXTERNAL_COST_BUDGET_EXHAUSTED = "external_cost_budget_exhausted"
     RETRIEVAL_BUDGET_EXHAUSTED = "retrieval_budget_exhausted"
@@ -575,8 +577,8 @@ class GenerationPolicy(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    provider_id: str = Field(
-        default="local_ollama",
+    provider_id: str | None = Field(
+        default=None,
         min_length=1,
         max_length=64,
         pattern=r"^[a-z0-9_]+$",
@@ -603,16 +605,18 @@ class ProviderCapability(BaseModel):
 
 
 class GenerationUsage(BaseModel):
-    """Normalized token usage reported directly by a generation provider."""
+    """Execution metrics for an answer generation call."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     input_tokens: int | None = Field(default=None, ge=0)
     output_tokens: int | None = Field(default=None, ge=0)
+    total_tokens: int | None = Field(default=None, ge=0)
+    duration_ms: float = Field(default=0.0, ge=0.0)
 
 
 class GroundedAnswer(BaseModel):
-    """Immutable, citation-gated answer produced by LiteBridge."""
+    """Immutable grounded answer produced from a ContextPackage."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -621,12 +625,12 @@ class GroundedAnswer(BaseModel):
     provider_id: str | None = None
     model_id: str | None = None
     status: GenerationStatus
-    text: str
+    text: str = ""
     cited_evidence_ids: tuple[str, ...] = Field(default_factory=tuple)
-    citation_valid: bool
+    citation_valid: bool = False
     abstention_reason: GenerationAbstentionReason | None = None
-    usage: GenerationUsage = Field(default_factory=GenerationUsage)
     warnings: tuple[str, ...] = Field(default_factory=tuple)
+    usage: GenerationUsage = Field(default_factory=GenerationUsage)
     timings_ms: tuple[tuple[str, float], ...] = Field(default_factory=tuple)
 
     @field_validator("cited_evidence_ids", "warnings", mode="before")
@@ -668,9 +672,10 @@ def derive_answer_id(
     hasher.update(context_package_id.encode())
     hasher.update((provider_id or "").encode())
     hasher.update((model_id or "").encode())
-    hasher.update(policy.provider_id.encode())
-    hasher.update(f"{policy.temperature:.4f}".encode())
+    hasher.update((policy.provider_id or "").encode())
+    hasher.update(str(policy.temperature).encode())
     hasher.update(str(policy.max_output_tokens).encode())
+    hasher.update(str(policy.timeout_ms).encode())
     hasher.update(str(policy.allow_external_generation).encode())
     hasher.update(str(policy.allow_private_evidence_export).encode())
     hasher.update(hashlib.sha256(text.encode()).digest())

@@ -19,7 +19,7 @@ from evidenceops.bridge.contracts import (
 
 def test_generation_policy_defaults_and_bounds() -> None:
     policy = GenerationPolicy()
-    assert policy.provider_id == "local_ollama"
+    assert policy.provider_id is None
     assert policy.temperature == 0.0
     assert policy.max_output_tokens == 512
     assert policy.timeout_ms == 30000

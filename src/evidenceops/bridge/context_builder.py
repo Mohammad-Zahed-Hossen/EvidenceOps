@@ -6,6 +6,7 @@ import hashlib
 import math
 
 from evidenceops.bridge.contracts import (
+    CompressionPolicy,
     CompressionReport,
     ContextPackage,
     EvidenceRecord,
@@ -14,6 +15,7 @@ from evidenceops.bridge.contracts import (
     PlannerRoute,
     QueryFeatures,
     RetrievalPolicy,
+    SourceDescriptor,
     StopReason,
 )
 from evidenceops.bridge.errors import LiteBridgeValidationError
@@ -77,6 +79,7 @@ def build_context_package(
     elapsed_ms: float,
     planner_decision: PlannerDecision | None = None,
     budget_used: tuple[tuple[str, int], ...] | None = None,
+    source_descriptor: SourceDescriptor | None = None,
 ) -> ContextPackage:
     """Perform extractive whole-item budget selection and assemble immutable ContextPackage."""
     normalized_query, query_hash, orig_length = normalize_query(query)
@@ -116,6 +119,7 @@ def build_context_package(
             selected_records=(),
             reproducibility=batch.reproducibility,
             planner_decision=effective_decision,
+            source_descriptor=source_descriptor,
         )
         return ContextPackage(
             package_id=package_id,
@@ -206,6 +210,7 @@ def build_context_package(
         selected_records=selected_records_tuple,
         reproducibility=batch.reproducibility,
         planner_decision=effective_decision,
+        source_descriptor=source_descriptor,
     )
 
     return ContextPackage(
@@ -238,6 +243,7 @@ def build_blocked_context_package(
     policy: RetrievalPolicy,
     decision: PlannerDecision,
     warnings: tuple[str, ...] = (),
+    source_descriptor: SourceDescriptor | None = None,
 ) -> ContextPackage:
     """Build an empty immutable ContextPackage when retrieval is blocked by planner or budget."""
     normalized_query, query_hash, orig_length = normalize_query(query)
@@ -247,6 +253,7 @@ def build_blocked_context_package(
         selected_records=(),
         reproducibility=(),
         planner_decision=decision,
+        source_descriptor=source_descriptor,
     )
     budget_used = (
         ("estimated_external_cost_microusd", 0),
@@ -254,6 +261,30 @@ def build_blocked_context_package(
         ("wall_clock_ms", 0),
         ("web_calls", 0),
     )
+    if PlannerReason.INVALID_PROFILE in decision.reason_codes:
+        stop_reason = StopReason.UNSUPPORTED_PROFILE
+    elif any(
+        r in decision.reason_codes
+        for r in (
+            PlannerReason.RETRIEVAL_BUDGET_EXHAUSTED,
+            PlannerReason.WEB_CALL_BUDGET_EXHAUSTED,
+            PlannerReason.EXTERNAL_COST_BUDGET_EXHAUSTED,
+        )
+    ):
+        stop_reason = StopReason.BUDGET_EXCEEDED
+    elif any(
+        r in decision.reason_codes
+        for r in (
+            PlannerReason.LOCAL_SOURCE_UNAVAILABLE,
+            PlannerReason.WEB_SOURCE_UNAVAILABLE,
+        )
+    ):
+        stop_reason = StopReason.SOURCE_UNAVAILABLE
+    elif PlannerReason.EXTERNAL_QUERY_NOT_ALLOWED in decision.reason_codes:
+        stop_reason = StopReason.UNSUPPORTED_PROFILE
+    else:
+        stop_reason = StopReason.BUDGET_EXCEEDED
+
     return ContextPackage(
         package_id=package_id,
         query_hash=query_hash,
@@ -271,7 +302,7 @@ def build_blocked_context_package(
         web_calls=0,
         retrieval_route="blocked",
         timings_ms=(("total", 0.0),),
-        stop_reason=StopReason.BUDGET_EXCEEDED,
+        stop_reason=stop_reason,
         warnings=warnings,
         reproducibility=(),
         planner_decision=decision,
@@ -287,6 +318,8 @@ def _derive_package_id(
     reproducibility: tuple[tuple[str, str], ...],
     planner_decision: PlannerDecision | None = None,
     compression_report: CompressionReport | None = None,
+    compression_policy: CompressionPolicy | None = None,
+    source_descriptor: SourceDescriptor | None = None,
 ) -> str:
     """Derive deterministic package identity strictly from stable inputs."""
     evidence_fingerprints: list[str] = []
@@ -318,9 +351,17 @@ def _derive_package_id(
     )
 
     if planner_decision is not None:
+        reasons_str = ",".join(r.value for r in planner_decision.reason_codes)
         identity_parts.append(
             f"planner={planner_decision.planner_id}:{planner_decision.planner_version}:"
-            f"{planner_decision.route.value}:{planner_decision.selected_source_id}"
+            f"{planner_decision.route.value}:{planner_decision.selected_source_id}:[{reasons_str}]"
+        )
+
+    if source_descriptor is not None:
+        desc = source_descriptor
+        identity_parts.append(
+            f"descriptor={desc.source_id}:{desc.source_kind.value}:"
+            f"{desc.privacy_classification.value}:{desc.estimated_external_cost_microusd}"
         )
 
     if compression_report is not None:
@@ -335,6 +376,13 @@ def _derive_package_id(
             f"{cr.target_max_context_chars}:{cr.target_max_estimated_tokens}:{cr.target_met}:"
             f"{cr.compressed_context_chars}:{cr.compressed_estimated_tokens}:"
             f"{cr.token_reduction_basis_points}:{','.join(trace_fps)}"
+        )
+
+    if compression_policy is not None:
+        cp = compression_policy
+        identity_parts.append(
+            f"comp_policy={cp.strategy}:{cp.target_max_context_chars}:{cp.target_max_estimated_tokens}:"
+            f"{cp.max_sentences_per_evidence}:{cp.allow_evidence_drop}:{cp.deduplicate_exact_retrieval_copies}"
         )
 
     digest = hashlib.sha256(":".join(identity_parts).encode("utf-8")).hexdigest()

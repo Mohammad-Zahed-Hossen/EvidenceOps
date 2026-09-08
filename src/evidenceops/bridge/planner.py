@@ -146,12 +146,17 @@ class DeterministicPlanner:
 
             desc = registry.get_descriptor(target_source_id, require_enabled=False)
             if not desc.enabled:
+                reason = (
+                    PlannerReason.WEB_SOURCE_UNAVAILABLE
+                    if desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET
+                    else PlannerReason.LOCAL_SOURCE_UNAVAILABLE
+                )
                 return PlannerDecision(
                     planner_id=self.PLANNER_ID,
                     planner_version=self.PLANNER_VERSION,
                     route=PlannerRoute.BLOCKED,
                     selected_source_id=None,
-                    reason_codes=(PlannerReason.WEB_SOURCE_UNAVAILABLE,),
+                    reason_codes=(reason,),
                     features=features,
                     effective_budget=budget,
                 )
@@ -232,15 +237,26 @@ class DeterministicPlanner:
 
         # Rule 3 & 4: No source explicitly selected
         try:
-            local_desc: SourceDescriptor | None = registry.default_descriptor(require_enabled=False)
+            default_desc: SourceDescriptor | None = registry.default_descriptor(
+                require_enabled=False
+            )
         except LiteBridgeSourceError:
-            local_desc = None
+            default_desc = None
 
+        local_desc: SourceDescriptor | None = None
         web_desc: SourceDescriptor | None = None
+
+        if default_desc is not None:
+            if default_desc.source_kind == SourceKind.LOCAL_DOCUMENT:
+                local_desc = default_desc
+            elif default_desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
+                web_desc = default_desc
+
         for desc in registry.list_descriptors():
-            if desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
+            if desc.source_kind == SourceKind.LOCAL_DOCUMENT and local_desc is None:
+                local_desc = desc
+            elif desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET and web_desc is None:
                 web_desc = desc
-                break
 
         # Rule 4: Local-reference cues always prefer local when available
         if features.has_local_reference_cue:
@@ -258,20 +274,22 @@ class DeterministicPlanner:
                     features=features,
                     effective_budget=budget,
                 )
-            local_profile_mismatch = (
+            if budget.max_retrieval_calls < 1:
+                fail_reason = PlannerReason.RETRIEVAL_BUDGET_EXHAUSTED
+            elif (
                 local_desc is not None
                 and policy.execution_profile not in local_desc.supported_execution_profiles
-            )
+            ):
+                fail_reason = PlannerReason.INVALID_PROFILE
+            else:
+                fail_reason = PlannerReason.LOCAL_SOURCE_UNAVAILABLE
+
             return PlannerDecision(
                 planner_id=self.PLANNER_ID,
                 planner_version=self.PLANNER_VERSION,
                 route=PlannerRoute.BLOCKED,
                 selected_source_id=None,
-                reason_codes=(
-                    (PlannerReason.INVALID_PROFILE,)
-                    if local_profile_mismatch
-                    else (PlannerReason.RETRIEVAL_BUDGET_EXHAUSTED,)
-                ),
+                reason_codes=(fail_reason,),
                 features=features,
                 effective_budget=budget,
             )
@@ -328,6 +346,71 @@ class DeterministicPlanner:
                     effective_budget=budget,
                 )
 
+        # Neutral query: check if default descriptor is web source
+        if default_desc is not None and default_desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
+            if policy.execution_profile != ExecutionProfile.HYBRID:
+                return PlannerDecision(
+                    planner_id=self.PLANNER_ID,
+                    planner_version=self.PLANNER_VERSION,
+                    route=PlannerRoute.BLOCKED,
+                    selected_source_id=None,
+                    reason_codes=(PlannerReason.INVALID_PROFILE,),
+                    features=features,
+                    effective_budget=budget,
+                )
+            if policy.web is None or not policy.web.allow_external_query:
+                return PlannerDecision(
+                    planner_id=self.PLANNER_ID,
+                    planner_version=self.PLANNER_VERSION,
+                    route=PlannerRoute.BLOCKED,
+                    selected_source_id=None,
+                    reason_codes=(PlannerReason.EXTERNAL_QUERY_NOT_ALLOWED,),
+                    features=features,
+                    effective_budget=budget,
+                )
+            if not default_desc.enabled:
+                return PlannerDecision(
+                    planner_id=self.PLANNER_ID,
+                    planner_version=self.PLANNER_VERSION,
+                    route=PlannerRoute.BLOCKED,
+                    selected_source_id=None,
+                    reason_codes=(PlannerReason.WEB_SOURCE_UNAVAILABLE,),
+                    features=features,
+                    effective_budget=budget,
+                )
+            if budget.max_web_calls < 1:
+                return PlannerDecision(
+                    planner_id=self.PLANNER_ID,
+                    planner_version=self.PLANNER_VERSION,
+                    route=PlannerRoute.BLOCKED,
+                    selected_source_id=None,
+                    reason_codes=(PlannerReason.WEB_CALL_BUDGET_EXHAUSTED,),
+                    features=features,
+                    effective_budget=budget,
+                )
+            if (
+                budget.max_estimated_external_cost_microusd
+                < default_desc.estimated_external_cost_microusd
+            ):
+                return PlannerDecision(
+                    planner_id=self.PLANNER_ID,
+                    planner_version=self.PLANNER_VERSION,
+                    route=PlannerRoute.BLOCKED,
+                    selected_source_id=None,
+                    reason_codes=(PlannerReason.EXTERNAL_COST_BUDGET_EXHAUSTED,),
+                    features=features,
+                    effective_budget=budget,
+                )
+            return PlannerDecision(
+                planner_id=self.PLANNER_ID,
+                planner_version=self.PLANNER_VERSION,
+                route=PlannerRoute.WEB,
+                selected_source_id=default_desc.source_id,
+                reason_codes=(PlannerReason.DEFAULT_LOCAL,),
+                features=features,
+                effective_budget=budget,
+            )
+
         # Default local route
         if (
             local_desc is not None
@@ -344,20 +427,22 @@ class DeterministicPlanner:
                 effective_budget=budget,
             )
 
-        profile_mismatch = (
+        if budget.max_retrieval_calls < 1:
+            fail_reason = PlannerReason.RETRIEVAL_BUDGET_EXHAUSTED
+        elif (
             local_desc is not None
             and policy.execution_profile not in local_desc.supported_execution_profiles
-        )
+        ):
+            fail_reason = PlannerReason.INVALID_PROFILE
+        else:
+            fail_reason = PlannerReason.LOCAL_SOURCE_UNAVAILABLE
+
         return PlannerDecision(
             planner_id=self.PLANNER_ID,
             planner_version=self.PLANNER_VERSION,
             route=PlannerRoute.BLOCKED,
             selected_source_id=None,
-            reason_codes=(
-                (PlannerReason.INVALID_PROFILE,)
-                if profile_mismatch
-                else (PlannerReason.RETRIEVAL_BUDGET_EXHAUSTED,)
-            ),
+            reason_codes=(fail_reason,),
             features=features,
             effective_budget=budget,
         )

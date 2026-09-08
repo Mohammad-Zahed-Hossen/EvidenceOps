@@ -10,6 +10,7 @@ from evidenceops.bridge.contracts import (
     PlannerReason,
     PlannerRoute,
     SourceDescriptor,
+    SourceKind,
     StopReason,
 )
 
@@ -66,7 +67,10 @@ class BudgetGuard:
                 warning="Retrieval call budget is exhausted (max_retrieval_calls=0).",
             )
 
-        if decision.route == PlannerRoute.WEB:
+        is_web = decision.route == PlannerRoute.WEB or (
+            descriptor is not None and descriptor.source_kind == SourceKind.WEB_SEARCH_SNIPPET
+        )
+        if is_web:
             if self._budget.max_web_calls < 1:
                 return PreflightCheckResult(
                     allowed=False,
@@ -88,6 +92,16 @@ class BudgetGuard:
                             f"({self._budget.max_estimated_external_cost_microusd} uUSD)."
                         ),
                     )
+        elif descriptor is not None and descriptor.estimated_external_cost_microusd > 0:
+            if (
+                self._budget.max_estimated_external_cost_microusd
+                < descriptor.estimated_external_cost_microusd
+            ):
+                return PreflightCheckResult(
+                    allowed=False,
+                    reason_code=PlannerReason.EXTERNAL_COST_BUDGET_EXHAUSTED,
+                    warning="Estimated external cost exceeds budget.",
+                )
 
         return PreflightCheckResult(allowed=True)
 
