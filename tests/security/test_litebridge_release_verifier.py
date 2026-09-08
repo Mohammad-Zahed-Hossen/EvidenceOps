@@ -18,6 +18,20 @@ format_findings = _MODULE.format_findings
 SecretFinding = _MODULE.SecretFinding
 
 
+def test_repository_security_fixtures_do_not_trigger_tracked_secret_scan() -> None:
+    repo_root = _SCRIPT.parents[1]
+
+    findings = scan_tracked_text_files(
+        repo_root,
+        tracked_paths=(
+            "tests/security/test_litebridge_provider_failure_audit.py",
+            "tests/security/test_litebridge_release_verifier.py",
+        ),
+    )
+
+    assert findings == ()
+
+
 def test_format_findings_formats_path_line_category_without_value() -> None:
     findings = (
         SecretFinding("sample/file.py", 42, "openai_api_key"),
@@ -30,7 +44,7 @@ def test_format_findings_formats_path_line_category_without_value() -> None:
 def test_scan_tracked_text_files_detects_secrets_without_exposing_value(tmp_path: Path) -> None:
     bad_file = tmp_path / "bad.py"
     # Write a secret pattern
-    bad_file.write_text("TAVILY_API_KEY=" + "tvly-fake-secret-value-1234\n", encoding="utf-8")
+    bad_file.write_text("TAVILY_API_KEY=" + "tvly" + "-fake-secret-value-1234\n", encoding="utf-8")
 
     findings = scan_tracked_text_files(tmp_path, tracked_paths=("bad.py",))
     assert len(findings) == 1

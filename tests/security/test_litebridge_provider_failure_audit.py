@@ -135,7 +135,7 @@ def _make_dummy_package() -> ContextPackage:
             GenerationStatus.GENERATION_FAILED,
         ),
         (
-            LiteBridgeProviderError("Authentication failed: Bearer secret-auth-token"),
+            LiteBridgeProviderError("Authentication failed: " + "Bearer " + "secret-auth-token"),
             GenerationStatus.GENERATION_FAILED,
         ),
         (
