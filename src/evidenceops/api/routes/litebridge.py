@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from evidenceops.bridge.contracts import (
     CompressionPolicy,
@@ -39,11 +39,20 @@ class PrepareContextApiRequest(BaseModel):
 class CompressContextApiRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    target_max_context_chars: int | None = Field(default=None, ge=1)
-    target_max_estimated_tokens: int | None = Field(default=None, ge=1)
-    max_sentences_per_evidence: int | None = Field(default=None, ge=1)
+    target_max_context_chars: int | None = Field(default=None, ge=100, le=24000)
+    target_max_estimated_tokens: int | None = Field(default=None, ge=25, le=6000)
+    max_sentences_per_evidence: int | None = Field(default=None, ge=1, le=8)
     deduplicate_exact_retrieval_copies: bool = True
     allow_evidence_drop: bool = True
+
+    @model_validator(mode="after")
+    def _validate_targets(self) -> CompressContextApiRequest:
+        if self.target_max_context_chars is None and self.target_max_estimated_tokens is None:
+            raise ValueError(
+                "Compression requires at least one target: "
+                "target_max_context_chars or target_max_estimated_tokens"
+            )
+        return self
 
 
 class AnswerApiRequest(BaseModel):

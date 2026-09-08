@@ -29,6 +29,7 @@ from evidenceops.bridge.contracts import (
     SourceKind,
     StopReason,
 )
+from evidenceops.bridge.errors import LiteBridgeValidationError
 from evidenceops.bridge.package_store import InterfacePackageStore
 from evidenceops.bridge.sdk import LiteBridgeSDK
 from evidenceops.bridge.service import LiteBridge
@@ -317,6 +318,142 @@ def test_litebridge_compression_invalid_policy_rejected(litebridge_client: TestC
         json={"target_max_context_chars": -50},
     )
     assert bad_resp.status_code == 422
+
+
+def test_litebridge_compression_no_target_rejected_with_422(litebridge_client: TestClient) -> None:
+    """Submitting compression with neither target chars nor tokens returns 422."""
+    prep_resp = litebridge_client.post(
+        "/v1/litebridge/context",
+        json={"query": "Testing empty targets"},
+    )
+    assert prep_resp.status_code == 200
+    handle = prep_resp.json()["context_handle"]
+
+    empty_targets_resp = litebridge_client.post(
+        f"/v1/litebridge/context/{handle}/compress",
+        json={
+            "deduplicate_exact_retrieval_copies": True,
+            "allow_evidence_drop": True,
+        },
+    )
+    assert empty_targets_resp.status_code == 422
+    data = empty_targets_resp.json()
+    assert (
+        "target_max_context_chars or target_max_estimated_tokens" in str(data)
+        or "validation" in str(data).lower()
+    )
+
+
+def test_litebridge_compression_contract_bounds_enforced(litebridge_client: TestClient) -> None:
+    """Verify contract limits on compression targets (chars, tokens, sentences)."""
+    prep_resp = litebridge_client.post(
+        "/v1/litebridge/context",
+        json={"query": "Testing bounds"},
+    )
+    assert prep_resp.status_code == 200
+    handle = prep_resp.json()["context_handle"]
+
+    # Chars too low (< 100)
+    assert (
+        litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_context_chars": 99},
+        ).status_code
+        == 422
+    )
+
+    # Chars too high (> 24000)
+    assert (
+        litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_context_chars": 24001},
+        ).status_code
+        == 422
+    )
+
+    # Tokens too low (< 25)
+    assert (
+        litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_estimated_tokens": 24},
+        ).status_code
+        == 422
+    )
+
+    # Tokens too high (> 6000)
+    assert (
+        litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_estimated_tokens": 6001},
+        ).status_code
+        == 422
+    )
+
+    # Sentences per evidence out of bounds (< 1 or > 8)
+    assert (
+        litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_context_chars": 1000, "max_sentences_per_evidence": 0},
+        ).status_code
+        == 422
+    )
+    assert (
+        litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_context_chars": 1000, "max_sentences_per_evidence": 9},
+        ).status_code
+        == 422
+    )
+
+
+def test_litebridge_sdk_validation_error_handler_422(litebridge_client: TestClient) -> None:
+    """When SDK raises LiteBridgeValidationError, API returns HTTP 422 with validation_error."""
+    prep_resp = litebridge_client.post(
+        "/v1/litebridge/context",
+        json={"query": "Testing SDK validation exception handling"},
+    )
+    assert prep_resp.status_code == 200
+    handle = prep_resp.json()["context_handle"]
+
+    # Simulate SDK LiteBridgeValidationError from underlying service
+    sdk: LiteBridgeSDK = litebridge_client.app.state.litebridge_sdk  # type: ignore[attr-defined]
+    mock_bridge = sdk._bridge
+    mock_bridge.compress_context.side_effect = LiteBridgeValidationError(
+        "Target compression budget cannot be satisfied with given evidence."
+    )
+
+    try:
+        resp = litebridge_client.post(
+            f"/v1/litebridge/context/{handle}/compress",
+            json={"target_max_context_chars": 500},
+        )
+        assert resp.status_code == 422
+        data = resp.json()
+        assert data["error"]["code"] == "validation_error"
+        assert "Target compression budget" in data["error"]["message"]
+    finally:
+        mock_bridge.compress_context.side_effect = None
+
+
+def test_dashboard_static_strict_citations_and_safe_dom(dashboard_dir: Path) -> None:
+    """Verify strict citation parsing, safe querySelector, and clipboard fallback in app.js."""
+    app_js = (dashboard_dir / "app.js").read_text(encoding="utf-8")
+
+    # Strict citation regex matching [C1], [C2], etc. (rejecting plain numeric [1], [2])
+    assert r"(\[C[1-9]\d*\])" in app_js, "Strict citation regex missing in app.js"
+    assert "/(\\[(?:C\\d+|\\d+)\\])/g" not in app_js, (
+        "Found old loose citation regex allowing numeric tokens [1]"
+    )
+
+    # No string-interpolated querySelector with data-citation-id
+    assert 'data-citation-id="${' not in app_js, (
+        "Found string concatenation in attribute selector in app.js"
+    )
+    assert 'data-citation-id=\\"${' not in app_js
+
+    # Clipboard fallback implementation
+    assert "copyTextToClipboard" in app_js
+    assert "execCommand" in app_js
 
 
 def test_backend_runs_listing_gap_documented(default_client: TestClient) -> None:

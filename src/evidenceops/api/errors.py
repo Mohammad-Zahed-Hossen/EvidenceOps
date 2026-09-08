@@ -114,7 +114,27 @@ def register_error_handlers(app: FastAPI) -> None:
             content=response_payload.model_dump(exclude_none=True),
         )
 
-    from evidenceops.bridge.errors import LiteBridgePackageNotFoundError
+    from evidenceops.bridge.errors import (
+        LiteBridgePackageNotFoundError,
+        LiteBridgeValidationError,
+    )
+
+    @app.exception_handler(LiteBridgeValidationError)
+    async def bridge_validation_error_handler(
+        request: Request, exc: LiteBridgeValidationError
+    ) -> JSONResponse:
+        request_id = getattr(request.state, "request_id", None)
+        response_payload = ApiErrorResponse(
+            error=ErrorDetail(
+                code="validation_error",
+                message=str(exc) or "LiteBridge policy validation error.",
+                request_id=request_id,
+            )
+        )
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=response_payload.model_dump(exclude_none=True),
+        )
 
     @app.exception_handler(LiteBridgePackageNotFoundError)
     async def package_not_found_handler(

@@ -120,6 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const labWarningsList = document.getElementById("lab-warnings-list");
   const labEvidenceBadge = document.getElementById("lab-evidence-badge");
   const labEvidenceList = document.getElementById("lab-evidence-list");
+  const labCallCounts = document.getElementById("lab-call-counts");
+  const labCostEstimate = document.getElementById("lab-cost-estimate");
+  const labPlannerReasonsRow = document.getElementById("lab-planner-reasons-row");
+  const labPlannerReasons = document.getElementById("lab-planner-reasons");
 
   const labCompressForm = document.getElementById("lab-compress-form");
   const labTargetChars = document.getElementById("lab-target-chars");
@@ -138,6 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const labCompBeforeTokens = document.getElementById("lab-comp-before-tokens");
   const labCompAfterTokens = document.getElementById("lab-comp-after-tokens");
   const labDescendantHandle = document.getElementById("lab-descendant-handle");
+  const labCompWarningsContainer = document.getElementById("lab-comp-warnings-container");
+  const labCompWarningsList = document.getElementById("lab-comp-warnings-list");
   const labDiffList = document.getElementById("lab-diff-list");
 
   // =========================================================================
@@ -533,6 +539,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Robust clipboard copy with fallback for insecure contexts
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        // Fall back to DOM execCommand
+      }
+    }
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      return false;
+    }
+  }
+
   // Render safe interactive citations in answer text
   function renderAnswerTextWithCitations(rawAnswer, citations) {
     answerText.replaceChildren();
@@ -542,21 +575,20 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Build map of recognized citation tokens -> citation IDs
+    // Build map of recognized citation tokens strictly matching [C1], [C2], etc.
     const recognizedTokens = new Map();
     citations.forEach((cit, idx) => {
-      const rawCitId = cit.citation_id || `C${idx + 1}`;
-      const token1 = `[${rawCitId}]`;
-      const token2 = rawCitId.startsWith("[") ? rawCitId : `[${rawCitId}]`;
-      const numericToken = `[${idx + 1}]`;
-
-      recognizedTokens.set(token1, rawCitId);
-      recognizedTokens.set(token2, rawCitId);
-      recognizedTokens.set(numericToken, rawCitId);
+      let rawCitId = cit.citation_id || `C${idx + 1}`;
+      if (rawCitId.startsWith("[") && rawCitId.endsWith("]")) {
+        rawCitId = rawCitId.slice(1, -1);
+      }
+      if (/^C[1-9]\d*$/.test(rawCitId)) {
+        recognizedTokens.set(`[${rawCitId}]`, rawCitId);
+      }
     });
 
-    // Token splitter regex matching [C1], [1], etc.
-    const tokenRegex = /(\[(?:C\d+|\d+)\])/g;
+    // Token splitter regex strictly matching [C1], [C2], ... (rejects numeric [1], [2])
+    const tokenRegex = /(\[C[1-9]\d*\])/g;
     const parts = rawAnswer.split(tokenRegex);
 
     parts.forEach((part) => {
@@ -570,11 +602,19 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.setAttribute("aria-label", `Jump to citation ${part}`);
 
         btn.addEventListener("click", () => {
-          const card = document.querySelector(`.citation-card[data-citation-id="${citId}"]`);
-          if (card) {
-            card.scrollIntoView({ behavior: "smooth", block: "nearest" });
-            card.classList.add("citation-highlighted");
-            setTimeout(() => card.classList.remove("citation-highlighted"), 1800);
+          // Safe element iteration instead of string-interpolated querySelector
+          const cards = citationsList.querySelectorAll(".citation-card");
+          let targetCard = null;
+          for (const card of cards) {
+            if (card.getAttribute("data-citation-id") === citId) {
+              targetCard = card;
+              break;
+            }
+          }
+          if (targetCard) {
+            targetCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            targetCard.classList.add("citation-highlighted");
+            setTimeout(() => targetCard.classList.remove("citation-highlighted"), 1800);
           }
         });
 
@@ -596,10 +636,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Answer Actions
   copyAnswerBtn.addEventListener("click", async () => {
     if (!lastGroundedQueryResponse || !lastGroundedQueryResponse.answer) return;
-    try {
-      await navigator.clipboard.writeText(lastGroundedQueryResponse.answer);
+    const ok = await copyTextToClipboard(lastGroundedQueryResponse.answer);
+    if (ok) {
       showActionFeedback("Answer with citations copied!");
-    } catch (err) {
+    } else {
       showActionFeedback("Failed to copy answer.");
     }
   });
@@ -610,21 +650,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const citations = lastGroundedQueryResponse.citations || [];
       const recognizedTokens = new Set();
       citations.forEach((cit, idx) => {
-        const raw = cit.citation_id || `C${idx + 1}`;
-        recognizedTokens.add(`[${raw}]`);
-        recognizedTokens.add(raw.startsWith("[") ? raw : `[${raw}]`);
-        recognizedTokens.add(`[${idx + 1}]`);
+        let raw = cit.citation_id || `C${idx + 1}`;
+        if (raw.startsWith("[") && raw.endsWith("]")) {
+          raw = raw.slice(1, -1);
+        }
+        if (/^C[1-9]\d*$/.test(raw)) {
+          recognizedTokens.add(`[${raw}]`);
+        }
       });
 
-      // Remove only recognized tokens
+      // Remove only recognized [C...] tokens
       let plain = lastGroundedQueryResponse.answer;
       recognizedTokens.forEach((tok) => {
         plain = plain.split(tok).join("");
       });
       plain = plain.replace(/\s{2,}/g, " ").trim();
 
-      await navigator.clipboard.writeText(plain);
-      showActionFeedback("Plain text copied!");
+      const ok = await copyTextToClipboard(plain);
+      if (ok) {
+        showActionFeedback("Plain text copied!");
+      } else {
+        showActionFeedback("Failed to copy plain text.");
+      }
     } catch (err) {
       showActionFeedback("Failed to copy plain text.");
     }
@@ -764,7 +811,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const numBadge = document.createElement("span");
           numBadge.className = "badge badge-cpu";
-          numBadge.textContent = `[${idx + 1}]`;
+          numBadge.textContent = rawCitId.startsWith("[") ? rawCitId : `[${rawCitId}]`;
 
           const title = document.createElement("span");
           title.className = "citation-title";
@@ -796,14 +843,22 @@ document.addEventListener("DOMContentLoaded", () => {
           card.appendChild(header);
           card.appendChild(details);
 
-          // Card hover highlights corresponding answer button
+          // Card hover highlights corresponding answer button safely
           card.addEventListener("mouseenter", () => {
-            const btns = answerText.querySelectorAll(`.citation-ref-btn[data-citation-id="${rawCitId}"]`);
-            btns.forEach((b) => b.classList.add("hover-focus"));
+            const btns = answerText.querySelectorAll(".citation-ref-btn");
+            btns.forEach((b) => {
+              if (b.getAttribute("data-citation-id") === rawCitId) {
+                b.classList.add("hover-focus");
+              }
+            });
           });
           card.addEventListener("mouseleave", () => {
-            const btns = answerText.querySelectorAll(`.citation-ref-btn[data-citation-id="${rawCitId}"]`);
-            btns.forEach((b) => b.classList.remove("hover-focus"));
+            const btns = answerText.querySelectorAll(".citation-ref-btn");
+            btns.forEach((b) => {
+              if (b.getAttribute("data-citation-id") === rawCitId) {
+                b.classList.remove("hover-focus");
+              }
+            });
           });
 
           citationsList.appendChild(card);
@@ -909,6 +964,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================================================================
   // Context Lab Workflows
   // =========================================================================
+  function updateCompressBtnState() {
+    if (!currentContextHandle) {
+      labCompressBtn.disabled = true;
+      return;
+    }
+    const charsVal = labTargetChars.value.trim();
+    const tokensVal = labTargetTokens.value.trim();
+    const charsNum = parseInt(charsVal, 10);
+    const tokensNum = parseInt(tokensVal, 10);
+
+    const hasValidChars = charsVal !== "" && !isNaN(charsNum) && charsNum >= 100 && charsNum <= 24000;
+    const hasValidTokens = tokensVal !== "" && !isNaN(tokensNum) && tokensNum >= 25 && tokensNum <= 6000;
+
+    labCompressBtn.disabled = !(hasValidChars || hasValidTokens);
+  }
+
+  labTargetChars.addEventListener("input", updateCompressBtnState);
+  labTargetTokens.addEventListener("input", updateCompressBtnState);
+
   if (labPrepareForm) {
     labPrepareForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -923,6 +997,7 @@ document.addEventListener("DOMContentLoaded", () => {
         max_evidence_items: parseInt(labMaxEvidence.value, 10) || 6,
         max_context_chars: parseInt(labMaxChars.value, 10) || 24000,
         max_estimated_tokens: parseInt(labMaxTokens.value, 10) || 6000,
+        execution_profile: labExternalConsent.checked ? "hybrid" : "local_only",
       };
 
       if (labSourceSelect.value) {
@@ -953,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderPackageInspector(currentContextHandle, currentParentPackage);
         labCompressionReport.classList.add("hidden");
-        labCompressBtn.disabled = false;
+        updateCompressBtnState();
       } catch (err) {
         alert("Network error preparing context package.");
       } finally {
@@ -979,6 +1054,35 @@ document.addEventListener("DOMContentLoaded", () => {
     labContextChars.textContent = String(pkg.context_chars ?? (pkg.context_text ? pkg.context_text.length : 0));
     labEstimatedTokens.textContent = String(pkg.estimated_tokens ?? "--");
     labStopReason.textContent = pkg.stop_reason || "--";
+
+    // Call Counts
+    if (labCallCounts) {
+      labCallCounts.textContent = `${pkg.retrieval_calls ?? 0} / ${pkg.web_calls ?? 0}`;
+    }
+
+    // Cost Estimate
+    if (labCostEstimate) {
+      let costStr = "$0.00";
+      if (Array.isArray(pkg.budget_used)) {
+        const entry = pkg.budget_used.find(([k]) => k === "estimated_external_cost_microusd");
+        if (entry) {
+          const usd = (entry[1] || 0) / 1000000;
+          costStr = `$${usd.toFixed(4)}`;
+        }
+      }
+      labCostEstimate.textContent = costStr;
+    }
+
+    // Planner Reason Codes
+    if (labPlannerReasonsRow && labPlannerReasons) {
+      const reasons = (decision && decision.reason_codes) ? decision.reason_codes : [];
+      if (reasons.length > 0) {
+        labPlannerReasons.textContent = reasons.join(", ");
+        labPlannerReasonsRow.classList.remove("hidden");
+      } else {
+        labPlannerReasonsRow.classList.add("hidden");
+      }
+    }
 
     // Warnings
     const warnings = pkg.warnings || [];
@@ -1031,22 +1135,34 @@ document.addEventListener("DOMContentLoaded", () => {
       contentBox.appendChild(untrustedLabel);
       contentBox.appendChild(excerptText);
 
+      if (ev.canonical_url) {
+        const urlRow = document.createElement("div");
+        urlRow.className = "untrusted-meta";
+        const urlLink = document.createElement("a");
+        urlLink.href = ev.canonical_url;
+        urlLink.target = "_blank";
+        urlLink.rel = "noopener noreferrer";
+        urlLink.textContent = ev.canonical_url;
+        urlRow.appendChild(urlLink);
+        contentBox.appendChild(urlRow);
+      }
+
       card.appendChild(header);
       card.appendChild(contentBox);
       labEvidenceList.appendChild(card);
     });
+
+    updateCompressBtnState();
   }
 
   labCopyHandleBtn.addEventListener("click", async () => {
     if (!currentContextHandle) return;
-    try {
-      await navigator.clipboard.writeText(currentContextHandle);
+    const ok = await copyTextToClipboard(currentContextHandle);
+    if (ok) {
       labCopyHandleBtn.textContent = "Copied!";
       setTimeout(() => {
         labCopyHandleBtn.textContent = "Copy Handle";
       }, 2000);
-    } catch (err) {
-      // ignore
     }
   });
 
@@ -1056,6 +1172,19 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       if (!currentContextHandle) return;
 
+      const charsVal = labTargetChars.value.trim();
+      const tokensVal = labTargetTokens.value.trim();
+      const charsNum = parseInt(charsVal, 10);
+      const tokensNum = parseInt(tokensVal, 10);
+
+      const hasValidChars = charsVal !== "" && !isNaN(charsNum) && charsNum >= 100 && charsNum <= 24000;
+      const hasValidTokens = tokensVal !== "" && !isNaN(tokensNum) && tokensNum >= 25 && tokensNum <= 6000;
+
+      if (!hasValidChars && !hasValidTokens) {
+        alert("Compression requires at least one target: Target Max Chars (100 - 24000) or Target Max Est. Tokens (25 - 6000).");
+        return;
+      }
+
       labCompressBtn.disabled = true;
       labCompressSpinner.classList.remove("hidden");
 
@@ -1064,14 +1193,17 @@ document.addEventListener("DOMContentLoaded", () => {
         allow_evidence_drop: labEvidenceDropCheckbox.checked,
       };
 
-      if (labTargetChars.value) {
-        payload.target_max_context_chars = parseInt(labTargetChars.value, 10);
+      if (hasValidChars) {
+        payload.target_max_context_chars = charsNum;
       }
-      if (labTargetTokens.value) {
-        payload.target_max_estimated_tokens = parseInt(labTargetTokens.value, 10);
+      if (hasValidTokens) {
+        payload.target_max_estimated_tokens = tokensNum;
       }
       if (labMaxSentences.value) {
-        payload.max_sentences_per_evidence = parseInt(labMaxSentences.value, 10);
+        const sentNum = parseInt(labMaxSentences.value, 10);
+        if (!isNaN(sentNum) && sentNum >= 1 && sentNum <= 8) {
+          payload.max_sentences_per_evidence = sentNum;
+        }
       }
 
       try {
@@ -1095,7 +1227,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         alert("Network error compressing context package.");
       } finally {
-        labCompressBtn.disabled = false;
+        updateCompressBtnState();
         labCompressSpinner.classList.add("hidden");
       }
     });
@@ -1122,17 +1254,42 @@ document.addEventListener("DOMContentLoaded", () => {
     labCompAfterTokens.textContent = String(compPkg.estimated_tokens ?? "--");
     labDescendantHandle.textContent = descendantHandle;
 
+    // Warnings if present
+    if (labCompWarningsContainer && labCompWarningsList) {
+      const compWarnings = report?.warnings || [];
+      if (compWarnings.length > 0) {
+        labCompWarningsList.replaceChildren();
+        compWarnings.forEach((w) => {
+          const li = document.createElement("li");
+          li.textContent = w;
+          labCompWarningsList.appendChild(li);
+        });
+        labCompWarningsContainer.classList.remove("hidden");
+      } else {
+        labCompWarningsContainer.classList.add("hidden");
+      }
+    }
+
     // Render Evidence Difference Breakdown
-    renderEvidenceDifference(parentPkg.evidence || [], compPkg.evidence || []);
+    renderEvidenceDifference(parentPkg.evidence || [], compPkg.evidence || [], report);
   }
 
-  function renderEvidenceDifference(parentEvidence, compressedEvidence) {
+  function renderEvidenceDifference(parentEvidence, compressedEvidence, compReport) {
     labDiffList.replaceChildren();
 
     const compMap = new Map();
     compressedEvidence.forEach((ev) => {
       compMap.set(ev.citation_id || ev.evidence_id, ev);
     });
+
+    const traceByCitation = new Map();
+    const traceByEvidenceId = new Map();
+    if (compReport && Array.isArray(compReport.trace)) {
+      compReport.trace.forEach((entry) => {
+        if (entry.citation_id) traceByCitation.set(entry.citation_id, entry);
+        if (entry.evidence_id) traceByEvidenceId.set(entry.evidence_id, entry);
+      });
+    }
 
     parentEvidence.forEach((pEv, idx) => {
       const citKey = pEv.citation_id || pEv.evidence_id || `[C${idx + 1}]`;
@@ -1147,17 +1304,23 @@ document.addEventListener("DOMContentLoaded", () => {
       header.appendChild(title);
 
       const cEv = compMap.get(citKey);
+      const traceEntry = (pEv.citation_id && traceByCitation.get(pEv.citation_id)) ||
+                         (pEv.evidence_id && traceByEvidenceId.get(pEv.evidence_id));
 
       if (!cEv) {
         // Dropped / omitted
         const omittedBadge = document.createElement("span");
         omittedBadge.className = "badge badge-danger";
-        omittedBadge.textContent = "Omitted by Compression Policy";
+        omittedBadge.textContent = traceEntry?.action ? `Omitted: ${traceEntry.action}` : "Omitted by Compression Policy";
         header.appendChild(omittedBadge);
 
         const note = document.createElement("p");
         note.className = "untrusted-excerpt";
-        note.textContent = "Entire evidence item removed to satisfy budget limits.";
+        let reasonText = traceEntry?.reason || "Evidence omitted during context compression.";
+        if (traceEntry?.duplicate_of_evidence_id) {
+          reasonText += ` (Duplicate of: ${traceEntry.duplicate_of_evidence_id})`;
+        }
+        note.textContent = reasonText;
         card.appendChild(header);
         card.appendChild(note);
       } else if (cEv.excerpt === pEv.excerpt) {
@@ -1180,7 +1343,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Shortened
         const shortenedBadge = document.createElement("span");
         shortenedBadge.className = "badge badge-warning";
-        shortenedBadge.textContent = "Extractive Sentences Retained";
+        shortenedBadge.textContent = traceEntry?.action ? `Shortened: ${traceEntry.action}` : "Extractive Sentences Retained";
         header.appendChild(shortenedBadge);
 
         const grid = document.createElement("div");
@@ -1216,6 +1379,12 @@ document.addEventListener("DOMContentLoaded", () => {
         grid.appendChild(compBlock);
 
         card.appendChild(header);
+        if (traceEntry?.reason) {
+          const reasonMeta = document.createElement("p");
+          reasonMeta.className = "untrusted-meta";
+          reasonMeta.textContent = `Action Reason: ${traceEntry.reason}`;
+          card.appendChild(reasonMeta);
+        }
         card.appendChild(grid);
       }
 

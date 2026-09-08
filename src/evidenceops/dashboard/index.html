@@ -414,9 +414,22 @@
                 <span class="metric-value" id="lab-planner-route">--</span>
               </div>
               <div class="metric-item">
+                <span class="metric-label">Calls (Ret / Web)</span>
+                <span class="metric-value" id="lab-call-counts">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Est. Ext. Cost</span>
+                <span class="metric-value" id="lab-cost-estimate">--</span>
+              </div>
+              <div class="metric-item">
                 <span class="metric-label">Stop Reason</span>
                 <span class="metric-value" id="lab-stop-reason">--</span>
               </div>
+            </div>
+
+            <div id="lab-planner-reasons-row" class="inspector-detail-row hidden">
+              <span class="meta-label">Planner Reason Codes:</span>
+              <span id="lab-planner-reasons" class="meta-val">--</span>
             </div>
 
             <div id="lab-warnings-container" class="warnings-box hidden" role="alert">
@@ -440,16 +453,16 @@
               <form id="lab-compress-form" class="compress-form">
                 <div class="form-row">
                   <div class="form-group col">
-                    <label for="lab-target-chars">Target Max Chars</label>
-                    <input type="number" id="lab-target-chars" name="target_max_context_chars" min="1" placeholder="e.g. 5000">
+                    <label for="lab-target-chars">Target Max Chars (100 - 24000)</label>
+                    <input type="number" id="lab-target-chars" name="target_max_context_chars" min="100" max="24000" placeholder="100 - 24000 (e.g. 5000)">
                   </div>
                   <div class="form-group col">
-                    <label for="lab-target-tokens">Target Max Est. Tokens</label>
-                    <input type="number" id="lab-target-tokens" name="target_max_estimated_tokens" min="1" placeholder="e.g. 1200">
+                    <label for="lab-target-tokens">Target Max Est. Tokens (25 - 6000)</label>
+                    <input type="number" id="lab-target-tokens" name="target_max_estimated_tokens" min="25" max="6000" placeholder="25 - 6000 (e.g. 1200)">
                   </div>
                   <div class="form-group col">
-                    <label for="lab-max-sentences">Max Sentences / Item</label>
-                    <input type="number" id="lab-max-sentences" name="max_sentences_per_evidence" min="1" placeholder="e.g. 3">
+                    <label for="lab-max-sentences">Max Sentences / Item (1 - 8)</label>
+                    <input type="number" id="lab-max-sentences" name="max_sentences_per_evidence" min="1" max="8" value="3" placeholder="1 - 8 (e.g. 3)">
                   </div>
                 </div>
 
@@ -502,6 +515,11 @@
                     <span class="metric-label">Descendant Handle</span>
                     <code class="metric-code" id="lab-descendant-handle">--</code>
                   </div>
+                </div>
+
+                <div id="lab-comp-warnings-container" class="warnings-box hidden" role="alert">
+                  <strong>Compression Warnings:</strong>
+                  <ul id="lab-comp-warnings-list" class="warnings-list"></ul>
                 </div>
 
                 <!-- Difference View -->
