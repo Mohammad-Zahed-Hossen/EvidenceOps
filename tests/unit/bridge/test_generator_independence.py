@@ -86,6 +86,8 @@ def test_core_modules_have_zero_forbidden_imports() -> None:
         bridge_dir / "source_registry.py",
         bridge_dir / "planner.py",
         bridge_dir / "budget.py",
+        bridge_dir / "generation_registry.py",
+        bridge_dir / "citation_validator.py",
     ]
 
     for file_path in core_files:
@@ -232,7 +234,7 @@ def test_registry_backed_prepare_context_succeeds_when_generation_stubs_explode(
 
 
 def test_adapter_modules_have_zero_llm_or_generation_imports() -> None:
-    """AST audit proving LiteBridge adapters have zero LLM/generation dependencies."""
+    """AST audit proving LiteBridge retrieval adapters have zero LLM/generation dependencies."""
     adapters_dir = (
         Path(__file__).resolve().parents[3] / "src" / "evidenceops" / "bridge" / "adapters"
     )
@@ -247,11 +249,16 @@ def test_adapter_modules_have_zero_llm_or_generation_imports() -> None:
         "google",
     }
 
-    adapter_files = list(adapters_dir.glob("*.py"))
-    # Minimum expected adapters: local, tavily, fetcher, retriever, cache
-    assert len(adapter_files) >= 4
+    retrieval_adapter_files = [
+        adapters_dir / "evidenceops_local.py",
+        adapters_dir / "tavily_search.py",
+        adapters_dir / "web_cache.py",
+        adapters_dir / "web_retriever.py",
+        adapters_dir / "loopback.py",
+    ]
 
-    for file_path in adapter_files:
+    for file_path in retrieval_adapter_files:
+        assert file_path.exists(), f"Adapter file {file_path} does not exist"
         tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -266,6 +273,49 @@ def test_adapter_modules_have_zero_llm_or_generation_imports() -> None:
                 for forbidden in forbidden_roots:
                     assert not module.startswith(forbidden), (
                         f"Forbidden import-from '{module}' found in adapter file {file_path.name}"
+                    )
+
+
+def test_generation_adapters_have_zero_vendor_sdk_imports() -> None:
+    """AST audit proving LiteBridge generation adapters use only httpx, not vendor SDKs."""
+    adapters_dir = (
+        Path(__file__).resolve().parents[3] / "src" / "evidenceops" / "bridge" / "adapters"
+    )
+    assert adapters_dir.exists()
+
+    vendor_sdk_roots = {
+        "openai",
+        "anthropic",
+        "google",
+        "ollama",
+        "langchain",
+        "langgraph",
+        "evidenceops.generation",
+    }
+
+    gen_adapter_files = [
+        adapters_dir / "ollama_generation.py",
+        adapters_dir / "openai_compatible_local.py",
+        adapters_dir / "openai_generation.py",
+        adapters_dir / "anthropic_generation.py",
+        adapters_dir / "gemini_generation.py",
+    ]
+
+    for file_path in gen_adapter_files:
+        assert file_path.exists(), f"Generation adapter file {file_path} does not exist"
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    for forbidden in vendor_sdk_roots:
+                        assert not alias.name.startswith(forbidden), (
+                            f"Vendor SDK import '{alias.name}' found in {file_path.name}"
+                        )
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                for forbidden in vendor_sdk_roots:
+                    assert not module.startswith(forbidden), (
+                        f"Vendor SDK import-from '{module}' found in {file_path.name}"
                     )
 
 
@@ -410,3 +460,25 @@ def test_page_fetch_symbols_and_modules_are_completely_absent() -> None:
     assert not hasattr(settings, "litebridge_web_max_redirects")
     assert not hasattr(settings, "litebridge_web_allowed_fetch_domains")
     assert not hasattr(settings, "parsed_allowed_fetch_domains")
+
+
+def test_prepare_context_never_touches_generation_registry() -> None:
+    """Verify prepare_context never invokes GenerationProviderRegistry or providers."""
+    from unittest.mock import MagicMock
+
+    from evidenceops.bridge.generation_registry import GenerationProviderRegistry
+
+    mock_gen_registry = MagicMock(spec=GenerationProviderRegistry)
+
+    retriever = ExplodingFakeRetriever()
+    bridge = LiteBridge(retriever=retriever, generation_registry=mock_gen_registry)
+
+    pkg = bridge.prepare_context("How do we ensure prepare_context ignores generation?")
+
+    assert retriever.call_count == 1
+    assert len(pkg.evidence) == 1
+    # Verify zero interactions with generation registry
+    mock_gen_registry.resolve.assert_not_called()
+    mock_gen_registry.get_capability.assert_not_called()
+    mock_gen_registry.list_capabilities.assert_not_called()
+    mock_gen_registry.has_provider.assert_not_called()

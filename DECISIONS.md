@@ -276,3 +276,23 @@
   7. **Backward-Compatible Defaults**: Default `RetrievalPolicy()` uses `BudgetPolicy()` (local only, `max_web_calls=0`). Under `HYBRID` profile with `web.allow_external_query=True`, `RetrievalPolicy` automatically defaults `budget` to permit 1 web call and up to 1,000,000 uUSD unless explicitly configured, preserving 100% backward compatibility with L1–L3 calls.
   8. **Deterministic Package Identity**: `package_id` deterministically incorporates `planner_decision` route and reasons, `effective_budget` parameters, and `source_descriptor` identity, while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
   9. **Consequences & Exit Gate**: Phase L4 is certified complete. Phase L5 (`External LLM Provider Adapters`) is unblocked.
+
+### ADR-032: LiteBridge L5 Optional Generation Providers and Syntactic Citation-Gated Answers
+- **Context**: Phase L5 introduces optional answer generation to LiteBridge. Many RAG systems tightly couple generation into the retrieval pipeline, depend on heavyweight vendor SDKs (introducing security and transitive dependency bloat), or hallucinate ungrounded citations without validation. LiteBridge requires answer generation that consumes an already-built immutable ContextPackage while keeping prepare_context() 100% generator-independent, maintaining zero paid API keys by default, and validating citations fail-closed.
+- **Decision**:
+  1. **Strict Pipeline Decoupling**: answer = bridge.answer(context_package, generation_policy=None) is completely decoupled from retrieval. answer() consumes a finished, immutable ContextPackage; it never retrieves, plans, reranks, calls source registries, alters budgets, or mutates the package. prepare_context() remains 100% generator-independent with zero imports or awareness of generation providers.
+  2. **Zero Vendor SDK Dependencies**: No vendor SDKs (openai, anthropic, google-genai, ollama) are added to project dependencies. All 5 generation adapters (OllamaGenerationAdapter, OpenAICompatibleLocalAdapter, OpenAIGenerationAdapter, AnthropicGenerationAdapter, GeminiGenerationAdapter) use standard-library typing and internal adapter-owned httpx.Client(trust_env=False, follow_redirects=False).
+  3. **Strict Network & Loopback Guardrails**:
+     - Local endpoints (Ollama, OpenAICompatibleLocal) enforce HTTP-only, literal 127.0.0.1 / [::1] or loopback-resolved localhost, zero credentials, zero query/fragments, and zero unexpected subpaths.
+     - Single request rule: exactly one HTTP request, zero retries, zero fallback to secondary providers.
+     - Ollama uses native /api/chat only; OpenAI-compatible endpoints are isolated in OpenAICompatibleLocalAdapter.
+  4. **Disabled by Default & Explicit Nonblank Model**: All generation providers are disabled by default (LITEBRIDGE_ENABLE_*=false). If a provider is enabled in configuration, a nonblank model name (and API key for authenticated endpoints) is strictly required at startup.
+  5. **Privacy Boundary & Per-Call Opt-In**: Any LOCAL_DOCUMENT evidence marks the ContextPackage private. A hosted provider (hosted_openai, hosted_anthropic, hosted_gemini) will refuse to send private evidence and fails closed with GenerationStatus.POLICY_BLOCKED and PRIVATE_EVIDENCE_EXPORT_NOT_ALLOWED unless allow_private_evidence_export=True is explicitly passed in GenerationPolicy. Environment variables cannot silently grant export consent.
+  6. **Syntactic Citation Validation & Fail-Closed Guard**:
+     - Validation is strictly syntactic: it verifies cited tokens exist in context_package.evidence without falsely overclaiming semantic verification.
+     - Strict parser scans all citation-like tokens (\[[cC][^\]]*\]). Any malformed ([CX], [C1 ], [C0], [c1]) or unknown ([C999]) token immediately fails closed to GenerationStatus.INVALID_CITATIONS with fixed abstention text, even if a valid citation is present.
+     - Successful answers require at least one valid citation and zero malformed/unknown tokens.
+  7. **Sanitized Failure & Deterministic Identity**:
+     - answer() never raises unhandled provider exceptions and never exposes raw upstream error text, URLs, paths, or secrets in GroundedAnswer or warnings. Failures return structured GroundedAnswer with sanitized abstention text.
+     - answer_id is derived deterministically from package ID, provider ID, model ID, normalized policy, final answer text, status, and cited IDs (excluding timings and usage).
+  8. **Consequences & Exit Gate**: Phase L5 is certified complete and verified with 100% mocked transports. Phase L6 (Context Compression and Quality Controls) is unblocked.

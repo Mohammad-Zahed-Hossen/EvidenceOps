@@ -77,6 +77,28 @@ class Settings(BaseSettings):
     litebridge_web_cache_max_entries: int = Field(default=64, gt=0, le=1024)
     litebridge_tavily_search_estimated_cost_microusd: int = Field(default=8000, ge=0, le=1_000_000)
 
+    # LiteBridge Generation Providers (all disabled by default)
+    litebridge_enable_ollama: bool = False
+    litebridge_ollama_base_url: str = "http://127.0.0.1:11434"
+    litebridge_ollama_model: str = "qwen2.5:1.5b"
+
+    litebridge_enable_local_openai_compatible: bool = False
+    litebridge_local_openai_compatible_base_url: str = "http://127.0.0.1:8000"
+    litebridge_local_openai_compatible_model: str = ""
+    litebridge_local_openai_compatible_api_key: SecretStr | None = None
+
+    litebridge_enable_openai: bool = False
+    litebridge_openai_model: str = ""
+    openai_api_key: SecretStr | None = None
+
+    litebridge_enable_anthropic: bool = False
+    litebridge_anthropic_model: str = ""
+    anthropic_api_key: SecretStr | None = None
+
+    litebridge_enable_gemini: bool = False
+    litebridge_gemini_model: str = ""
+    gemini_api_key: SecretStr | None = None
+
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod
     def local_service_url(cls, value: str) -> str:

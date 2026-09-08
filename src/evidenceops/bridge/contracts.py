@@ -433,3 +433,143 @@ class ContextPackage(BaseModel):
                         f"budget_used value for '{k}' must be a non-negative int, got {v}"
                     )
         return self
+
+
+class ProviderLocation(StrEnum):
+    """Execution location of a generation provider."""
+
+    LOCAL = "local"
+    HOSTED = "hosted"
+
+
+class GenerationStatus(StrEnum):
+    """Explicit status outcomes of answer generation."""
+
+    SUCCESS = "success"
+    ABSTAINED = "abstained"
+    PROVIDER_UNAVAILABLE = "provider_unavailable"
+    INVALID_CITATIONS = "invalid_citations"
+    POLICY_BLOCKED = "policy_blocked"
+    GENERATION_FAILED = "generation_failed"
+
+
+class GenerationAbstentionReason(StrEnum):
+    """Typed reasons for abstaining from answer generation."""
+
+    NO_EVIDENCE = "no_evidence"
+    PROVIDER_NOT_CONFIGURED = "provider_not_configured"
+    EXTERNAL_GENERATION_NOT_ALLOWED = "external_generation_not_allowed"
+    PRIVATE_EVIDENCE_EXPORT_NOT_ALLOWED = "private_evidence_export_not_allowed"
+    INVALID_CITATIONS = "invalid_citations"
+    PROVIDER_FAILURE = "provider_failure"
+
+
+class GenerationPolicy(BaseModel):
+    """Immutable policy governing answer generation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    provider_id: str = Field(
+        default="local_ollama",
+        min_length=1,
+        max_length=64,
+        pattern=r"^[a-z0-9_]+$",
+    )
+    temperature: float = Field(default=0.0, ge=0.0, le=1.0)
+    max_output_tokens: int = Field(default=512, ge=1, le=2048)
+    timeout_ms: int = Field(default=30000, ge=1000, le=60000)
+    allow_external_generation: bool = False
+    allow_private_evidence_export: bool = False
+
+
+class ProviderCapability(BaseModel):
+    """Immutable capability descriptor for a registered generation provider."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    provider_id: str = Field(min_length=1)
+    display_name: str = Field(min_length=1)
+    location: ProviderLocation
+    model_id: str = Field(min_length=1)
+    supports_citations: bool
+    max_output_tokens: int = Field(ge=1)
+    enabled: bool
+
+
+class GenerationUsage(BaseModel):
+    """Normalized token usage reported directly by a generation provider."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+
+
+class GroundedAnswer(BaseModel):
+    """Immutable, citation-gated answer produced by LiteBridge."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    answer_id: str = Field(min_length=1)
+    context_package_id: str = Field(min_length=1)
+    provider_id: str | None = None
+    model_id: str | None = None
+    status: GenerationStatus
+    text: str
+    cited_evidence_ids: tuple[str, ...] = Field(default_factory=tuple)
+    citation_valid: bool
+    abstention_reason: GenerationAbstentionReason | None = None
+    usage: GenerationUsage = Field(default_factory=GenerationUsage)
+    warnings: tuple[str, ...] = Field(default_factory=tuple)
+    timings_ms: tuple[tuple[str, float], ...] = Field(default_factory=tuple)
+
+    @field_validator("cited_evidence_ids", "warnings", mode="before")
+    @classmethod
+    def _coerce_tuples(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(v)
+        return v
+
+    @field_validator("timings_ms", mode="before")
+    @classmethod
+    def _coerce_timings(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(tuple(item) if isinstance(item, list) else item for item in v)
+        return v
+
+    @model_validator(mode="after")
+    def _validate_status_citation_invariants(self) -> GroundedAnswer:
+        if self.status != GenerationStatus.SUCCESS and self.citation_valid:
+            raise ValueError("citation_valid must be False when generation status is not SUCCESS")
+        return self
+
+
+def derive_answer_id(
+    *,
+    context_package_id: str,
+    provider_id: str | None,
+    model_id: str | None,
+    policy: GenerationPolicy,
+    text: str,
+    status: GenerationStatus,
+    cited_evidence_ids: tuple[str, ...],
+    abstention_reason: GenerationAbstentionReason | None = None,
+) -> str:
+    """Derive a deterministic answer ID strictly from stable execution inputs."""
+    import hashlib
+
+    hasher = hashlib.sha256()
+    hasher.update(context_package_id.encode())
+    hasher.update((provider_id or "").encode())
+    hasher.update((model_id or "").encode())
+    hasher.update(policy.provider_id.encode())
+    hasher.update(f"{policy.temperature:.4f}".encode())
+    hasher.update(str(policy.max_output_tokens).encode())
+    hasher.update(str(policy.allow_external_generation).encode())
+    hasher.update(str(policy.allow_private_evidence_export).encode())
+    hasher.update(hashlib.sha256(text.encode()).digest())
+    hasher.update(status.value.encode())
+    hasher.update((abstention_reason.value if abstention_reason else "").encode())
+    for cid in sorted(cited_evidence_ids):
+        hasher.update(cid.encode())
+    return f"ans_{hasher.hexdigest()[:24]}"

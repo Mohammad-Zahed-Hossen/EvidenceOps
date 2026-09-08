@@ -104,3 +104,75 @@ def test_build_litebridge_web_enabled_wires_web_source() -> None:
         assert desc.freshness == SourceFreshness.LIVE
         assert desc.supported_execution_profiles == (ExecutionProfile.HYBRID,)
         assert desc.estimated_external_cost_microusd == 8000
+
+
+def test_build_litebridge_generation_providers_disabled_by_default() -> None:
+    settings = Settings(
+        processed_data_dir=Path("data/processed"),
+        bm25_data_dir=Path("data/bm25"),
+        bm25_index_id="test_bm25_index",
+    )
+    with patch("evidenceops.bridge.factory.build_documentation_service"):
+        bridge = build_litebridge(settings)
+        assert bridge._generation_registry is not None
+        assert len(bridge._generation_registry.list_capabilities()) == 0
+
+
+def test_build_litebridge_ollama_enabled_missing_model_raises() -> None:
+    from evidenceops.bridge.errors import LiteBridgeValidationError
+
+    settings = Settings(
+        processed_data_dir=Path("data/processed"),
+        bm25_data_dir=Path("data/bm25"),
+        bm25_index_id="test_bm25_index",
+        litebridge_enable_ollama=True,
+        litebridge_ollama_model="",
+    )
+    with patch("evidenceops.bridge.factory.build_documentation_service"):
+        import pytest
+
+        with pytest.raises(LiteBridgeValidationError) as exc_info:
+            build_litebridge(settings)
+        assert "Ollama model ID must be nonblank" in str(exc_info.value)
+
+
+def test_build_litebridge_openai_enabled_missing_key_raises() -> None:
+    from evidenceops.bridge.errors import LiteBridgeValidationError
+
+    settings = Settings(
+        processed_data_dir=Path("data/processed"),
+        bm25_data_dir=Path("data/bm25"),
+        bm25_index_id="test_bm25_index",
+        litebridge_enable_openai=True,
+        litebridge_openai_model="gpt-4o-mini",
+        openai_api_key=None,
+    )
+    with patch("evidenceops.bridge.factory.build_documentation_service"):
+        import pytest
+
+        with pytest.raises(LiteBridgeValidationError) as exc_info:
+            build_litebridge(settings)
+        assert "OpenAI API key is missing or blank" in str(exc_info.value)
+
+
+def test_build_litebridge_wires_enabled_providers() -> None:
+    from pydantic import SecretStr
+
+    settings = Settings(
+        processed_data_dir=Path("data/processed"),
+        bm25_data_dir=Path("data/bm25"),
+        bm25_index_id="test_bm25_index",
+        litebridge_enable_ollama=True,
+        litebridge_ollama_model="llama3:latest",
+        litebridge_enable_openai=True,
+        litebridge_openai_model="gpt-4o-mini",
+        openai_api_key=SecretStr("sk-test-openai"),
+    )
+    with patch("evidenceops.bridge.factory.build_documentation_service"):
+        bridge = build_litebridge(settings)
+        assert bridge._generation_registry is not None
+        assert bridge._generation_registry.has_provider("local_ollama")
+        assert bridge._generation_registry.has_provider("hosted_openai")
+        assert not bridge._generation_registry.has_provider("hosted_anthropic")
+        assert not bridge._generation_registry.has_provider("hosted_gemini")
+        assert not bridge._generation_registry.has_provider("local_openai_compatible")

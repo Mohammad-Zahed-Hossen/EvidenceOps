@@ -42,41 +42,45 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Complete and verified — deterministic planner and budget policy (Phase L4)
+### Status: Complete and verified — optional generation adapters and syntactic citation gating (Phase L5)
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Phase L4 (Deterministic Planner and Hard Budget Policy).
-- **Phase L4 Completion Status:**
-  - **Deterministic Single-Action Planner**: Implemented `DeterministicPlanner` which analyzes query features (freshness cues, explicit temporal years, local technical reference cues) and policies to route queries to exactly one registered source (`LOCAL`, `WEB`) or emit `BLOCKED`. Zero LLM calls, zero agent loops, zero speculative retries, and complete generator independence.
-  - **Budget Authority Separation**: `RetrievalPolicy` exclusively owns context character and token ceilings (`max_context_chars`, `max_estimated_tokens`), while `BudgetPolicy` exclusively owns execution calls, cost, and wall-clock ceilings (`max_retrieval_calls`, `max_web_calls`, `max_wall_clock_ms`, `max_estimated_external_cost_microusd`).
-  - **Hard Preflight Budgets**: Call limits and estimated cost limits are enforced preflight before any retrieval action. Zero allowed calls immediately returns a blocked empty package.
-  - **Bounded Web Timeout**: Web retrieval network timeout is clamped against `policy.budget.max_wall_clock_ms`.
-  - **Post-Execution Wall-Clock Reporting**: Synchronous local retrieval evaluates wall clock post-execution and emits `StopReason.BUDGET_EXCEEDED` with a sanitized fixed warning if the budget was exceeded.
-  - **Accurate Web Cost Accounting**: External cost is charged only for actual web calls: `estimated_external_cost_microusd = descriptor.estimated_external_cost_microusd * actual_web_calls`. In-memory cache hits incur 0 external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
-  - **SourceRegistry Encapsulation**: Retriever resolution remains strictly internal (`resolve()`). Callers inspect read-only descriptors (`get_descriptor`, `default_descriptor`, `has_source`) without bypassing planning or budget guardrails.
-  - **Deterministic Package Identity**: `package_id` incorporates planner route, reason codes, and effective budget parameters, while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
+- **Current Baseline:** Phase L5 (Optional Generation Adapters and Syntactic Citation Gating).
+- **Phase L5 Completion Status:**
+  - **Generator-Independent Core Maintained**: `prepare_context()` remains 100% generator-independent with zero provider calls or imports. `answer()` consumes an immutable, already-built `ContextPackage`.
+  - **Zero Vendor SDK Dependencies**: No vendor SDKs added to dependencies. All 5 generation adapters (`OllamaGenerationAdapter`, `OpenAICompatibleLocalAdapter`, `OpenAIGenerationAdapter`, `AnthropicGenerationAdapter`, `GeminiGenerationAdapter`) use standard-library typing and internal adapter-owned `httpx.Client(trust_env=False, follow_redirects=False)`.
+  - **Strict Local Endpoint Guardrails**: Enforces HTTP-only, literal `127.0.0.1` / `[::1]` or loopback-resolved `localhost`, zero credentials, zero query/fragments, and zero unexpected subpaths via `validate_loopback_url`.
+  - **Disabled by Default & Nonblank Validation**: All generation providers are disabled by default. Enabling any provider requires a nonblank model name (and API key for authenticated endpoints).
+  - **Privacy Boundary & Per-Call Consent**: Any `LOCAL_DOCUMENT` evidence marks the package private. Hosted providers refuse private evidence with `POLICY_BLOCKED` and `PRIVATE_EVIDENCE_EXPORT_NOT_ALLOWED` unless `allow_private_evidence_export=True` is explicitly passed in `GenerationPolicy`.
+  - **Syntactic Citation Validation**: Strictly validates that cited tokens exist in `context_package.evidence` without claiming semantic verification. Strict parser scans all citation-like tokens (`\[[cC][^\]]*\]`); any malformed (`[CX]`, `[C1 ]`, `[C0]`, `[c1]`) or unknown (`[C999]`) token immediately fails closed to `INVALID_CITATIONS` with fixed abstention text.
+  - **Deterministic Answer Identity**: Derived deterministically from package ID, provider ID, model ID, normalized policy, final answer text, status, and cited IDs (excluding timings and usage).
+  - **Sanitized Failure Boundaries**: `answer()` returns structured `GroundedAnswer` abstentions without leaking raw exception text, URLs, paths, or secrets.
 - **Deliverables:**
-  - `src/evidenceops/bridge/contracts.py`: Added `BudgetPolicy`, `PlannerRoute`, `PlannerReason`, `QueryFeatures`, `PlannerDecision`, and budget/planner package fields.
-  - `src/evidenceops/bridge/budget.py`: `BudgetGuard` enforcing preflight checks, web-call cost calculation, and post-execution wall-clock evaluation.
-  - `src/evidenceops/bridge/planner.py`: Query feature extractor and `DeterministicPlanner` single-action routing engine.
-  - `src/evidenceops/bridge/source_registry.py`: Read-only descriptor lookup methods (`get_descriptor`, `default_descriptor`, `has_source`, `list_descriptors`).
-  - `src/evidenceops/bridge/context_builder.py`: Blocked package constructor and deterministic package identity incorporating planner decisions.
-  - `src/evidenceops/bridge/service.py`: Core `prepare_context()` integration with preflight budget checks, single-source dispatch, cost accounting, and post-execution wall-clock reporting.
-  - `src/evidenceops/settings.py`: Added `litebridge_tavily_search_estimated_cost_microusd = 8000`.
-  - `src/evidenceops/bridge/factory.py`: Wired source cost metadata (local = 0 uUSD, Tavily = 8000 uUSD).
-  - `src/evidenceops/bridge/adapters/web_retriever.py`: Clamped `max_results` by `max_evidence_items` and `timeout_ms` by `max_wall_clock_ms`.
+  - `src/evidenceops/bridge/contracts.py`: Added `ProviderLocation`, `GenerationStatus`, `GenerationAbstentionReason`, `GenerationPolicy`, `ProviderCapability`, `GenerationUsage`, `GroundedAnswer`, and `derive_answer_id(...)`.
+  - `src/evidenceops/bridge/ports.py`: Added `GenerationRequest` (with `query: str`), `GenerationResponse`, and `@runtime_checkable class GenerationProvider(Protocol)`.
+  - `src/evidenceops/bridge/errors.py`: Added provider error classes.
+  - `src/evidenceops/bridge/citation_validator.py`: Pure syntactic citation token extractor and validator.
+  - `src/evidenceops/bridge/generation_registry.py`: Pure provider registry decoupled from EvidenceOps internals.
+  - `src/evidenceops/bridge/adapters/loopback.py`: Reusable strict loopback HTTP endpoint validator.
+  - `src/evidenceops/bridge/adapters/ollama_generation.py`: Native `/api/chat` Ollama generation adapter.
+  - `src/evidenceops/bridge/adapters/openai_compatible_local.py`: Local OpenAI-compatible generation adapter.
+  - `src/evidenceops/bridge/adapters/openai_generation.py`: Hosted OpenAI generation adapter.
+  - `src/evidenceops/bridge/adapters/anthropic_generation.py`: Hosted Anthropic generation adapter.
+  - `src/evidenceops/bridge/adapters/gemini_generation.py`: Hosted Gemini generation adapter.
+  - `src/evidenceops/bridge/service.py`: Added `LiteBridge.answer(...)` with all privacy, abstention, and citation gating.
+  - `src/evidenceops/bridge/factory.py`: Wired optional generation providers (disabled by default).
+  - `src/evidenceops/settings.py` & `.env.example`: Added Phase L5 generation configuration settings.
 - **Verification Results:**
-  - Focused bridge tests: 138 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 647 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors (211 files).
-  - Type checking: Mypy passes with zero issues (102 source files).
-  - AST audit: `test_generator_independence.py` confirms zero generator or EvidenceOps imports in `planner.py` or `budget.py`.
+  - Focused bridge tests: 184 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 693 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors (228 files).
+  - Type checking: Mypy passes with zero issues (110 source files).
+  - AST audit: Proves core and retrieval modules have zero LLM/generation imports, and generation adapters use zero vendor SDKs.
 - **Known Limitations & Deferred Milestones:**
-  - Query decomposition, iterative multi-hop retrieval, and multi-source evidence fusion are deliberately deferred to future phases.
-  - **Deferred Security Milestone (Direct Web Page Retrieval)**: Arbitrary direct web page fetching remains excluded until a proven DNS-pinning/rebinding defense is designed.
-  - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
-  - Context packaging only; answer generation (`answer()`) is not implemented.
+  - Context compression, dynamic chunk pruning, and quality metrics are deferred to Phase L6.
+  - Multi-hop retrieval and multi-source evidence fusion are deferred to Phase L7.
+  - Direct web page retrieval remains a Deferred Security Milestone.
 - **Next Phase:**
-  `L5 — External LLM Provider Adapters` (UNBLOCKED).
+  `L6 — Context Compression and Quality Controls` (UNBLOCKED).

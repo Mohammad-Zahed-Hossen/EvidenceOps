@@ -7,6 +7,8 @@ from typing import Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from evidenceops.bridge.contracts import (
+    GenerationPolicy,
+    ProviderCapability,
     RetrievalPolicy,
     SourceKind,
     validate_canonical_https_url,
@@ -92,4 +94,46 @@ class WebSearchProvider(Protocol):
         timeout_ms: int,
     ) -> tuple[WebSearchHit, ...]:
         """Execute web search query returning normalized hits."""
+        ...
+
+
+class GenerationRequest(BaseModel):
+    """LiteBridge-neutral request passed to a GenerationProvider port."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    context_package_id: str = Field(min_length=1)
+    query: str = Field(min_length=1)
+    system_instruction: str = Field(min_length=1)
+    context_text: str
+    max_output_tokens: int = Field(ge=1)
+    temperature: float = Field(ge=0.0, le=1.0)
+
+
+class GenerationResponse(BaseModel):
+    """LiteBridge-neutral response returned by a GenerationProvider port."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    text: str
+    model_id: str = Field(min_length=1)
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+
+
+@runtime_checkable
+class GenerationProvider(Protocol):
+    """Provider-neutral port for answer generation."""
+
+    @property
+    def capability(self) -> ProviderCapability:
+        """Return the capability descriptor for this provider."""
+        ...
+
+    def generate(
+        self,
+        request: GenerationRequest,
+        policy: GenerationPolicy,
+    ) -> GenerationResponse:
+        """Execute a single bounded generation call."""
         ...

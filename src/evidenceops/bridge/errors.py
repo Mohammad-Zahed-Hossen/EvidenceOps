@@ -45,3 +45,27 @@ class LiteBridgeTimeoutError(LiteBridgeRetrievalError):
     """Raised when retrieval exceeds its deadline or times out."""
 
     default_code = "timeout_error"
+
+
+class LiteBridgeProviderError(LiteBridgeError):
+    """Raised when an LLM generation provider fails."""
+
+    default_code = "provider_error"
+
+
+class LiteBridgeProviderUnavailableError(LiteBridgeProviderError):
+    """Raised when a generation provider daemon, endpoint, or service is unreachable."""
+
+    default_code = "provider_unavailable"
+
+
+class LiteBridgeProviderAuthError(LiteBridgeProviderError):
+    """Raised when provider authentication fails or credentials are rejected."""
+
+    default_code = "provider_auth_error"
+
+
+class LiteBridgeProviderRateLimitError(LiteBridgeProviderError):
+    """Raised when provider rate limits or quotas are exceeded."""
+
+    default_code = "provider_rate_limit"
