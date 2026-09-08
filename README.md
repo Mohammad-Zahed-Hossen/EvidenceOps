@@ -170,6 +170,34 @@ uv run evidenceops-mcp
 
 ---
 
+## Dashboard UX & LiteBridge Context Lab
+
+The EvidenceOps dashboard (served at `http://127.0.0.1:8080/`) is a lightweight, framework-free, air-gapped developer console organizing workflows into three accessible client-side views:
+
+1. **Grounded QA** (`#grounded-qa`): Interactive query execution with bounded retrieval, telemetry flow, interactive citations (click `[C1]` to scroll and highlight evidence), safe plain-text/with-citation copying, and safe run result JSON downloads.
+2. **Context Lab** (`#context-lab`): Inspection and bounded extractive compression of LiteBridge context packages via opaque server handles (`POST /v1/litebridge/context` and `POST /v1/litebridge/context/{handle}/compress`).
+3. **Runs & System** (`#runs-system`): Bounded in-memory session run history with one-click query replay, component health probes, process lifetime metrics, sanitized capability inventory, and benchmark runner.
+
+### Enabling LiteBridge in Development
+
+By default, LiteBridge local interfaces are disabled (`LITEBRIDGE_ENABLE_INTERFACES=false`), and Context Lab shows an informational local status banner. To enable Context Lab in development:
+
+```powershell
+$env:LITEBRIDGE_ENABLE_INTERFACES="true"
+uv run uvicorn evidenceops.api.app:create_app --factory --host 127.0.0.1 --port 8080
+```
+
+> **Consent & Policy Invariant**: No provider or external retrieval is enabled by default; optional external capabilities remain gated by server configuration and per-call consent.
+
+### Known Dashboard Limitations
+
+- **Local-First & Air-Gapped**: Runs strictly on loopback (`127.0.0.1`) without external CDNs, fonts, or analytics.
+- **No Arbitrary Fetch**: The UI contains no direct URL fetch, provider credential input, or arbitrary endpoint override fields.
+- **Syntactic Citation Validation**: Citation interactions validate against syntactic tokens (`[C1]`, `[1]`) returned in query metadata; this is not a semantic grounding proof.
+- **Session-Scoped Run History**: The backend implements individual run lookup (`GET /v1/runs/{run_id}`) but does not support a `/v1/runs` listing endpoint; session run history is tracked in-memory within the active browser tab (up to 10 queries).
+
+---
+
 ## Representative Demo Workflow
 
 | Scenario | Input Query | Engine Behavior | Output |

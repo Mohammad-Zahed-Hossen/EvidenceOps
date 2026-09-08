@@ -3,332 +3,688 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EvidenceOps | Controlled RAG Observability Dashboard</title>
+  <title>EvidenceOps | Controlled RAG Observability &amp; Context Lab</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <header class="navbar">
     <div class="brand">
-      <div class="brand-logo">EO</div>
+      <div class="brand-logo" aria-hidden="true">EO</div>
       <div class="brand-text">
         <h1>EvidenceOps</h1>
-        <span class="subtitle">Adaptive Retrieval & Evidence Evaluation Console</span>
+        <span class="subtitle">Controlled RAG Observability &amp; Context Lab</span>
       </div>
     </div>
-    <div class="header-chips" aria-label="System configuration info">
-      <span class="header-chip"><span class="chip-dot"></span> LLM: <strong>qwen2.5:1.5b</strong> (CPU)</span>
-      <span class="header-chip">Max Calls: <strong>3</strong></span>
-      <span class="header-chip">Port: <strong>8080</strong></span>
-    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist" aria-label="Dashboard Views">
+      <button
+        type="button"
+        role="tab"
+        id="tab-grounded-qa"
+        class="nav-tab active"
+        aria-selected="true"
+        aria-controls="panel-grounded-qa"
+        tabindex="0"
+      >
+        Grounded QA
+      </button>
+      <button
+        type="button"
+        role="tab"
+        id="tab-context-lab"
+        class="nav-tab"
+        aria-selected="false"
+        aria-controls="panel-context-lab"
+        tabindex="-1"
+      >
+        Context Lab
+      </button>
+      <button
+        type="button"
+        role="tab"
+        id="tab-runs-system"
+        class="nav-tab"
+        aria-selected="false"
+        aria-controls="panel-runs-system"
+        tabindex="-1"
+      >
+        Runs &amp; System
+      </button>
+    </nav>
+
     <div class="header-status">
-      <div class="system-status-indicator" id="system-status-pill">
+      <!-- LiteBridge Local Interface Capability Chip -->
+      <div class="system-status-indicator" id="litebridge-status-pill" title="LiteBridge Local Interface Status">
+        <span class="status-dot neutral" id="litebridge-status-dot"></span>
+        <span class="status-text" id="litebridge-status-badge">LiteBridge: Checking...</span>
+      </div>
+
+      <!-- System Health Indicator -->
+      <div class="system-status-indicator" id="system-status-pill" title="Service Health">
         <span class="status-dot" id="system-status-dot"></span>
         <span class="status-text" id="service-health-badge">Checking System...</span>
       </div>
-      <button class="btn btn-ghost" id="refresh-health-btn" title="Refresh Service Status">
-        Refresh Status
+
+      <button type="button" class="btn btn-ghost" id="refresh-health-btn" title="Refresh Service Status">
+        Refresh
       </button>
     </div>
   </header>
 
   <main class="dashboard-layout">
-    <!-- Top Row: Query & Route Governor -->
-    <section class="card query-panel" aria-labelledby="query-section-heading">
-      <div class="card-header">
-        <h2 id="query-section-heading" class="card-title">Query Execution & Route Governor</h2>
-        <span class="badge badge-cpu">CPU-Bounded (1 Concurrency)</span>
-      </div>
-
-      <!-- Sample Query Benchmarks -->
-      <div class="sample-queries-wrapper" aria-label="Sample test queries">
-        <span class="sample-queries-label">Corpus Benchmarks:</span>
-        <div class="sample-pills-list">
-          <button type="button" class="sample-pill" data-query="How do I declare query parameters in FastAPI?">FastAPI Query Params</button>
-          <button type="button" class="sample-pill" data-query="How does Qdrant handle vector indexing and distance metrics?">Qdrant Vector Indexing</button>
-          <button type="button" class="sample-pill" data-query="Compare sparse BM25 keyword matching with dense vector retrieval.">BM25 vs Dense Hybrid</button>
-          <button type="button" class="sample-pill" data-query="What was the closing stock price of Apple on January 1st, 2026?">Unsupported (Abstain)</button>
-        </div>
-      </div>
-
-      <form id="query-form" class="query-form">
-        <div class="form-group">
-          <label for="query-input">User Inquiry</label>
-          <textarea
-            id="query-input"
-            name="query"
-            rows="3"
-            placeholder="Ask a factual technical question grounded in the ingested evidence base..."
-            required
-            maxlength="2000"
-          ></textarea>
-          <div class="field-hint">
-            <span>Enforces strict bounded retrieval and evidence sufficiency checks.</span>
-            <span id="char-counter">0 / 2000</span>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group col">
-            <label for="strategy-select">Retrieval Strategy</label>
-            <select id="strategy-select" name="strategy">
-              <option value="heuristic_adaptive" selected>Heuristic Adaptive (EvidenceOps)</option>
-            </select>
-          </div>
-
-          <div class="form-group col-small">
-            <label for="iterations-input">Max Iterations</label>
-            <input
-              type="number"
-              id="iterations-input"
-              name="max_iterations"
-              min="1"
-              max="3"
-              value="3"
-              required
-            >
-          </div>
-
-          <div class="form-group col-checkbox">
-            <label class="checkbox-container" for="debug-toggle">
-              <input type="checkbox" id="debug-toggle" name="debug">
-              <span class="checkbox-label">Diagnostics</span>
-            </label>
-          </div>
-
-          <div class="form-group col-action">
-            <button type="submit" id="submit-query-btn" class="btn btn-primary">
-              <span class="btn-text">Execute Query</span>
-              <span class="btn-spinner hidden" id="query-spinner"></span>
-            </button>
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <!-- Mid Row: Left Column (Answer + Citations), Right Column (Trajectory & Diagnostics) -->
-    <div class="content-grid">
-      <!-- Left Column: Answer, Abstention, & Evidence Citations -->
-      <section class="card answer-panel" aria-labelledby="answer-section-heading">
+    <!-- ================================================================= -->
+    <!-- VIEW 1: GROUNDED QA                                               -->
+    <!-- ================================================================= -->
+    <section
+      id="panel-grounded-qa"
+      class="tab-panel active"
+      role="tabpanel"
+      aria-labelledby="tab-grounded-qa"
+    >
+      <!-- Top Row: Query & Route Governor -->
+      <section class="card query-panel" aria-labelledby="query-section-heading">
         <div class="card-header">
-          <h2 id="answer-section-heading" class="card-title">Grounded Answer & Citations</h2>
-          <div id="answer-status-tag" class="badge badge-neutral">Awaiting Query</div>
+          <h2 id="query-section-heading" class="card-title">Query Execution &amp; Route Governor</h2>
+          <span class="badge badge-cpu">CPU-Bounded (1 Concurrency)</span>
         </div>
 
-        <div id="abstention-banner" class="banner banner-warning hidden" role="alert">
-          <div class="banner-icon">⚠️</div>
-          <div class="banner-content">
-            <strong>System Abstained:</strong>
-            <span id="abstention-reason"></span>
+        <!-- Sample Query Benchmarks -->
+        <div class="sample-queries-wrapper" aria-label="Sample test queries">
+          <span class="sample-queries-label">Corpus Benchmarks:</span>
+          <div class="sample-pills-list">
+            <button type="button" class="sample-pill" data-query="How do I declare query parameters in FastAPI?">FastAPI Query Params</button>
+            <button type="button" class="sample-pill" data-query="How does Qdrant handle vector indexing and distance metrics?">Qdrant Vector Indexing</button>
+            <button type="button" class="sample-pill" data-query="Compare sparse BM25 keyword matching with dense vector retrieval.">BM25 vs Dense Hybrid</button>
+            <button type="button" class="sample-pill" data-query="What was the closing stock price of Apple on January 1st, 2026?">Unsupported (Abstain)</button>
           </div>
         </div>
 
-        <div id="answer-container" class="answer-container">
-          <div id="answer-placeholder" class="empty-state">
-            Submit a query above to execute retrieval and view grounded generation.
-          </div>
-          <div id="answer-text" class="answer-text hidden"></div>
-        </div>
-
-        <div class="citations-section">
-          <h3 class="section-subtitle">Grounded Evidence Citations (<span id="citation-count">0</span>)</h3>
-          <div id="citations-list" class="citations-list">
-            <div class="empty-citations">No citations returned yet.</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Right Column: Trajectory, Route, Metrics, and Evaluation -->
-      <div class="sidebar-column">
-        <!-- Panel: Trajectory & Governance -->
-        <section class="card trajectory-panel" aria-labelledby="trajectory-section-heading">
-          <div class="card-header">
-            <h2 id="trajectory-section-heading" class="card-title">Execution Trajectory & Telemetry</h2>
-            <span class="badge" id="route-badge">Idle</span>
-          </div>
-
-          <!-- Chronological Trajectory Flow -->
-          <div class="trajectory-flow" id="trajectory-flow">
-            <div class="flow-step" id="step-features">
-              <div class="step-badge">1</div>
-              <div class="step-info">
-                <span class="step-title">Query Analysis</span>
-                <span class="step-detail" id="step-features-text">Awaiting inquiry</span>
-              </div>
-            </div>
-            <div class="flow-step" id="step-route">
-              <div class="step-badge">2</div>
-              <div class="step-info">
-                <span class="step-title">Controller Decision</span>
-                <span class="step-detail" id="step-route-text">Governor idle</span>
-              </div>
-            </div>
-            <div class="flow-step" id="step-retrieval">
-              <div class="step-badge">3</div>
-              <div class="step-info">
-                <span class="step-title">Bounded Retrieval</span>
-                <span class="step-detail" id="step-retrieval-text">0 calls made</span>
-              </div>
-            </div>
-            <div class="flow-step" id="step-sufficiency">
-              <div class="step-badge">4</div>
-              <div class="step-info">
-                <span class="step-title">Sufficiency Gate</span>
-                <span class="step-detail" id="step-sufficiency-text">Threshold: 0.72</span>
-              </div>
-            </div>
-            <div class="flow-step" id="step-terminal">
-              <div class="step-badge">5</div>
-              <div class="step-info">
-                <span class="step-title">Grounded Outcome</span>
-                <span class="step-detail" id="step-terminal-text">Idle</span>
-              </div>
+        <form id="query-form" class="query-form">
+          <div class="form-group">
+            <label for="query-input">User Inquiry</label>
+            <textarea
+              id="query-input"
+              name="query"
+              rows="3"
+              placeholder="Ask a factual technical question grounded in the ingested evidence base..."
+              required
+              maxlength="2000"
+            ></textarea>
+            <div class="field-hint">
+              <span>Enforces strict bounded retrieval and evidence sufficiency checks. Press Ctrl/Cmd+Enter to execute.</span>
+              <span id="char-counter">0 / 2000</span>
             </div>
           </div>
 
-          <div class="metrics-strip">
-            <div class="metric-item">
-              <span class="metric-label">Sufficiency</span>
-              <span class="metric-value" id="sufficiency-score">--</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-label">Latency</span>
-              <span class="metric-value" id="query-latency">--</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-label">Retrieval Calls</span>
-              <span class="metric-value" id="retrieval-calls">--</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-label">Iterations</span>
-              <span class="metric-value" id="iterations-count">--</span>
-            </div>
-          </div>
-
-          <div class="trace-row">
-            <span class="trace-label">Trace ID:</span>
-            <code id="trace-id" class="trace-id-code">none</code>
-          </div>
-
-          <div id="diagnostics-wrapper" class="diagnostics-wrapper hidden">
-            <details>
-              <summary>View Diagnostic Features</summary>
-              <pre id="diagnostics-pre" class="code-block"></pre>
-            </details>
-          </div>
-        </section>
-
-        <!-- Panel: System Health & Metrics -->
-        <section class="card health-panel" aria-labelledby="health-section-heading">
-          <div class="card-header">
-            <h2 id="health-section-heading" class="card-title">Component Health Probes</h2>
-          </div>
-          <div id="health-components-list" class="components-grid">
-            <div class="component-card">Loading probes...</div>
-          </div>
-
-          <div class="submetrics-row">
-            <div class="submetric">
-              <span class="submetric-num" id="metrics-queries-count">0</span>
-              <span class="submetric-name">Total Queries</span>
-            </div>
-            <div class="submetric">
-              <span class="submetric-num" id="metrics-evals-count">0</span>
-              <span class="submetric-name">Eval Jobs</span>
-            </div>
-            <div class="submetric">
-              <span class="submetric-num" id="metrics-avg-latency">0ms</span>
-              <span class="submetric-name">Avg Latency</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Panel: Benchmark Evaluation Runner -->
-        <section class="card eval-panel" aria-labelledby="eval-section-heading">
-          <div class="card-header">
-            <h2 id="eval-section-heading" class="card-title">Benchmark Evaluation Runner</h2>
-            <span class="badge" id="eval-status-badge">Idle</span>
-          </div>
-
-          <form id="eval-form" class="eval-form">
-            <div class="form-group">
-              <label for="eval-dataset-select">Benchmark Dataset</label>
-              <select id="eval-dataset-select" name="dataset_name" required>
-                <option value="evidenceops-controlled-v1" selected>evidenceops-controlled-v1 (Allowlisted)</option>
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="strategy-select">Retrieval Strategy</label>
+              <select id="strategy-select" name="strategy">
+                <option value="heuristic_adaptive" selected>Heuristic Adaptive (EvidenceOps)</option>
               </select>
             </div>
 
+            <div class="form-group col-small">
+              <label for="iterations-input">Max Iterations</label>
+              <input
+                type="number"
+                id="iterations-input"
+                name="max_iterations"
+                min="1"
+                max="3"
+                value="3"
+                required
+              >
+            </div>
+
+            <div class="form-group col-checkbox">
+              <label class="checkbox-container" for="debug-toggle">
+                <input type="checkbox" id="debug-toggle" name="debug">
+                <span class="checkbox-label">Diagnostics</span>
+              </label>
+            </div>
+
+            <div class="form-group col-action">
+              <button type="submit" id="submit-query-btn" class="btn btn-primary">
+                <span class="btn-text">Execute Query</span>
+                <span class="btn-spinner hidden" id="query-spinner"></span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Content Grid: Left (Answer + Citations), Right (Trajectory & Diagnostics) -->
+      <div class="content-grid">
+        <!-- Left Column: Answer, Abstention, & Evidence Citations -->
+        <section class="card answer-panel" aria-labelledby="answer-section-heading">
+          <div class="card-header">
+            <h2 id="answer-section-heading" class="card-title">Grounded Answer &amp; Citations</h2>
+            <div id="answer-status-tag" class="badge badge-neutral">Awaiting Query</div>
+          </div>
+
+          <!-- Answer Action Bar -->
+          <div class="answer-actions-bar" aria-label="Answer Actions">
+            <div class="action-buttons-group">
+              <button type="button" class="btn btn-sm btn-ghost" id="copy-answer-btn" title="Copy answer with recognized citation tokens">
+                Copy with Citations
+              </button>
+              <button type="button" class="btn btn-sm btn-ghost" id="copy-plain-btn" title="Copy plain text with recognized citations removed">
+                Copy Plain Text
+              </button>
+              <button type="button" class="btn btn-sm btn-ghost" id="download-run-btn" disabled title="Download safe run result JSON">
+                Download Safe Run Result JSON
+              </button>
+            </div>
+            <span class="action-feedback hidden" id="action-feedback" aria-live="polite"></span>
+          </div>
+
+          <div id="abstention-banner" class="banner banner-warning hidden" role="alert">
+            <div class="banner-icon">⚠️</div>
+            <div class="banner-content">
+              <strong>System Abstained:</strong>
+              <span id="abstention-reason"></span>
+            </div>
+          </div>
+
+          <div id="answer-container" class="answer-container">
+            <div id="answer-placeholder" class="empty-state">
+              Submit a query above to execute retrieval and view grounded generation.
+            </div>
+            <div id="answer-text" class="answer-text hidden" aria-live="polite"></div>
+          </div>
+
+          <div class="citations-section">
+            <h3 class="section-subtitle">Grounded Evidence Citations (<span id="citation-count">0</span>)</h3>
+            <div id="citations-list" class="citations-list">
+              <div class="empty-citations">No citations returned yet.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column: Trajectory, Route, Metrics, and Evaluation -->
+        <div class="sidebar-column">
+          <!-- Panel: Trajectory & Governance -->
+          <section class="card trajectory-panel" aria-labelledby="trajectory-section-heading">
+            <div class="card-header">
+              <h2 id="trajectory-section-heading" class="card-title">Execution Trajectory &amp; Telemetry</h2>
+              <span class="badge" id="route-badge">Idle</span>
+            </div>
+
+            <!-- Chronological Trajectory Flow -->
+            <div class="trajectory-flow" id="trajectory-flow">
+              <div class="flow-step" id="step-features">
+                <div class="step-badge">1</div>
+                <div class="step-info">
+                  <span class="step-title">Query Analysis</span>
+                  <span class="step-detail" id="step-features-text">Awaiting inquiry</span>
+                </div>
+              </div>
+              <div class="flow-step" id="step-route">
+                <div class="step-badge">2</div>
+                <div class="step-info">
+                  <span class="step-title">Controller Decision</span>
+                  <span class="step-detail" id="step-route-text">Governor idle</span>
+                </div>
+              </div>
+              <div class="flow-step" id="step-retrieval">
+                <div class="step-badge">3</div>
+                <div class="step-info">
+                  <span class="step-title">Bounded Retrieval</span>
+                  <span class="step-detail" id="step-retrieval-text">0 calls made</span>
+                </div>
+              </div>
+              <div class="flow-step" id="step-sufficiency">
+                <div class="step-badge">4</div>
+                <div class="step-info">
+                  <span class="step-title">Sufficiency Gate</span>
+                  <span class="step-detail" id="step-sufficiency-text">Threshold: 0.72</span>
+                </div>
+              </div>
+              <div class="flow-step" id="step-terminal">
+                <div class="step-badge">5</div>
+                <div class="step-info">
+                  <span class="step-title">Grounded Outcome</span>
+                  <span class="step-detail" id="step-terminal-text">Idle</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="metrics-strip">
+              <div class="metric-item">
+                <span class="metric-label">Sufficiency</span>
+                <span class="metric-value" id="sufficiency-score">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Latency</span>
+                <span class="metric-value" id="query-latency">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Retrieval Calls</span>
+                <span class="metric-value" id="retrieval-calls">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Iterations</span>
+                <span class="metric-value" id="iterations-count">--</span>
+              </div>
+            </div>
+
+            <div class="trace-row">
+              <span class="trace-label">Trace ID:</span>
+              <code id="trace-id" class="trace-id-code">none</code>
+            </div>
+
+            <div id="diagnostics-wrapper" class="diagnostics-wrapper hidden">
+              <details>
+                <summary>View Diagnostic Features</summary>
+                <pre id="diagnostics-pre" class="code-block"></pre>
+              </details>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 2: LITEBRIDGE CONTEXT LAB                                    -->
+    <!-- ================================================================= -->
+    <section
+      id="panel-context-lab"
+      class="tab-panel hidden"
+      role="tabpanel"
+      aria-labelledby="tab-context-lab"
+    >
+      <!-- LiteBridge Availability Banner -->
+      <div id="lab-status-banner" class="banner banner-warning hidden" role="alert">
+        <div class="banner-icon">ℹ️</div>
+        <div class="banner-content">
+          <strong id="lab-status-title">LiteBridge Local Interfaces Unavailable</strong>
+          <span id="lab-status-message">Checking local interface status...</span>
+        </div>
+      </div>
+
+      <div id="lab-workspace" class="lab-workspace">
+        <!-- Top: Preparation Form -->
+        <section class="card lab-prepare-panel" aria-labelledby="lab-prepare-heading">
+          <div class="card-header">
+            <h2 id="lab-prepare-heading" class="card-title">Context Preparation</h2>
+            <span class="badge badge-cpu">Public L7 Interface</span>
+          </div>
+
+          <form id="lab-prepare-form" class="query-form">
             <div class="form-group">
-              <label>Benchmark Systems</label>
-              <div id="eval-systems-group" class="checkbox-group">
-                <label class="checkbox-container">
-                  <input type="checkbox" name="systems" value="dense_rag" checked>
-                  <span class="checkbox-label">Dense RAG</span>
-                </label>
-                <label class="checkbox-container">
-                  <input type="checkbox" name="systems" value="two_step_hybrid" checked>
-                  <span class="checkbox-label">Two-Step Hybrid</span>
-                </label>
-                <label class="checkbox-container">
-                  <input type="checkbox" name="systems" value="evidenceops" checked>
-                  <span class="checkbox-label">EvidenceOps</span>
-                </label>
+              <label for="lab-query-input">Target Query</label>
+              <textarea
+                id="lab-query-input"
+                name="query"
+                rows="3"
+                placeholder="Enter query to retrieve, rank, and assemble bounded context..."
+                required
+                maxlength="2000"
+              ></textarea>
+              <div class="field-hint">
+                <span>Prepares an opaque context package via /v1/litebridge/context. Press Ctrl/Cmd+Enter to submit.</span>
+                <span id="lab-char-counter">0 / 2000</span>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group col">
-                <label for="eval-limit-input">Question Limit (Optional)</label>
-                <input type="number" id="eval-limit-input" name="limit" min="1" max="1000" placeholder="All">
+                <label for="lab-source-select">Source Constraint (Optional)</label>
+                <select id="lab-source-select" name="source_id">
+                  <option value="">Auto / Local Default</option>
+                </select>
               </div>
+
+              <div class="form-group col-small">
+                <label for="lab-max-evidence">Max Items</label>
+                <input type="number" id="lab-max-evidence" name="max_evidence_items" min="1" max="20" value="6">
+              </div>
+
+              <div class="form-group col-small">
+                <label for="lab-max-chars">Max Chars</label>
+                <input type="number" id="lab-max-chars" name="max_context_chars" min="1000" max="100000" value="24000">
+              </div>
+
+              <div class="form-group col-small">
+                <label for="lab-max-tokens">Max Est. Tokens</label>
+                <input type="number" id="lab-max-tokens" name="max_estimated_tokens" min="100" max="25000" value="6000">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-checkbox">
+                <label class="checkbox-container" for="lab-external-consent">
+                  <input type="checkbox" id="lab-external-consent" name="allow_external_query" disabled>
+                  <span class="checkbox-label">Explicit External Web Query Consent (Disabled unless eligible source configured)</span>
+                </label>
+              </div>
+
               <div class="form-group col-action">
-                <button type="submit" id="run-eval-btn" class="btn btn-secondary">
-                  <span class="btn-text">Run Benchmark</span>
-                  <span class="btn-spinner hidden" id="eval-spinner"></span>
+                <button type="submit" id="lab-prepare-btn" class="btn btn-primary">
+                  <span class="btn-text">Prepare Context</span>
+                  <span class="btn-spinner hidden" id="lab-prepare-spinner"></span>
                 </button>
               </div>
             </div>
           </form>
+        </section>
 
-          <div id="eval-results-container" class="eval-results-container hidden">
-            <div class="eval-result-header">
-              <span class="eval-id-label">Job ID: <strong id="eval-job-id">--</strong></span>
-              <span class="eval-timing" id="eval-job-timing"></span>
-            </div>
-            <div id="eval-job-message" class="eval-job-message"></div>
-            <div id="eval-artifact-link-wrapper" class="eval-artifact-link hidden">
-              <span>Artifact Output:</span>
-              <code id="eval-artifact-path"></code>
+        <!-- Middle: Package Inspector -->
+        <section class="card lab-inspector-panel" id="lab-inspector-panel" aria-labelledby="lab-inspector-heading">
+          <div class="card-header">
+            <h2 id="lab-inspector-heading" class="card-title">Package Inspector</h2>
+            <div id="lab-package-status-tag" class="badge badge-neutral">No Package Loaded</div>
+          </div>
+
+          <div id="lab-inspector-empty" class="empty-state">
+            Prepare context above to inspect the opaque handle, assembled evidence cards, and token estimates.
+          </div>
+
+          <div id="lab-inspector-content" class="lab-inspector-content hidden">
+            <!-- Metadata & Telemetry Strip -->
+            <div class="inspector-meta-strip">
+              <div class="handle-box">
+                <span class="handle-title">Opaque Context Handle:</span>
+                <code id="lab-handle-display" class="opaque-handle-code">--</code>
+                <button type="button" class="btn btn-sm btn-ghost" id="lab-copy-handle-btn" title="Copy context handle">Copy Handle</button>
+              </div>
+              <div class="lineage-box">
+                <span class="meta-label">Package ID (Lineage):</span>
+                <code id="lab-package-id-display" class="package-id-code">--</code>
+              </div>
             </div>
 
-            <div id="eval-table-container" class="eval-table-container hidden">
-              <table class="eval-summary-table" id="eval-summary-table">
-                <thead>
-                  <tr>
-                    <th>System</th>
-                    <th>Recall@10</th>
-                    <th>MRR@10</th>
-                    <th>Lexical Proxy F1*</th>
-                    <th>Cit. Prec.</th>
-                    <th>Abstain Acc.</th>
-                    <th>Latency</th>
-                  </tr>
-                </thead>
-                <tbody id="eval-table-body"></tbody>
-              </table>
-              <div class="eval-caveat-note">
-                * Note: Lexical proxy F1 measures token overlap and is not human-reviewed factual correctness.
+            <div class="metrics-strip lab-metrics-strip">
+              <div class="metric-item">
+                <span class="metric-label">Evidence Items</span>
+                <span class="metric-value" id="lab-evidence-count">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Context Chars</span>
+                <span class="metric-value" id="lab-context-chars">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Est. Tokens</span>
+                <span class="metric-value" id="lab-estimated-tokens">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Planner Route</span>
+                <span class="metric-value" id="lab-planner-route">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Stop Reason</span>
+                <span class="metric-value" id="lab-stop-reason">--</span>
+              </div>
+            </div>
+
+            <div id="lab-warnings-container" class="warnings-box hidden" role="alert">
+              <strong>Sanitized Warnings:</strong>
+              <ul id="lab-warnings-list" class="warnings-list"></ul>
+            </div>
+
+            <!-- Evidence Cards -->
+            <div class="lab-evidence-section">
+              <h3 class="section-subtitle">Assembled Evidence (<span id="lab-evidence-badge">0</span>)</h3>
+              <div id="lab-evidence-list" class="evidence-cards-list"></div>
+            </div>
+
+            <!-- Extractive Compression Controls -->
+            <div class="compression-controls-box">
+              <h3 class="section-subtitle">Extractive Context Compression</h3>
+              <p class="compression-desc">
+                Applies deterministic sentence-level extraction or evidence dropping without LLM synthesis.
+              </p>
+
+              <form id="lab-compress-form" class="compress-form">
+                <div class="form-row">
+                  <div class="form-group col">
+                    <label for="lab-target-chars">Target Max Chars</label>
+                    <input type="number" id="lab-target-chars" name="target_max_context_chars" min="1" placeholder="e.g. 5000">
+                  </div>
+                  <div class="form-group col">
+                    <label for="lab-target-tokens">Target Max Est. Tokens</label>
+                    <input type="number" id="lab-target-tokens" name="target_max_estimated_tokens" min="1" placeholder="e.g. 1200">
+                  </div>
+                  <div class="form-group col">
+                    <label for="lab-max-sentences">Max Sentences / Item</label>
+                    <input type="number" id="lab-max-sentences" name="max_sentences_per_evidence" min="1" placeholder="e.g. 3">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group col-checkbox">
+                    <label class="checkbox-container" for="lab-dedup-checkbox">
+                      <input type="checkbox" id="lab-dedup-checkbox" checked>
+                      <span class="checkbox-label">Deduplicate exact retrieval copies</span>
+                    </label>
+                  </div>
+                  <div class="form-group col-checkbox">
+                    <label class="checkbox-container" for="lab-evidence-drop-checkbox">
+                      <input type="checkbox" id="lab-evidence-drop-checkbox" checked>
+                      <span class="checkbox-label warning-label">Allow evidence drop (May remove whole evidence items)</span>
+                    </label>
+                  </div>
+                  <div class="form-group col-action">
+                    <button type="submit" id="lab-compress-btn" class="btn btn-secondary" disabled>
+                      <span class="btn-text">Compress Context</span>
+                      <span class="btn-spinner hidden" id="lab-compress-spinner"></span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <!-- Compression Outcome & Report -->
+              <div id="lab-compression-report" class="compression-report-box hidden">
+                <div class="report-header">
+                  <span class="report-title">Compression Outcome: <strong id="lab-compress-outcome">--</strong></span>
+                  <span class="report-target-status" id="lab-compress-target-met">--</span>
+                </div>
+                <div class="metrics-strip lab-compress-metrics">
+                  <div class="metric-item">
+                    <span class="metric-label">Before Chars</span>
+                    <span class="metric-value" id="lab-comp-before-chars">--</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">After Chars</span>
+                    <span class="metric-value" id="lab-comp-after-chars">--</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Before Tokens</span>
+                    <span class="metric-value" id="lab-comp-before-tokens">--</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">After Tokens</span>
+                    <span class="metric-value" id="lab-comp-after-tokens">--</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Descendant Handle</span>
+                    <code class="metric-code" id="lab-descendant-handle">--</code>
+                  </div>
+                </div>
+
+                <!-- Difference View -->
+                <div class="diff-view-section">
+                  <h4 class="diff-view-title">Evidence Difference Breakdown</h4>
+                  <div id="lab-diff-list" class="diff-cards-list"></div>
+                </div>
               </div>
             </div>
           </div>
         </section>
       </div>
-    </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 3: RUNS & SYSTEM                                             -->
+    <!-- ================================================================= -->
+    <section
+      id="panel-runs-system"
+      class="tab-panel hidden"
+      role="tabpanel"
+      aria-labelledby="tab-runs-system"
+    >
+      <div class="system-layout-grid">
+        <!-- Left: Recent Runs (Session History) -->
+        <section class="card runs-panel" aria-labelledby="runs-section-heading">
+          <div class="card-header">
+            <h2 id="runs-section-heading" class="card-title">Recent Session Runs</h2>
+            <span class="badge badge-cpu" id="runs-session-count">0 Runs in Session</span>
+          </div>
+
+          <div class="runs-disclaimer-banner">
+            <p>
+              <strong>Note:</strong> Server-wide run history listing (<code>/v1/runs</code>) is not supported by the backend.
+              The list below displays queries executed during the current browser session (in-memory, bounded to 10) for safe replay.
+            </p>
+          </div>
+
+          <div id="session-runs-container" class="session-runs-list">
+            <div class="empty-state" id="empty-runs-state">
+              No queries executed in this session yet. Execute a query in Grounded QA to record session runs.
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column: Component Probes, Metrics, LiteBridge Capabilities & Eval Runner -->
+        <div class="system-column">
+          <!-- Component Health Probes -->
+          <section class="card health-panel" aria-labelledby="health-section-heading">
+            <div class="card-header">
+              <h2 id="health-section-heading" class="card-title">Component Health Probes</h2>
+            </div>
+            <div id="health-components-list" class="components-grid">
+              <div class="component-card">Loading probes...</div>
+            </div>
+
+            <div class="submetrics-row">
+              <div class="submetric">
+                <span class="submetric-num" id="metrics-queries-count">0</span>
+                <span class="submetric-name">Total Queries</span>
+              </div>
+              <div class="submetric">
+                <span class="submetric-num" id="metrics-evals-count">0</span>
+                <span class="submetric-name">Eval Jobs</span>
+              </div>
+              <div class="submetric">
+                <span class="submetric-num" id="metrics-avg-latency">0ms</span>
+                <span class="submetric-name">Avg Latency</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- LiteBridge Capabilities Inspector -->
+          <section class="card capabilities-panel" id="litebridge-capabilities-card" aria-labelledby="capabilities-heading">
+            <div class="card-header">
+              <h2 id="capabilities-heading" class="card-title">LiteBridge Capability Inventory</h2>
+              <span class="badge" id="capabilities-badge">Checking...</span>
+            </div>
+            <div id="capabilities-content" class="capabilities-content">
+              <p class="meta-note">Sanitized capabilities reported by local server interface.</p>
+              <div class="cap-group">
+                <h4 class="cap-group-title">Registered Sources</h4>
+                <div id="cap-sources-list" class="cap-list">
+                  <div class="empty-state-sm">No sources loaded.</div>
+                </div>
+              </div>
+              <div class="cap-group">
+                <h4 class="cap-group-title">Generation Providers</h4>
+                <div id="cap-providers-list" class="cap-list">
+                  <div class="empty-state-sm">No providers loaded.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Benchmark Evaluation Runner (Preserved, Collapsed by default) -->
+          <section class="card eval-panel" aria-labelledby="eval-section-heading">
+            <div class="card-header">
+              <h2 id="eval-section-heading" class="card-title">Benchmark Evaluation Runner</h2>
+              <span class="badge" id="eval-status-badge">Idle</span>
+            </div>
+
+            <form id="eval-form" class="eval-form">
+              <div class="form-group">
+                <label for="eval-dataset-select">Benchmark Dataset</label>
+                <select id="eval-dataset-select" name="dataset_name" required>
+                  <option value="evidenceops-controlled-v1" selected>evidenceops-controlled-v1 (Allowlisted)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Benchmark Systems</label>
+                <div id="eval-systems-group" class="checkbox-group">
+                  <label class="checkbox-container">
+                    <input type="checkbox" name="systems" value="dense_rag" checked>
+                    <span class="checkbox-label">Dense RAG</span>
+                  </label>
+                  <label class="checkbox-container">
+                    <input type="checkbox" name="systems" value="two_step_hybrid" checked>
+                    <span class="checkbox-label">Two-Step Hybrid</span>
+                  </label>
+                  <label class="checkbox-container">
+                    <input type="checkbox" name="systems" value="evidenceops" checked>
+                    <span class="checkbox-label">EvidenceOps</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col">
+                  <label for="eval-limit-input">Question Limit (Optional)</label>
+                  <input type="number" id="eval-limit-input" name="limit" min="1" max="1000" placeholder="All">
+                </div>
+                <div class="form-group col-action">
+                  <button type="submit" id="run-eval-btn" class="btn btn-secondary">
+                    <span class="btn-text">Run Benchmark</span>
+                    <span class="btn-spinner hidden" id="eval-spinner"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <div id="eval-results-container" class="eval-results-container hidden">
+              <div class="eval-result-header">
+                <span class="eval-id-label">Job ID: <strong id="eval-job-id">--</strong></span>
+                <span class="eval-timing" id="eval-job-timing"></span>
+              </div>
+              <div id="eval-job-message" class="eval-job-message"></div>
+              <div id="eval-artifact-link-wrapper" class="eval-artifact-link hidden">
+                <span>Artifact Output:</span>
+                <code id="eval-artifact-path"></code>
+              </div>
+
+              <div id="eval-table-container" class="eval-table-container hidden">
+                <table class="eval-summary-table" id="eval-summary-table">
+                  <thead>
+                    <tr>
+                      <th>System</th>
+                      <th>Recall@10</th>
+                      <th>MRR@10</th>
+                      <th>Lexical Proxy F1*</th>
+                      <th>Cit. Prec.</th>
+                      <th>Abstain Acc.</th>
+                      <th>Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody id="eval-table-body"></tbody>
+                </table>
+                <div class="eval-caveat-note">
+                  * Note: Lexical proxy F1 measures token overlap and is not human-reviewed factual correctness.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
     <div class="footer-content">
-      <span>EvidenceOps Local Deployment • Localhost Loopback Only • Zero Paid APIs</span>
-      <span class="version-tag">EvidenceOps v1.0.0 • Phase 6 Hardened Release</span>
+      <span>EvidenceOps Local Deployment • Localhost Loopback Only • No provider or external retrieval is enabled by default</span>
+      <span class="version-tag">EvidenceOps v1.0.0 • UX U1 Hardened</span>
     </div>
   </footer>
 

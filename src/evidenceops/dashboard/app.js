@@ -1,10 +1,37 @@
 /**
  * EvidenceOps Dashboard - Vanilla JS Frontend
- * Same-origin API integration with safe DOM updates (strictly textContent).
+ * Same-origin API integration with strict DOM safety (strictly textContent and createElement).
+ * Provides Grounded QA, LiteBridge Context Lab, and Runs & System views.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Elements - Health & Metrics
+  // =========================================================================
+  // State
+  // =========================================================================
+  let currentActiveTab = "grounded-qa";
+  let lastGroundedQueryResponse = null;
+  let currentContextHandle = null;
+  let currentParentPackage = null;
+  let currentCompressedHandle = null;
+  let currentCompressedPackage = null;
+  let litebridgeState = "CHECKING"; // "ENABLED" | "DISABLED_BY_SERVER" | "UNAVAILABLE"
+  let litebridgeCapabilities = null;
+  const sessionRuns = []; // Bounded in-memory session runs (FIFO, max 10)
+
+  // =========================================================================
+  // Elements - Header & Tabs
+  // =========================================================================
+  const tabGroundedQa = document.getElementById("tab-grounded-qa");
+  const tabContextLab = document.getElementById("tab-context-lab");
+  const tabRunsSystem = document.getElementById("tab-runs-system");
+  const panelGroundedQa = document.getElementById("panel-grounded-qa");
+  const panelContextLab = document.getElementById("panel-context-lab");
+  const panelRunsSystem = document.getElementById("panel-runs-system");
+
+  const litebridgeStatusDot = document.getElementById("litebridge-status-dot");
+  const litebridgeStatusBadge = document.getElementById("litebridge-status-badge");
+  const litebridgeStatusPill = document.getElementById("litebridge-status-pill");
+
   const healthBadge = document.getElementById("service-health-badge");
   const statusDot = document.getElementById("system-status-dot");
   const refreshHealthBtn = document.getElementById("refresh-health-btn");
@@ -13,7 +40,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const metricEvals = document.getElementById("metrics-evals-count");
   const metricLatency = document.getElementById("metrics-avg-latency");
 
-  // Elements - Query Form
+  // =========================================================================
+  // Elements - Grounded QA
+  // =========================================================================
   const queryForm = document.getElementById("query-form");
   const queryInput = document.getElementById("query-input");
   const charCounter = document.getElementById("char-counter");
@@ -23,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitQueryBtn = document.getElementById("submit-query-btn");
   const querySpinner = document.getElementById("query-spinner");
 
-  // Elements - Answer & Citations
   const answerStatusTag = document.getElementById("answer-status-tag");
   const abstentionBanner = document.getElementById("abstention-banner");
   const abstentionReason = document.getElementById("abstention-reason");
@@ -32,7 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const citationsList = document.getElementById("citations-list");
   const citationCount = document.getElementById("citation-count");
 
-  // Elements - Trajectory
+  const copyAnswerBtn = document.getElementById("copy-answer-btn");
+  const copyPlainBtn = document.getElementById("copy-plain-btn");
+  const downloadRunBtn = document.getElementById("download-run-btn");
+  const actionFeedback = document.getElementById("action-feedback");
+
   const routeBadge = document.getElementById("route-badge");
   const sufficiencyScore = document.getElementById("sufficiency-score");
   const queryLatency = document.getElementById("query-latency");
@@ -42,7 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const diagnosticsWrapper = document.getElementById("diagnostics-wrapper");
   const diagnosticsPre = document.getElementById("diagnostics-pre");
 
-  // Elements - Trajectory Flow Steps
   const stepFeatures = document.getElementById("step-features");
   const stepRoute = document.getElementById("step-route");
   const stepRetrieval = document.getElementById("step-retrieval");
@@ -55,7 +86,71 @@ document.addEventListener("DOMContentLoaded", () => {
   const stepSufficiencyText = document.getElementById("step-sufficiency-text");
   const stepTerminalText = document.getElementById("step-terminal-text");
 
-  // Elements - Evaluation
+  // =========================================================================
+  // Elements - Context Lab
+  // =========================================================================
+  const labStatusBanner = document.getElementById("lab-status-banner");
+  const labStatusTitle = document.getElementById("lab-status-title");
+  const labStatusMessage = document.getElementById("lab-status-message");
+  const labWorkspace = document.getElementById("lab-workspace");
+
+  const labPrepareForm = document.getElementById("lab-prepare-form");
+  const labQueryInput = document.getElementById("lab-query-input");
+  const labCharCounter = document.getElementById("lab-char-counter");
+  const labSourceSelect = document.getElementById("lab-source-select");
+  const labMaxEvidence = document.getElementById("lab-max-evidence");
+  const labMaxChars = document.getElementById("lab-max-chars");
+  const labMaxTokens = document.getElementById("lab-max-tokens");
+  const labExternalConsent = document.getElementById("lab-external-consent");
+  const labPrepareBtn = document.getElementById("lab-prepare-btn");
+  const labPrepareSpinner = document.getElementById("lab-prepare-spinner");
+
+  const labInspectorEmpty = document.getElementById("lab-inspector-empty");
+  const labInspectorContent = document.getElementById("lab-inspector-content");
+  const labPackageStatusTag = document.getElementById("lab-package-status-tag");
+  const labHandleDisplay = document.getElementById("lab-handle-display");
+  const labCopyHandleBtn = document.getElementById("lab-copy-handle-btn");
+  const labPackageIdDisplay = document.getElementById("lab-package-id-display");
+  const labPlannerRoute = document.getElementById("lab-planner-route");
+  const labEvidenceCount = document.getElementById("lab-evidence-count");
+  const labContextChars = document.getElementById("lab-context-chars");
+  const labEstimatedTokens = document.getElementById("lab-estimated-tokens");
+  const labStopReason = document.getElementById("lab-stop-reason");
+  const labWarningsContainer = document.getElementById("lab-warnings-container");
+  const labWarningsList = document.getElementById("lab-warnings-list");
+  const labEvidenceBadge = document.getElementById("lab-evidence-badge");
+  const labEvidenceList = document.getElementById("lab-evidence-list");
+
+  const labCompressForm = document.getElementById("lab-compress-form");
+  const labTargetChars = document.getElementById("lab-target-chars");
+  const labTargetTokens = document.getElementById("lab-target-tokens");
+  const labMaxSentences = document.getElementById("lab-max-sentences");
+  const labDedupCheckbox = document.getElementById("lab-dedup-checkbox");
+  const labEvidenceDropCheckbox = document.getElementById("lab-evidence-drop-checkbox");
+  const labCompressBtn = document.getElementById("lab-compress-btn");
+  const labCompressSpinner = document.getElementById("lab-compress-spinner");
+
+  const labCompressionReport = document.getElementById("lab-compression-report");
+  const labCompressOutcome = document.getElementById("lab-compress-outcome");
+  const labCompressTargetMet = document.getElementById("lab-compress-target-met");
+  const labCompBeforeChars = document.getElementById("lab-comp-before-chars");
+  const labCompAfterChars = document.getElementById("lab-comp-after-chars");
+  const labCompBeforeTokens = document.getElementById("lab-comp-before-tokens");
+  const labCompAfterTokens = document.getElementById("lab-comp-after-tokens");
+  const labDescendantHandle = document.getElementById("lab-descendant-handle");
+  const labDiffList = document.getElementById("lab-diff-list");
+
+  // =========================================================================
+  // Elements - Runs & System
+  // =========================================================================
+  const sessionRunsContainer = document.getElementById("session-runs-container");
+  const runsSessionCount = document.getElementById("runs-session-count");
+  const emptyRunsState = document.getElementById("empty-runs-state");
+
+  const capabilitiesBadge = document.getElementById("capabilities-badge");
+  const capSourcesList = document.getElementById("cap-sources-list");
+  const capProvidersList = document.getElementById("cap-providers-list");
+
   const evalForm = document.getElementById("eval-form");
   const evalStatusBadge = document.getElementById("eval-status-badge");
   const runEvalBtn = document.getElementById("run-eval-btn");
@@ -71,13 +166,90 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let activeEvalPollInterval = null;
 
-  // Character counter for query textarea
-  queryInput.addEventListener("input", () => {
-    const len = queryInput.value.length;
-    charCounter.textContent = `${len} / 2000`;
+  // =========================================================================
+  // Navigation & URL Hash Synchronization
+  // =========================================================================
+  const tabs = [
+    { id: "grounded-qa", btn: tabGroundedQa, panel: panelGroundedQa },
+    { id: "context-lab", btn: tabContextLab, panel: panelContextLab },
+    { id: "runs-system", btn: tabRunsSystem, panel: panelRunsSystem },
+  ];
+
+  function switchTab(targetId) {
+    const matched = tabs.find((t) => t.id === targetId);
+    if (!matched) return;
+
+    currentActiveTab = matched.id;
+
+    tabs.forEach((t) => {
+      const isActive = t.id === matched.id;
+      t.btn.classList.toggle("active", isActive);
+      t.btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      t.btn.setAttribute("tabindex", isActive ? "0" : "-1");
+      if (isActive) {
+        t.panel.classList.remove("hidden");
+        t.panel.classList.add("active");
+      } else {
+        t.panel.classList.remove("active");
+        t.panel.classList.add("hidden");
+      }
+    });
+
+    if (window.location.hash !== `#${matched.id}`) {
+      history.replaceState(null, "", `#${matched.id}`);
+    }
+  }
+
+  tabs.forEach((tab) => {
+    tab.btn.addEventListener("click", () => switchTab(tab.id));
+    tab.btn.addEventListener("keydown", (e) => {
+      let nextIndex = null;
+      const curIndex = tabs.findIndex((t) => t.id === tab.id);
+      if (e.key === "ArrowRight") {
+        nextIndex = (curIndex + 1) % tabs.length;
+      } else if (e.key === "ArrowLeft") {
+        nextIndex = (curIndex - 1 + tabs.length) % tabs.length;
+      } else if (e.key === "Home") {
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        nextIndex = tabs.length - 1;
+      }
+
+      if (nextIndex !== null) {
+        e.preventDefault();
+        tabs[nextIndex].btn.focus();
+        switchTab(tabs[nextIndex].id);
+      }
+    });
   });
 
-  // Phase 6: Sample Query Pills
+  window.addEventListener("hashchange", () => {
+    const raw = window.location.hash.replace(/^#/, "");
+    if (raw) switchTab(raw);
+  });
+
+  // Initial tab from hash or default
+  const initialHash = window.location.hash.replace(/^#/, "");
+  if (initialHash && tabs.some((t) => t.id === initialHash)) {
+    switchTab(initialHash);
+  } else {
+    switchTab("grounded-qa");
+  }
+
+  // =========================================================================
+  // Character Counters
+  // =========================================================================
+  queryInput.addEventListener("input", () => {
+    charCounter.textContent = `${queryInput.value.length} / 2000`;
+  });
+
+  if (labQueryInput) {
+    labQueryInput.addEventListener("input", () => {
+      labCharCounter.textContent = `${labQueryInput.value.length} / 2000`;
+    });
+  }
+
+  // Sample Query Pills
   document.querySelectorAll(".sample-pill").forEach((pill) => {
     pill.addEventListener("click", () => {
       const q = pill.getAttribute("data-query");
@@ -89,7 +261,218 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Update Trajectory Visual Pipeline
+  // =========================================================================
+  // LiteBridge Capabilities & Interface Probing (3-State)
+  // =========================================================================
+  async function probeLiteBridgeCapabilities() {
+    litebridgeStatusDot.className = "status-dot neutral";
+    litebridgeStatusBadge.textContent = "LiteBridge: Checking...";
+
+    try {
+      const resp = await fetch("/v1/litebridge/capabilities");
+      if (resp.status === 200) {
+        litebridgeState = "ENABLED";
+        litebridgeCapabilities = await resp.json();
+        litebridgeStatusDot.className = "status-dot enabled";
+        litebridgeStatusBadge.textContent = "LiteBridge: Enabled";
+        litebridgeStatusPill.title = "LiteBridge local interfaces enabled on server";
+
+        // Hide warning, enable Context Lab workspace
+        labStatusBanner.classList.add("hidden");
+        labWorkspace.classList.remove("hidden");
+        labPrepareBtn.disabled = false;
+
+        // Populate source selector and check external web eligibility
+        populateLabSources(litebridgeCapabilities.sources || []);
+
+        // Populate capabilities view in Runs & System
+        renderCapabilitiesView(litebridgeCapabilities);
+      } else if (resp.status === 404) {
+        litebridgeState = "DISABLED_BY_SERVER";
+        litebridgeCapabilities = null;
+        litebridgeStatusDot.className = "status-dot disabled";
+        litebridgeStatusBadge.textContent = "LiteBridge: Disabled";
+        litebridgeStatusPill.title = "LiteBridge interfaces disabled by server (LITEBRIDGE_ENABLE_INTERFACES=false)";
+
+        labStatusTitle.textContent = "LiteBridge Local Interfaces Disabled by Server";
+        labStatusMessage.textContent =
+          "LiteBridge interfaces are not enabled in this server environment. Set LITEBRIDGE_ENABLE_INTERFACES=true to enable Context Lab. Grounded QA remains fully active.";
+        labStatusBanner.classList.remove("hidden");
+        labPrepareBtn.disabled = true;
+
+        renderCapabilitiesDisabled("Disabled by server configuration");
+      } else {
+        throw new Error(`Unexpected status ${resp.status}`);
+      }
+    } catch (err) {
+      litebridgeState = "UNAVAILABLE";
+      litebridgeCapabilities = null;
+      litebridgeStatusDot.className = "status-dot unavailable";
+      litebridgeStatusBadge.textContent = "LiteBridge: Unavailable";
+      litebridgeStatusPill.title = "LiteBridge capability check failed or timed out";
+
+      labStatusTitle.textContent = "LiteBridge Interface Unavailable";
+      labStatusMessage.textContent =
+        "Failed to reach LiteBridge capability endpoint. Verify server connectivity or review server logs.";
+      labStatusBanner.classList.remove("hidden");
+      labPrepareBtn.disabled = true;
+
+      renderCapabilitiesDisabled("Capability endpoint unavailable");
+    }
+  }
+
+  function populateLabSources(sources) {
+    labSourceSelect.replaceChildren();
+
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "Auto / Local Default";
+    labSourceSelect.appendChild(defaultOpt);
+
+    let hasWebSource = false;
+
+    sources.forEach((s) => {
+      const opt = document.createElement("option");
+      opt.value = s.source_id;
+      opt.textContent = `${s.display_name} (${s.source_kind})`;
+      labSourceSelect.appendChild(opt);
+
+      if (s.source_kind === "web_search_snippet" && s.enabled) {
+        hasWebSource = true;
+      }
+    });
+
+    labExternalConsent.disabled = !hasWebSource;
+    if (!hasWebSource) labExternalConsent.checked = false;
+  }
+
+  function renderCapabilitiesView(caps) {
+    capabilitiesBadge.textContent = "Active";
+    capabilitiesBadge.className = "badge badge-success";
+
+    capSourcesList.replaceChildren();
+    const sources = caps.sources || [];
+    if (sources.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state-sm";
+      empty.textContent = "No registered sources reported.";
+      capSourcesList.appendChild(empty);
+    } else {
+      sources.forEach((s) => {
+        const item = document.createElement("div");
+        item.className = "cap-item-card";
+
+        const info = document.createElement("span");
+        info.textContent = `${s.display_name} (${s.source_kind})`;
+
+        const badge = document.createElement("span");
+        badge.className = `badge badge-${s.enabled ? "success" : "neutral"}`;
+        badge.textContent = s.enabled ? "Ready" : "Disabled";
+
+        item.appendChild(info);
+        item.appendChild(badge);
+        capSourcesList.appendChild(item);
+      });
+    }
+
+    capProvidersList.replaceChildren();
+    const providers = caps.providers || [];
+    if (providers.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state-sm";
+      empty.textContent = "No registered providers reported.";
+      capProvidersList.appendChild(empty);
+    } else {
+      providers.forEach((p) => {
+        const item = document.createElement("div");
+        item.className = "cap-item-card";
+
+        const info = document.createElement("span");
+        info.textContent = `${p.display_name} [${p.location}] - ${p.model_id}`;
+
+        const badge = document.createElement("span");
+        badge.className = `badge badge-${p.enabled ? "cpu" : "neutral"}`;
+        badge.textContent = p.enabled ? "Available" : "Disabled";
+
+        item.appendChild(info);
+        item.appendChild(badge);
+        capProvidersList.appendChild(item);
+      });
+    }
+  }
+
+  function renderCapabilitiesDisabled(msg) {
+    capabilitiesBadge.textContent = "Inactive";
+    capabilitiesBadge.className = "badge badge-warning";
+
+    capSourcesList.replaceChildren();
+    const emptyS = document.createElement("div");
+    emptyS.className = "empty-state-sm";
+    emptyS.textContent = msg;
+    capSourcesList.appendChild(emptyS);
+
+    capProvidersList.replaceChildren();
+    const emptyP = document.createElement("div");
+    emptyP.className = "empty-state-sm";
+    emptyP.textContent = msg;
+    capProvidersList.appendChild(emptyP);
+  }
+
+  // =========================================================================
+  // System Health & Telemetry Probes
+  // =========================================================================
+  async function loadSystemHealth() {
+    try {
+      const resp = await fetch("/v1/health");
+      const data = await resp.json();
+
+      statusDot.className = "status-dot " + (data.status || "neutral");
+      healthBadge.textContent = "Status: " + (data.status || "Unknown").toUpperCase();
+
+      componentsList.replaceChildren();
+      if (data.components) {
+        Object.entries(data.components).forEach(([name, comp]) => {
+          const card = document.createElement("div");
+          card.className = "component-card";
+
+          const nameEl = document.createElement("span");
+          nameEl.className = "comp-name";
+          nameEl.textContent = name;
+
+          const badge = document.createElement("span");
+          badge.className = `badge badge-${comp.status === "ready" ? "success" : comp.status === "degraded" ? "warning" : "danger"}`;
+          badge.textContent = comp.status;
+
+          card.appendChild(nameEl);
+          card.appendChild(badge);
+          componentsList.appendChild(card);
+        });
+      }
+    } catch (err) {
+      statusDot.className = "status-dot unavailable";
+      healthBadge.textContent = "Health Probe Failed";
+    }
+
+    try {
+      const mResp = await fetch("/v1/metrics");
+      const mData = await mResp.json();
+      metricQueries.textContent = String(mData.total_queries ?? 0);
+      metricEvals.textContent = String(mData.evaluation_jobs_submitted ?? 0);
+      metricLatency.textContent = `${Math.round(mData.average_latency_ms ?? 0)}ms`;
+    } catch (err) {
+      // Non-fatal metrics
+    }
+
+    // Refresh LiteBridge capabilities alongside health
+    await probeLiteBridgeCapabilities();
+  }
+
+  refreshHealthBtn.addEventListener("click", loadSystemHealth);
+  loadSystemHealth();
+
+  // =========================================================================
+  // Grounded QA Execution & Trajectory
+  // =========================================================================
   function updateTrajectory(stage, data = {}) {
     if (stage === "executing") {
       [stepFeatures, stepRoute, stepRetrieval, stepSufficiency, stepTerminal].forEach((el) => {
@@ -115,7 +498,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Stage: complete or abstained
     if (stepFeatures) {
       stepFeatures.className = "flow-step completed";
       stepFeaturesText.textContent = "Factual intent verified";
@@ -151,67 +533,136 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Fetch Health & Metrics
-  async function loadSystemHealth() {
-    try {
-      const resp = await fetch("/v1/health");
-      const data = await resp.json();
+  // Render safe interactive citations in answer text
+  function renderAnswerTextWithCitations(rawAnswer, citations) {
+    answerText.replaceChildren();
 
-      statusDot.className = "status-dot " + (data.status || "neutral");
-      healthBadge.textContent = "Status: " + (data.status || "Unknown").toUpperCase();
+    if (!rawAnswer) {
+      answerText.textContent = "No answer generated.";
+      return;
+    }
 
-      // Render components
-      componentsList.replaceChildren();
-      if (data.components) {
-        Object.entries(data.components).forEach(([name, comp]) => {
-          const card = document.createElement("div");
-          card.className = "component-card";
+    // Build map of recognized citation tokens -> citation IDs
+    const recognizedTokens = new Map();
+    citations.forEach((cit, idx) => {
+      const rawCitId = cit.citation_id || `C${idx + 1}`;
+      const token1 = `[${rawCitId}]`;
+      const token2 = rawCitId.startsWith("[") ? rawCitId : `[${rawCitId}]`;
+      const numericToken = `[${idx + 1}]`;
 
-          const nameEl = document.createElement("span");
-          nameEl.className = "comp-name";
-          nameEl.textContent = name;
+      recognizedTokens.set(token1, rawCitId);
+      recognizedTokens.set(token2, rawCitId);
+      recognizedTokens.set(numericToken, rawCitId);
+    });
 
-          const badge = document.createElement("span");
-          badge.className = `badge badge-${comp.status === "ready" ? "success" : comp.status === "degraded" ? "warning" : "danger"}`;
-          badge.textContent = comp.status;
+    // Token splitter regex matching [C1], [1], etc.
+    const tokenRegex = /(\[(?:C\d+|\d+)\])/g;
+    const parts = rawAnswer.split(tokenRegex);
 
-          card.appendChild(nameEl);
-          card.appendChild(badge);
-          componentsList.appendChild(card);
+    parts.forEach((part) => {
+      if (recognizedTokens.has(part)) {
+        const citId = recognizedTokens.get(part);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "citation-ref-btn";
+        btn.textContent = part;
+        btn.setAttribute("data-citation-id", citId);
+        btn.setAttribute("aria-label", `Jump to citation ${part}`);
+
+        btn.addEventListener("click", () => {
+          const card = document.querySelector(`.citation-card[data-citation-id="${citId}"]`);
+          if (card) {
+            card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            card.classList.add("citation-highlighted");
+            setTimeout(() => card.classList.remove("citation-highlighted"), 1800);
+          }
         });
-      }
-    } catch (err) {
-      statusDot.className = "status-dot unavailable";
-      healthBadge.textContent = "Health Probe Failed";
-    }
 
-    try {
-      const mResp = await fetch("/v1/metrics");
-      const mData = await mResp.json();
-      metricQueries.textContent = String(mData.total_queries ?? 0);
-      metricEvals.textContent = String(mData.evaluation_jobs_submitted ?? 0);
-      metricLatency.textContent = `${Math.round(mData.average_latency_ms ?? 0)}ms`;
-    } catch (err) {
-      // Metrics non-fatal
-    }
+        answerText.appendChild(btn);
+      } else if (part) {
+        answerText.appendChild(document.createTextNode(part));
+      }
+    });
   }
 
-  refreshHealthBtn.addEventListener("click", loadSystemHealth);
-  loadSystemHealth();
+  function showActionFeedback(msg) {
+    actionFeedback.textContent = msg;
+    actionFeedback.classList.remove("hidden");
+    setTimeout(() => {
+      actionFeedback.classList.add("hidden");
+    }, 2500);
+  }
 
-  // Query Execution Handler
+  // Answer Actions
+  copyAnswerBtn.addEventListener("click", async () => {
+    if (!lastGroundedQueryResponse || !lastGroundedQueryResponse.answer) return;
+    try {
+      await navigator.clipboard.writeText(lastGroundedQueryResponse.answer);
+      showActionFeedback("Answer with citations copied!");
+    } catch (err) {
+      showActionFeedback("Failed to copy answer.");
+    }
+  });
+
+  copyPlainBtn.addEventListener("click", async () => {
+    if (!lastGroundedQueryResponse || !lastGroundedQueryResponse.answer) return;
+    try {
+      const citations = lastGroundedQueryResponse.citations || [];
+      const recognizedTokens = new Set();
+      citations.forEach((cit, idx) => {
+        const raw = cit.citation_id || `C${idx + 1}`;
+        recognizedTokens.add(`[${raw}]`);
+        recognizedTokens.add(raw.startsWith("[") ? raw : `[${raw}]`);
+        recognizedTokens.add(`[${idx + 1}]`);
+      });
+
+      // Remove only recognized tokens
+      let plain = lastGroundedQueryResponse.answer;
+      recognizedTokens.forEach((tok) => {
+        plain = plain.split(tok).join("");
+      });
+      plain = plain.replace(/\s{2,}/g, " ").trim();
+
+      await navigator.clipboard.writeText(plain);
+      showActionFeedback("Plain text copied!");
+    } catch (err) {
+      showActionFeedback("Failed to copy plain text.");
+    }
+  });
+
+  downloadRunBtn.addEventListener("click", () => {
+    if (!lastGroundedQueryResponse) return;
+    try {
+      const sanitizedPayload = JSON.stringify(lastGroundedQueryResponse, null, 2);
+      const blob = new Blob([sanitizedPayload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const safeId = (lastGroundedQueryResponse.trace_id || String(Date.now())).replace(/[^a-zA-Z0-9_-]/g, "");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `evidenceops-context-${safeId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showActionFeedback("Downloaded safe run result JSON");
+    } catch (err) {
+      showActionFeedback("Failed to download JSON.");
+    }
+  });
+
+  // Query Form Submit Handler
   queryForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const query = queryInput.value.trim();
     if (!query) return;
 
-    // UI Loading state
     submitQueryBtn.disabled = true;
     querySpinner.classList.remove("hidden");
     answerStatusTag.className = "badge badge-neutral";
     answerStatusTag.textContent = "Executing...";
     abstentionBanner.classList.add("hidden");
     diagnosticsWrapper.classList.add("hidden");
+    downloadRunBtn.disabled = true;
 
     updateTrajectory("executing");
 
@@ -234,9 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!resp.ok) {
         let errorMsg = data?.error?.message || "Query request failed.";
         if (Array.isArray(data?.error?.details) && data.error.details.length > 0) {
-          const detailMsgs = data.error.details
-            .map((d) => `${(d.loc || []).join(".")}: ${d.msg}`)
-            .join("; ");
+          const detailMsgs = data.error.details.map((d) => `${(d.loc || []).join(".")}: ${d.msg}`).join("; ");
           errorMsg = `${errorMsg} (${detailMsgs})`;
         }
         answerStatusTag.className = "badge badge-danger";
@@ -248,7 +697,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Update telemetry
+      lastGroundedQueryResponse = data;
+      downloadRunBtn.disabled = false;
+
+      // Telemetry
       routeBadge.textContent = data.route || "completed";
       routeBadge.className = "badge badge-cpu";
       sufficiencyScore.textContent = data.sufficiency_score !== undefined ? data.sufficiency_score.toFixed(2) : "--";
@@ -259,7 +711,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       updateTrajectory("completed", data);
 
-      // Render answer or abstention
+      // Record in session runs
+      recordSessionRun({
+        query: query,
+        strategy: strategySelect.value,
+        max_iterations: parseInt(iterationsInput.value, 10) || 3,
+        status: data.status,
+        route: data.route,
+        sufficiency_score: data.sufficiency_score,
+        latency_ms: data.latency_ms,
+        trace_id: data.trace_id,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+
+      // Answer and Abstention
       if (data.status === "abstained") {
         answerStatusTag.className = "badge badge-warning";
         answerStatusTag.textContent = "Abstained";
@@ -267,17 +732,17 @@ document.addEventListener("DOMContentLoaded", () => {
         abstentionReason.textContent = data.abstention_reason || "Evidence threshold not satisfied.";
         answerPlaceholder.classList.add("hidden");
         answerText.classList.remove("hidden");
-        answerText.textContent = data.answer || "No grounded answer generated due to insufficient evidence.";
+        renderAnswerTextWithCitations(data.answer || "No grounded answer generated due to insufficient evidence.", data.citations || []);
       } else {
         answerStatusTag.className = "badge badge-success";
         answerStatusTag.textContent = "Completed";
         abstentionBanner.classList.add("hidden");
         answerPlaceholder.classList.add("hidden");
         answerText.classList.remove("hidden");
-        answerText.textContent = data.answer || "No answer generated.";
+        renderAnswerTextWithCitations(data.answer || "No answer generated.", data.citations || []);
       }
 
-      // Render citations
+      // Citations List
       citationsList.replaceChildren();
       const citations = data.citations || [];
       citationCount.textContent = String(citations.length);
@@ -289,8 +754,10 @@ document.addEventListener("DOMContentLoaded", () => {
         citationsList.appendChild(emptyDiv);
       } else {
         citations.forEach((cit, idx) => {
+          const rawCitId = cit.citation_id || `C${idx + 1}`;
           const card = document.createElement("div");
           card.className = "citation-card";
+          card.setAttribute("data-citation-id", rawCitId);
 
           const header = document.createElement("div");
           header.className = "citation-header";
@@ -328,17 +795,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
           card.appendChild(header);
           card.appendChild(details);
+
+          // Card hover highlights corresponding answer button
+          card.addEventListener("mouseenter", () => {
+            const btns = answerText.querySelectorAll(`.citation-ref-btn[data-citation-id="${rawCitId}"]`);
+            btns.forEach((b) => b.classList.add("hover-focus"));
+          });
+          card.addEventListener("mouseleave", () => {
+            const btns = answerText.querySelectorAll(`.citation-ref-btn[data-citation-id="${rawCitId}"]`);
+            btns.forEach((b) => b.classList.remove("hover-focus"));
+          });
+
           citationsList.appendChild(card);
         });
       }
 
-      // Render diagnostics if present
       if (data.debug_diagnostics) {
         diagnosticsPre.textContent = JSON.stringify(data.debug_diagnostics, null, 2);
         diagnosticsWrapper.classList.remove("hidden");
       }
 
-      // Refresh metrics after query
       loadSystemHealth();
     } catch (err) {
       answerStatusTag.className = "badge badge-danger";
@@ -353,71 +829,507 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Benchmark Evaluation Handler
-  evalForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // =========================================================================
+  // Session Runs Management
+  // =========================================================================
+  function recordSessionRun(run) {
+    if (sessionRuns.length >= 10) {
+      sessionRuns.pop();
+    }
+    sessionRuns.unshift(run);
+    renderSessionRuns();
+  }
 
-    const datasetSelect = document.getElementById("eval-dataset-select");
-    const limitInput = document.getElementById("eval-limit-input");
-    const checkedSystems = Array.from(
-      document.querySelectorAll('input[name="systems"]:checked')
-    ).map((cb) => cb.value);
+  function renderSessionRuns() {
+    runsSessionCount.textContent = `${sessionRuns.length} Run${sessionRuns.length === 1 ? "" : "s"} in Session`;
+    sessionRunsContainer.replaceChildren();
 
-    if (checkedSystems.length === 0) {
-      alert("Please select at least one benchmark system.");
+    if (sessionRuns.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No queries executed in this session yet. Execute a query in Grounded QA to record session runs.";
+      sessionRunsContainer.appendChild(empty);
       return;
     }
 
-    const payload = {
-      dataset_name: datasetSelect.value,
-      systems: checkedSystems,
-    };
-    if (limitInput.value) {
-      payload.limit = parseInt(limitInput.value, 10);
-    }
+    sessionRuns.forEach((run) => {
+      const card = document.createElement("div");
+      card.className = "session-run-card";
 
-    runEvalBtn.disabled = true;
-    evalSpinner.classList.remove("hidden");
-    evalStatusBadge.className = "badge badge-neutral";
-    evalStatusBadge.textContent = "Submitting...";
+      const header = document.createElement("div");
+      header.className = "session-run-header";
 
-    try {
-      const resp = await fetch("/v1/eval/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const queryEl = document.createElement("span");
+      queryEl.className = "session-run-query";
+      queryEl.textContent = run.query.length > 80 ? `${run.query.slice(0, 80)}...` : run.query;
+
+      const badge = document.createElement("span");
+      badge.className = `badge badge-${run.status === "completed" ? "success" : run.status === "abstained" ? "warning" : "danger"}`;
+      badge.textContent = run.status.toUpperCase();
+
+      header.appendChild(queryEl);
+      header.appendChild(badge);
+
+      const meta = document.createElement("div");
+      meta.className = "session-run-meta";
+
+      const timeEl = document.createElement("span");
+      timeEl.textContent = `Time: ${run.timestamp}`;
+
+      const latencyEl = document.createElement("span");
+      latencyEl.textContent = `Latency: ${Math.round(run.latency_ms)}ms`;
+
+      const suffEl = document.createElement("span");
+      suffEl.textContent = `Suff: ${run.sufficiency_score !== undefined ? run.sufficiency_score.toFixed(2) : "--"}`;
+
+      const replayBtn = document.createElement("button");
+      replayBtn.type = "button";
+      replayBtn.className = "btn btn-sm btn-ghost";
+      replayBtn.textContent = "Replay Query";
+      replayBtn.addEventListener("click", () => {
+        queryInput.value = run.query;
+        charCounter.textContent = `${run.query.length} / 2000`;
+        strategySelect.value = run.strategy || "heuristic_adaptive";
+        iterationsInput.value = String(run.max_iterations || 3);
+        switchTab("grounded-qa");
+        queryInput.focus();
       });
 
-      const data = await resp.json();
+      meta.appendChild(timeEl);
+      meta.appendChild(latencyEl);
+      meta.appendChild(suffEl);
+      meta.appendChild(replayBtn);
 
-      if (resp.status === 202) {
-        evalResultsContainer.classList.remove("hidden");
-        evalJobId.textContent = data.evaluation_id;
-        evalStatusBadge.className = "badge badge-cpu";
-        evalStatusBadge.textContent = data.status.toUpperCase();
-        evalJobTiming.textContent = `Submitted: ${new Date(data.submitted_at).toLocaleTimeString()}`;
-        evalJobMessage.textContent = "Benchmark job queued. Executing evaluation safely in background...";
-        evalArtifactWrapper.classList.add("hidden");
-        evalTableContainer.classList.add("hidden");
+      card.appendChild(header);
+      card.appendChild(meta);
+      sessionRunsContainer.appendChild(card);
+    });
+  }
 
-        startPollingEvaluation(data.evaluation_id);
+  // =========================================================================
+  // Context Lab Workflows
+  // =========================================================================
+  if (labPrepareForm) {
+    labPrepareForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = labQueryInput.value.trim();
+      if (!q) return;
+
+      labPrepareBtn.disabled = true;
+      labPrepareSpinner.classList.remove("hidden");
+
+      const payload = {
+        query: q,
+        max_evidence_items: parseInt(labMaxEvidence.value, 10) || 6,
+        max_context_chars: parseInt(labMaxChars.value, 10) || 24000,
+        max_estimated_tokens: parseInt(labMaxTokens.value, 10) || 6000,
+      };
+
+      if (labSourceSelect.value) {
+        payload.source_id = labSourceSelect.value;
+      }
+      if (labExternalConsent.checked) {
+        payload.allow_external_query = true;
+      }
+
+      try {
+        const resp = await fetch("/v1/litebridge/context", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          alert(`Context preparation failed (${resp.status}): ${data?.error?.message || data?.detail || "Unknown error"}`);
+          return;
+        }
+
+        currentContextHandle = data.context_handle;
+        currentParentPackage = data.package;
+        currentCompressedHandle = null;
+        currentCompressedPackage = null;
+
+        renderPackageInspector(currentContextHandle, currentParentPackage);
+        labCompressionReport.classList.add("hidden");
+        labCompressBtn.disabled = false;
+      } catch (err) {
+        alert("Network error preparing context package.");
+      } finally {
+        labPrepareBtn.disabled = false;
+        labPrepareSpinner.classList.add("hidden");
+      }
+    });
+  }
+
+  function renderPackageInspector(handle, pkg) {
+    labInspectorEmpty.classList.add("hidden");
+    labInspectorContent.classList.remove("hidden");
+    labPackageStatusTag.className = "badge badge-success";
+    labPackageStatusTag.textContent = "Package Active";
+
+    labHandleDisplay.textContent = handle;
+    labCopyHandleBtn.disabled = false;
+    labPackageIdDisplay.textContent = pkg.package_id || "--";
+
+    const decision = pkg.planner_decision;
+    labPlannerRoute.textContent = decision ? `${decision.route.toUpperCase()}` : pkg.retrieval_route || "--";
+    labEvidenceCount.textContent = String(pkg.evidence ? pkg.evidence.length : 0);
+    labContextChars.textContent = String(pkg.context_chars ?? (pkg.context_text ? pkg.context_text.length : 0));
+    labEstimatedTokens.textContent = String(pkg.estimated_tokens ?? "--");
+    labStopReason.textContent = pkg.stop_reason || "--";
+
+    // Warnings
+    const warnings = pkg.warnings || [];
+    if (warnings.length > 0) {
+      labWarningsList.replaceChildren();
+      warnings.forEach((w) => {
+        const li = document.createElement("li");
+        li.textContent = w;
+        labWarningsList.appendChild(li);
+      });
+      labWarningsContainer.classList.remove("hidden");
+    } else {
+      labWarningsContainer.classList.add("hidden");
+    }
+
+    // Evidence Cards
+    labEvidenceList.replaceChildren();
+    const evidence = pkg.evidence || [];
+    labEvidenceBadge.textContent = String(evidence.length);
+
+    evidence.forEach((ev, idx) => {
+      const card = document.createElement("div");
+      card.className = "citation-card";
+
+      const header = document.createElement("div");
+      header.className = "citation-header";
+
+      const badge = document.createElement("span");
+      badge.className = "badge badge-cpu";
+      badge.textContent = ev.citation_id || `[C${idx + 1}]`;
+
+      const kind = document.createElement("span");
+      kind.className = "citation-title";
+      kind.textContent = `${ev.source_id || "local"} • ${ev.source_kind}`;
+
+      header.appendChild(badge);
+      header.appendChild(kind);
+
+      const contentBox = document.createElement("div");
+      contentBox.className = "untrusted-content-box";
+
+      const untrustedLabel = document.createElement("span");
+      untrustedLabel.className = "untrusted-label";
+      untrustedLabel.textContent = "Untrusted Excerpt Content";
+
+      const excerptText = document.createElement("div");
+      excerptText.className = "untrusted-excerpt";
+      excerptText.textContent = ev.excerpt;
+
+      contentBox.appendChild(untrustedLabel);
+      contentBox.appendChild(excerptText);
+
+      card.appendChild(header);
+      card.appendChild(contentBox);
+      labEvidenceList.appendChild(card);
+    });
+  }
+
+  labCopyHandleBtn.addEventListener("click", async () => {
+    if (!currentContextHandle) return;
+    try {
+      await navigator.clipboard.writeText(currentContextHandle);
+      labCopyHandleBtn.textContent = "Copied!";
+      setTimeout(() => {
+        labCopyHandleBtn.textContent = "Copy Handle";
+      }, 2000);
+    } catch (err) {
+      // ignore
+    }
+  });
+
+  // Extractive Compression Handler
+  if (labCompressForm) {
+    labCompressForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentContextHandle) return;
+
+      labCompressBtn.disabled = true;
+      labCompressSpinner.classList.remove("hidden");
+
+      const payload = {
+        deduplicate_exact_retrieval_copies: labDedupCheckbox.checked,
+        allow_evidence_drop: labEvidenceDropCheckbox.checked,
+      };
+
+      if (labTargetChars.value) {
+        payload.target_max_context_chars = parseInt(labTargetChars.value, 10);
+      }
+      if (labTargetTokens.value) {
+        payload.target_max_estimated_tokens = parseInt(labTargetTokens.value, 10);
+      }
+      if (labMaxSentences.value) {
+        payload.max_sentences_per_evidence = parseInt(labMaxSentences.value, 10);
+      }
+
+      try {
+        const resp = await fetch(`/v1/litebridge/context/${currentContextHandle}/compress`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          alert(`Compression failed (${resp.status}): ${data?.error?.message || data?.detail || "Validation error"}`);
+          return;
+        }
+
+        currentCompressedHandle = data.context_handle;
+        currentCompressedPackage = data.package;
+
+        renderCompressionReport(currentParentPackage, currentCompressedPackage, currentCompressedHandle);
+      } catch (err) {
+        alert("Network error compressing context package.");
+      } finally {
+        labCompressBtn.disabled = false;
+        labCompressSpinner.classList.add("hidden");
+      }
+    });
+  }
+
+  function renderCompressionReport(parentPkg, compPkg, descendantHandle) {
+    labCompressionReport.classList.remove("hidden");
+
+    const report = compPkg.compression_report;
+    const outcome = report ? report.outcome : "COMPLETED";
+    labCompressOutcome.textContent = outcome;
+
+    if (report && report.target_met !== undefined) {
+      labCompressTargetMet.textContent = report.target_met ? "Target Satisfied" : "Target Not Met";
+      labCompressTargetMet.className = report.target_met ? "badge badge-success" : "badge badge-warning";
+    } else {
+      labCompressTargetMet.textContent = "Completed";
+      labCompressTargetMet.className = "badge badge-cpu";
+    }
+
+    labCompBeforeChars.textContent = String(parentPkg.context_chars ?? parentPkg.context_text.length);
+    labCompAfterChars.textContent = String(compPkg.context_chars ?? compPkg.context_text.length);
+    labCompBeforeTokens.textContent = String(parentPkg.estimated_tokens ?? "--");
+    labCompAfterTokens.textContent = String(compPkg.estimated_tokens ?? "--");
+    labDescendantHandle.textContent = descendantHandle;
+
+    // Render Evidence Difference Breakdown
+    renderEvidenceDifference(parentPkg.evidence || [], compPkg.evidence || []);
+  }
+
+  function renderEvidenceDifference(parentEvidence, compressedEvidence) {
+    labDiffList.replaceChildren();
+
+    const compMap = new Map();
+    compressedEvidence.forEach((ev) => {
+      compMap.set(ev.citation_id || ev.evidence_id, ev);
+    });
+
+    parentEvidence.forEach((pEv, idx) => {
+      const citKey = pEv.citation_id || pEv.evidence_id || `[C${idx + 1}]`;
+      const card = document.createElement("div");
+      card.className = "diff-card";
+
+      const header = document.createElement("div");
+      header.className = "diff-card-header";
+
+      const title = document.createElement("strong");
+      title.textContent = `Evidence ${citKey}`;
+      header.appendChild(title);
+
+      const cEv = compMap.get(citKey);
+
+      if (!cEv) {
+        // Dropped / omitted
+        const omittedBadge = document.createElement("span");
+        omittedBadge.className = "badge badge-danger";
+        omittedBadge.textContent = "Omitted by Compression Policy";
+        header.appendChild(omittedBadge);
+
+        const note = document.createElement("p");
+        note.className = "untrusted-excerpt";
+        note.textContent = "Entire evidence item removed to satisfy budget limits.";
+        card.appendChild(header);
+        card.appendChild(note);
+      } else if (cEv.excerpt === pEv.excerpt) {
+        // Kept unchanged
+        const keptBadge = document.createElement("span");
+        keptBadge.className = "badge badge-success";
+        keptBadge.textContent = "Kept Unchanged";
+        header.appendChild(keptBadge);
+
+        const text = document.createElement("div");
+        text.className = "untrusted-content-box";
+        const content = document.createElement("div");
+        content.className = "untrusted-excerpt";
+        content.textContent = cEv.excerpt;
+        text.appendChild(content);
+
+        card.appendChild(header);
+        card.appendChild(text);
       } else {
+        // Shortened
+        const shortenedBadge = document.createElement("span");
+        shortenedBadge.className = "badge badge-warning";
+        shortenedBadge.textContent = "Extractive Sentences Retained";
+        header.appendChild(shortenedBadge);
+
+        const grid = document.createElement("div");
+        grid.className = "diff-blocks-grid";
+
+        const origBlock = document.createElement("div");
+        const origTitle = document.createElement("span");
+        origTitle.className = "diff-block-title";
+        origTitle.textContent = "Original Excerpt";
+        const origText = document.createElement("div");
+        origText.className = "untrusted-content-box";
+        const origContent = document.createElement("div");
+        origContent.className = "untrusted-excerpt";
+        origContent.textContent = pEv.excerpt;
+        origText.appendChild(origContent);
+        origBlock.appendChild(origTitle);
+        origBlock.appendChild(origText);
+
+        const compBlock = document.createElement("div");
+        const compTitle = document.createElement("span");
+        compTitle.className = "diff-block-title";
+        compTitle.textContent = "Compressed Excerpt";
+        const compText = document.createElement("div");
+        compText.className = "untrusted-content-box";
+        const compContent = document.createElement("div");
+        compContent.className = "untrusted-excerpt";
+        compContent.textContent = cEv.excerpt;
+        compText.appendChild(compContent);
+        compBlock.appendChild(compTitle);
+        compBlock.appendChild(compText);
+
+        grid.appendChild(origBlock);
+        grid.appendChild(compBlock);
+
+        card.appendChild(header);
+        card.appendChild(grid);
+      }
+
+      labDiffList.appendChild(card);
+    });
+  }
+
+  // =========================================================================
+  // Keyboard Shortcuts (Ctrl/Cmd + Enter, Ctrl/Cmd + K, Escape)
+  // =========================================================================
+  document.addEventListener("keydown", (e) => {
+    // Ctrl/Cmd + Enter: Submit active query form
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      if (currentActiveTab === "grounded-qa") {
+        e.preventDefault();
+        queryForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      } else if (currentActiveTab === "context-lab" && labPrepareForm) {
+        e.preventDefault();
+        labPrepareForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      }
+      return;
+    }
+
+    // Ctrl/Cmd + K: Focus active inquiry input
+    if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      if (currentActiveTab === "grounded-qa") {
+        queryInput.focus();
+        queryInput.select();
+      } else if (currentActiveTab === "context-lab" && labQueryInput) {
+        labQueryInput.focus();
+        labQueryInput.select();
+      }
+      return;
+    }
+
+    // Escape: Close expanded details or active feedback
+    if (e.key === "Escape") {
+      actionFeedback.classList.add("hidden");
+      document.querySelectorAll("details[open]").forEach((d) => {
+        if (!d.classList.contains("citation-details")) {
+          d.removeAttribute("open");
+        }
+      });
+    }
+  });
+
+  // =========================================================================
+  // Benchmark Evaluation Runner (Preserved for backward compatibility)
+  // =========================================================================
+  if (evalForm) {
+    evalForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const datasetSelect = document.getElementById("eval-dataset-select");
+      const limitInput = document.getElementById("eval-limit-input");
+      const checkedSystems = Array.from(document.querySelectorAll('input[name="systems"]:checked')).map((cb) => cb.value);
+
+      if (checkedSystems.length === 0) {
+        alert("Please select at least one benchmark system.");
+        return;
+      }
+
+      const payload = {
+        dataset_name: datasetSelect.value,
+        systems: checkedSystems,
+      };
+      if (limitInput && limitInput.value) {
+        payload.limit = parseInt(limitInput.value, 10);
+      }
+
+      runEvalBtn.disabled = true;
+      evalSpinner.classList.remove("hidden");
+      evalStatusBadge.className = "badge badge-neutral";
+      evalStatusBadge.textContent = "Submitting...";
+
+      try {
+        const resp = await fetch("/v1/eval/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await resp.json();
+
+        if (resp.status === 202) {
+          evalResultsContainer.classList.remove("hidden");
+          evalJobId.textContent = data.evaluation_id;
+          evalStatusBadge.className = "badge badge-cpu";
+          evalStatusBadge.textContent = data.status.toUpperCase();
+          evalJobTiming.textContent = `Submitted: ${new Date(data.submitted_at).toLocaleTimeString()}`;
+          evalJobMessage.textContent = "Benchmark job queued. Executing evaluation safely in background...";
+          evalArtifactWrapper.classList.add("hidden");
+          evalTableContainer.classList.add("hidden");
+
+          startPollingEvaluation(data.evaluation_id);
+        } else {
+          evalStatusBadge.className = "badge badge-danger";
+          evalStatusBadge.textContent = ({ 409: "Busy" })[resp.status] || "Rejected";
+          evalResultsContainer.classList.remove("hidden");
+          evalJobMessage.textContent = data?.error?.message || "Failed to submit evaluation job.";
+          runEvalBtn.disabled = false;
+          evalSpinner.classList.add("hidden");
+        }
+      } catch (err) {
         evalStatusBadge.className = "badge badge-danger";
-        evalStatusBadge.textContent = ({ 409: "Busy" })[resp.status] || "Rejected";
+        evalStatusBadge.textContent = "Error";
         evalResultsContainer.classList.remove("hidden");
-        evalJobMessage.textContent = data?.error?.message || "Failed to submit evaluation job.";
+        evalJobMessage.textContent = "Network error submitting evaluation job.";
         runEvalBtn.disabled = false;
         evalSpinner.classList.add("hidden");
       }
-    } catch (err) {
-      evalStatusBadge.className = "badge badge-danger";
-      evalStatusBadge.textContent = "Error";
-      evalResultsContainer.classList.remove("hidden");
-      evalJobMessage.textContent = "Network error submitting evaluation job.";
-      runEvalBtn.disabled = false;
-      evalSpinner.classList.add("hidden");
-    }
-  });
+    });
+  }
 
   function startPollingEvaluation(evaluationId) {
     if (activeEvalPollInterval) {
@@ -444,7 +1356,6 @@ document.addEventListener("DOMContentLoaded", () => {
             evalArtifactWrapper.classList.remove("hidden");
           }
 
-          // Populate summary table
           renderBenchmarkTable(job.systems_evaluated || ["Dense RAG", "Two-Step Hybrid", "EvidenceOps"]);
 
           runEvalBtn.disabled = false;
@@ -459,7 +1370,7 @@ document.addEventListener("DOMContentLoaded", () => {
           loadSystemHealth();
         }
       } catch (err) {
-        // Continue polling on transient network error
+        // Ignore transient errors
       }
     }, 2000);
   }
@@ -469,7 +1380,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const systemRows = [
       { name: "Dense RAG", recall: "0.75", mrr: "0.68", factF1: "0.71", citPrec: "0.82", abstain: "0.85", lat: "340ms" },
       { name: "Two-Step Hybrid", recall: "0.82", mrr: "0.76", factF1: "0.77", citPrec: "0.89", abstain: "0.90", lat: "510ms" },
-      { name: "EvidenceOps", recall: "0.88", mrr: "0.82", factF1: "0.83", citPrec: "0.94", abstain: "0.95", lat: "620ms" }
+      { name: "EvidenceOps", recall: "0.88", mrr: "0.82", factF1: "0.83", citPrec: "0.94", abstain: "0.95", lat: "620ms" },
     ];
 
     systemRows.forEach((row) => {
