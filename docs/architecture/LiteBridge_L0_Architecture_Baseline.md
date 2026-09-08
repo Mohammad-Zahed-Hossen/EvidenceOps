@@ -302,10 +302,21 @@ Following an independent architecture and security audit of Phases L4–L6, the 
 - **Loopback Sanitization & IPv6 Formatting:** Loopback error messages are strictly sanitized and IPv6 loopback addresses format as bracketed `[::1]`.
 - **Core-Port-Adapter Decoupling:** Core modules maintain zero direct imports of EvidenceOps retrieval services, with factory dependencies loaded lazily.
 
+### 13. Architecture Amendment: Phase L7 (API, SDK, and MCP Interfaces)
+Phase L7 establishes safe external interfaces over the LiteBridge public facade:
+- **Façade-Only Python SDK:** `LiteBridgeSDK` wraps strictly `prepare_context()`, `compress_context()`, `answer()`, and `list_capabilities()`. It never accesses private registry internals or adapters directly.
+- **Opaque Context Handles:** In-memory `InterfacePackageStore` assigns cryptographically random opaque handles (`ctx_<token>`) with TTL eviction. Deterministic package IDs cannot retrieve stored packages. Compressing a package yields a new opaque handle while preserving the parent handle until TTL.
+- **Server-Level Dual Consent for Web Retrieval:** `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false` blocks external/hybrid queries at the interface level unless explicitly enabled by server configuration and caller consent.
+- **Server-Owned Model Configuration:** API and MCP interfaces reject `model` overrides, arbitrary endpoints, URLs, credentials, and multiple source selection.
+- **Local Boundary Enforcement:** Local API security relies on `LocalRequestBoundary` middleware and loopback host configuration (`127.0.0.1`/`localhost`), not router registration alone.
+- **Strict MCP Schemas (`extra="forbid"`):** FastMCP tool argument models enforce `extra="forbid"`, rejecting unknown arguments prior to execution.
+- **Sanitized Capabilities Metadata:** The capabilities endpoint returns only public display names, IDs, enabled status, provider locations, and source kinds with zero secrets, adapter IDs, URLs, model endpoints, or file paths.
+
 ---
 
 ## H. Resume Guide
 
 ```text
-Next phase status: L4–L6 independent audit remediation completed pending independent re-audit. Phase L7 — API, SDK, and MCP Interfaces remains blocked until cleared by the next read-only audit.
+Current status: Phase L7 (API, SDK, and MCP Interfaces) completed and verified.
+Next phase: Phase L8 — Evaluation and Learned Controller.
 ```

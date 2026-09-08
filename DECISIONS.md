@@ -340,4 +340,21 @@
      - `bridge/factory.py` delegates documentation service creation lazily, ensuring core modules contain zero direct EvidenceOps retrieval dependencies at load time.
   8. **Consequences & Status**:
      - Remediations for F01–F10 are implemented and verified by 18 focused regression tests and full test suite (218 bridge tests, 728 total tests).
-     - Status: **Remediation completed pending independent re-audit**. Phase L7 — API, SDK, and MCP Interfaces remains blocked until cleared by the next read-only audit.
+     - Status: **Remediation completed and certified**. Phase L7 implementation approved with mandatory safety corrections.
+
+### ADR-035: LiteBridge L7 API, SDK, and MCP Interfaces
+- **Context**: Phase L7 introduces external consumption interfaces for LiteBridge (API, SDK, and MCP Interfaces). Directly exposing internal backend mechanisms, deterministic IDs, arbitrary model overrides, or multi-source inputs creates severe security, cost, and architecture-boundary risks. Ten mandatory safety corrections were established prior to implementation.
+- **Decision**:
+  1. **Opaque Random Context Handles**: Interfaces generate cryptographically secure, random opaque handles (`ctx_<urlsafe_token>`) via `InterfacePackageStore`. A deterministic `package_id` is never used as an access token; guessed package IDs are rejected with 404 or ToolError.
+  2. **Façade-Only Python SDK**: `LiteBridgeSDK` wraps strictly public facade methods (`prepare_context()`, `compress_context()`, `answer()`, `list_capabilities()`). It never accesses private registry attributes (`_source_registry`, `_generation_registry`) or internal adapter implementations.
+  3. **Exact Bounded L6 Compression Policy**: API and MCP interfaces accept only the real bounded L6 policy fields (`target_max_context_chars`, `target_max_estimated_tokens`, `max_sentences_per_evidence`, `deduplicate_exact_retrieval_copies`, `allow_evidence_drop`). Unsupported fields or strategies are rejected.
+  4. **Server-Owned Model Configuration**: Clients select only registered `provider_id`s. Model overrides, endpoints, and credentials cannot be injected by callers; `model` override attempts are rejected with 422 or ToolError.
+  5. **Single Source Selection Only**: Interfaces accept at most one optional `source_id: str | None`, constructing the internal `SourcePolicy`. Multi-source selection lists are strictly prohibited at the interface boundary.
+  6. **Server-Level Dual Consent for External Retrieval**: Added `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`. Web or hybrid retrieval requires both this server-level flag and explicit per-call client consent (`allow_external_query=True`).
+  7. **Local Boundary Enforcement**: Local API security is enforced via `LocalRequestBoundary` middleware and loopback host configuration (`127.0.0.1`/`localhost`), not router registration alone. Remote deployment is blocked without explicit authentication.
+  8. **Strict Input Validation in FastMCP (`extra="forbid"`)**: All FastMCP tool argument models enforce `extra="forbid"`. Injected fields, paths, or arbitrary metadata are rejected before execution.
+  9. **Handle Lifecycle on Compression**: Storing a package returns a fresh opaque handle. Compressing a package yields a new opaque handle for the descendant package while preserving the parent handle until TTL expiry.
+  10. **Sanitized Capabilities Metadata**: The capabilities endpoint exposes only public display names, IDs, enabled status, provider locations, and source kinds. Zero credentials, adapter IDs, URLs, model endpoints, or file paths are ever exposed.
+- **Consequences**:
+  - Full suite passed (747 passed, 1 skipped).
+  - Gate L7 satisfied. Phase L7 completed. LiteBridge provides safe, bounded SDK, API, and MCP access.

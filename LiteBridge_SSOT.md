@@ -1,14 +1,15 @@
 # LiteBridge System Specification
 
 **Status:** Approved planning baseline
-**Version:** 1.3 — Independent audit remediation (F01–F10) baseline.
+**Version:** 1.4 — Safe Python SDK, Local API, and Narrow MCP Interfaces (Phase L7).
 **Project type:** Model-agnostic external retrieval, planning, and context-preparation layer  
 **Reference implementation:** EvidenceOps  
 **Primary repository:** `D:\Code\Assignment\EvidenceOps`  
 **Experimental branch:** `experiment/litebridge-bridge`
 
 ### Document Changelog
-- **Version 1.3 (2026-09-08):** Phase L4–L6 independent audit remediation baseline (F01–F10). Enforces explicit generation provider selection (`provider_id=None` default failing closed to `PROVIDER_UNAVAILABLE` / `PROVIDER_NOT_CONFIGURED` with zero provider calls); derives deterministic descendant package IDs for empty and no-reduction compression paths; incorporates complete source descriptor identity, planner reason codes, and compression policy into deterministic package IDs; enforces preflight budget checks for web/cost sources; returns truthful `LOCAL_SOURCE_UNAVAILABLE` / `SOURCE_UNAVAILABLE` diagnostics; sanitizes loopback error messages with bracketed IPv6 support; unifies sentence boundaries in a shared pure parser preserving original separators; and isolates Core-Port-Adapter boundary with lazy factory imports. Remediations completed pending independent re-audit.
+- **Version 1.4 (2026-09-08):** Phase L7 Safe Python SDK, Local API, and Narrow MCP Interfaces. Implemented `LiteBridgeSDK` wrapping public facade methods; opaque random `context_handle` generation (`ctx_...`) via `InterfacePackageStore` with TTL eviction; server-level dual consent for web retrieval via `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`; server-owned model configuration rejecting caller `model` overrides; single source selection enforcement; loopback API boundary enforcement; strict FastMCP argument validation (`extra="forbid"`); and sanitized capability introspection. Exit gate passed.
+- **Version 1.3 (2026-09-08):** Phase L4–L6 independent audit remediation baseline (F01–F10). Enforces explicit generation provider selection (`provider_id=None` default failing closed to `PROVIDER_UNAVAILABLE` / `PROVIDER_NOT_CONFIGURED` with zero provider calls); derives deterministic descendant package IDs for empty and no-reduction compression paths; incorporates complete source descriptor identity, planner reason codes, and compression policy into deterministic package IDs; enforces preflight budget checks for web/cost sources; returns truthful `LOCAL_SOURCE_UNAVAILABLE` / `SOURCE_UNAVAILABLE` diagnostics; sanitizes loopback error messages with bracketed IPv6 support; unifies sentence boundaries in a shared pure parser preserving original separators; and isolates Core-Port-Adapter boundary with lazy factory imports. Remediations completed and certified.
 - **Version 1.2 (2026-09-08):** Phase L6 deterministic extractive context compression and quality controls baseline. Extractive sentence/whole-item compression, final rendered context target checks, conservative deduplication, integer basis points, and citation preservation.
 - **Version 1.1 (2026-09-07):** Portability and anti-coupling architecture guardrails. Established core-port-adapter boundary, extraction gate, provider-neutral product claims, and prohibited core coupling to EvidenceOps internal models.
 - **Version 1.0 (2026-09-07):** Initial system specification baseline for Phase L0.
@@ -943,7 +944,7 @@ Exit gate: context reduction does not silently remove required support or create
 - add provider/source capability inspection;
 - preserve local-only deployment profile.
 
-Exit gate: external clients cannot access arbitrary backends, URLs, paths, credentials, or shell commands.
+Exit gate: external clients cannot access arbitrary backends, URLs, paths, credentials, or shell commands. (Passed: certified with 10 mandatory safety corrections, opaque random handles, server-owned model configuration, server-level web dual consent, and strict MCP schema enforcement).
 
 ### Phase L8: Evaluation and learned controller
 

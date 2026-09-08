@@ -69,3 +69,9 @@ class LiteBridgeProviderRateLimitError(LiteBridgeProviderError):
     """Raised when provider rate limits or quotas are exceeded."""
 
     default_code = "provider_rate_limit"
+
+
+class LiteBridgePackageNotFoundError(LiteBridgeError):
+    """Raised when an interface package handle is unknown or expired."""
+
+    default_code = "package_not_found"

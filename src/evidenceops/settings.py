@@ -99,6 +99,14 @@ class Settings(BaseSettings):
     litebridge_gemini_model: str = ""
     gemini_api_key: SecretStr | None = None
 
+    # Phase L7 LiteBridge Interfaces (SDK, API, and MCP)
+    litebridge_enable_interfaces: bool = False
+    litebridge_interface_package_ttl_seconds: int = Field(default=300, gt=0, le=86400)
+    litebridge_interface_package_max_entries: int = Field(default=64, gt=0, le=10000)
+    litebridge_interface_allow_external_retrieval: bool = False
+    litebridge_interface_allow_external_generation: bool = False
+    litebridge_interface_allow_private_evidence_export: bool = False
+
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod
     def local_service_url(cls, value: str) -> str:

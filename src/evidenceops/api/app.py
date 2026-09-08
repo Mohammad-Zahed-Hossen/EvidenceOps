@@ -137,6 +137,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(query.router, prefix="/v1")
     app.include_router(runs.router, prefix="/v1")
     app.include_router(evaluation.router, prefix="/v1")
+    if active_settings.litebridge_enable_interfaces:
+        from evidenceops.api.routes import litebridge
+
+        app.include_router(litebridge.router, prefix="/v1")
 
     # Dashboard & Static Files
     dashboard_dir = Path(__file__).resolve().parent.parent / "dashboard"

@@ -47,24 +47,22 @@ Awaiting user instructions for Git operations or portfolio presentation.
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Phase L4–L6 Audit Remediation (Findings F01–F10).
-- **Remediation Summary:**
-  - **F01 & F09 (Planner routing diagnostics & budget preflight):** Added `PlannerReason.LOCAL_SOURCE_UNAVAILABLE` and `StopReason.SOURCE_UNAVAILABLE`; `BudgetGuard` preflight rejects queries routing to web or cost-incurring sources with zero budget.
-  - **F02 & F03 (Sentence boundary parser & separator preservation):** Implemented pure `parse_sentence_boundaries()` shared between compressor and quality controls, preserving original separators without synthetic space joins.
-  - **F04 & F10 (Deterministic package identity & descendant lineage):** `_derive_package_id()` hashes planner reason codes, complete stable source descriptor identity, and complete compression policy fields; empty package and no-reduction compression paths derive deterministic descendant IDs distinct from parent.
-  - **F05 (Explicit generation provider selection):** `GenerationPolicy.provider_id` defaults to `None`; `LiteBridge.answer()` fails closed with `PROVIDER_UNAVAILABLE` and `PROVIDER_NOT_CONFIGURED` without provider invocations.
-  - **F06 (Loopback sanitization & IPv6 support):** Sanitized loopback error messages and added bracketed IPv6 formatting `[::1]` with safe port range validation.
-  - **F07 (Deterministic answer ID):** Hashing uses full float precision `str(policy.temperature)` and includes `timeout_ms`.
-  - **F08 (Core-Port-Adapter boundary isolation):** Replaced eager imports of EvidenceOps retrieval services in `bridge/__init__.py` and `bridge/factory.py` with lazy resolution.
+- **Current Baseline:** Phase L7 (API, SDK, and MCP Interfaces).
+- **Phase L7 Implementation Summary:**
+  - **Facade-Only Python SDK:** `LiteBridgeSDK` wraps public facade methods without accessing private registry attributes or adapters.
+  - **Opaque Context Handles:** In-memory `InterfacePackageStore` assigns cryptographically random opaque handles (`ctx_<token>`) with TTL eviction; guessed package IDs cannot retrieve packages.
+  - **Server-Owned Model Configuration:** API and MCP interfaces reject `model` overrides, arbitrary endpoints, URLs, credentials, and multiple source selection.
+  - **Dual Consent for External Retrieval:** Added `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`; web retrieval requires both server setting and per-call client consent.
+  - **Local Boundary Enforcement:** Local API security is guarded by `LocalRequestBoundary` middleware and loopback host configuration (`127.0.0.1`/`localhost`).
+  - **Strict MCP Argument Validation:** All FastMCP tool argument models enforce `extra="forbid"`, rejecting unknown arguments prior to execution.
+  - **Sanitized Capability Metadata:** Public `/capabilities` endpoint and tool expose only sanitized display names, IDs, enabled status, provider locations, and source kinds.
 - **Verification Results:**
-  - Focused bridge tests: 218 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 727 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors (228 files clean).
-  - Type checking: Mypy passes with zero issues (112 source files).
-  - AST audit: Proves zero direct EvidenceOps retrieval/model imports in LiteBridge core modules.
+  - Focused bridge & interface tests: 244 passed, 0 failures.
+  - Full test suite: 747 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors (242 files clean).
+  - Type checking: Mypy passes with zero issues (116 source files).
 - **Known Limitations & Deferred Milestones:**
-  - Public API, SDK packaging, and MCP interfaces are planned for Phase L7.
   - Multi-hop retrieval and multi-source evidence fusion remain deferred.
   - Direct web page retrieval remains a Deferred Security Milestone.
 - **Next Phase:**
-  `Phase L7 — API, SDK, and MCP Interfaces` remains **BLOCKED** pending independent re-audit certification of findings F01–F10.
+  `Phase L8 — Evaluation and Learned Controller`.

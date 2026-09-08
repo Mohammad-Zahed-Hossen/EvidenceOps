@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
@@ -12,6 +12,11 @@ from pydantic import Field, ValidationError
 
 from evidenceops.domain.errors import EvidenceOpsError
 from evidenceops.retrieval.service import DocumentationService, SearchDocumentationRequest
+from evidenceops.settings import Settings, get_settings
+
+if TYPE_CHECKING:
+    from evidenceops.bridge.package_store import InterfacePackageStore
+    from evidenceops.bridge.sdk import LiteBridgeSDK
 
 
 class EvidenceOpsMCPServer(FastMCP):
@@ -21,15 +26,36 @@ class EvidenceOpsMCPServer(FastMCP):
         self, name: str, arguments: dict[str, Any]
     ) -> Sequence[ContentBlock] | dict[str, Any]:
         try:
-            return await super().call_tool(name, arguments)
+            res = await super().call_tool(name, arguments)
+            if name.startswith("litebridge_"):
+                import json
+
+                content = res[0] if isinstance(res, tuple) else res
+                if isinstance(content, Sequence) and len(content) > 0:
+                    first = content[0]
+                    if hasattr(first, "text") and isinstance(first.text, str):
+                        try:
+                            parsed = json.loads(first.text)
+                            if isinstance(parsed, dict):
+                                return parsed
+                        except Exception:
+                            pass
+            return res
         except ToolError as exc:
             if isinstance(exc.__cause__, ValidationError):
                 raise ToolError("invalid tool arguments") from None
             raise
 
 
-def create_server(service: DocumentationService) -> EvidenceOpsMCPServer:
+def create_server(
+    service: DocumentationService,
+    *,
+    litebridge_sdk: LiteBridgeSDK | None = None,
+    litebridge_package_store: InterfacePackageStore | None = None,
+    settings: Settings | None = None,
+) -> EvidenceOpsMCPServer:
     """Create an MCP server exposing only the approved local documentation tools."""
+    active_settings = settings or get_settings()
 
     server = EvidenceOpsMCPServer(
         name="evidenceops",
@@ -92,5 +118,27 @@ def create_server(service: DocumentationService) -> EvidenceOpsMCPServer:
         argument_model.model_config["extra"] = "forbid"
         argument_model.model_rebuild(force=True)
         tool.parameters = argument_model.model_json_schema(by_alias=True)
+
+    if active_settings.litebridge_enable_interfaces:
+        from evidenceops.mcp_server.litebridge_tools import register_litebridge_tools
+
+        eff_sdk = litebridge_sdk
+        if eff_sdk is None:
+            from evidenceops.bridge.factory import build_litebridge
+            from evidenceops.bridge.sdk import LiteBridgeSDK
+
+            bridge = build_litebridge()
+            eff_sdk = LiteBridgeSDK(bridge)
+
+        eff_store = litebridge_package_store
+        if eff_store is None:
+            from evidenceops.bridge.package_store import InterfacePackageStore
+
+            eff_store = InterfacePackageStore(
+                ttl_seconds=active_settings.litebridge_interface_package_ttl_seconds,
+                max_entries=active_settings.litebridge_interface_package_max_entries,
+            )
+
+        register_litebridge_tools(server, eff_sdk, eff_store, active_settings)
 
     return server

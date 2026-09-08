@@ -21,10 +21,13 @@ from evidenceops.bridge.contracts import (
     GenerationStatus,
     GenerationUsage,
     GroundedAnswer,
+    LiteBridgeCapabilities,
     PlannerReason,
     PlannerRoute,
+    ProviderCapability,
     ProviderLocation,
     RetrievalPolicy,
+    SourceCapability,
     SourceDescriptor,
     SourceKind,
     SourcePolicy,
@@ -631,4 +634,28 @@ class LiteBridge:
             usage=usage,
             warnings=(),
             timings_ms=timings,
+        )
+
+    def list_capabilities(self) -> LiteBridgeCapabilities:
+        """Return sanitized, immutable capability metadata for registered sources and providers."""
+        sources: list[SourceCapability] = []
+        if self._source_registry is not None:
+            for desc in self._source_registry.list_descriptors():
+                sources.append(
+                    SourceCapability(
+                        source_id=desc.source_id,
+                        display_name=desc.display_name,
+                        source_kind=desc.source_kind,
+                        enabled=desc.enabled,
+                        privacy_classification=desc.privacy_classification,
+                        freshness=desc.freshness,
+                        supported_execution_profiles=desc.supported_execution_profiles,
+                    )
+                )
+        providers: list[ProviderCapability] = []
+        if self._generation_registry is not None:
+            providers = list(self._generation_registry.list_capabilities())
+        return LiteBridgeCapabilities(
+            sources=tuple(sources),
+            providers=tuple(providers),
         )

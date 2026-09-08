@@ -604,6 +604,46 @@ class ProviderCapability(BaseModel):
     enabled: bool
 
 
+class SourceCapability(BaseModel):
+    """Immutable, sanitized capability descriptor for a registered evidence source."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_id: str = Field(min_length=1)
+    display_name: str = Field(min_length=1)
+    source_kind: SourceKind
+    enabled: bool
+    privacy_classification: PrivacyClassification
+    freshness: SourceFreshness
+    supported_execution_profiles: tuple[ExecutionProfile, ...] = (ExecutionProfile.LOCAL_ONLY,)
+
+    @field_validator("supported_execution_profiles", mode="before")
+    @classmethod
+    def _coerce_tuple(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(v)
+        return v
+
+
+class LiteBridgeCapabilities(BaseModel):
+    """Immutable, sanitized capability summary for LiteBridge sources and providers."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sources: tuple[SourceCapability, ...] = ()
+    providers: tuple[ProviderCapability, ...] = ()
+    allow_external_retrieval: bool = False
+    allow_external_generation: bool = False
+    allow_private_evidence_export: bool = False
+
+    @field_validator("sources", "providers", mode="before")
+    @classmethod
+    def _coerce_tuples(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(v)
+        return v
+
+
 class GenerationUsage(BaseModel):
     """Execution metrics for an answer generation call."""
 
