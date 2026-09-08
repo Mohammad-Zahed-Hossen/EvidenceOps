@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlparse
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -69,6 +69,43 @@ class Settings(BaseSettings):
     embedding_threads: int = Field(default=4, ge=1, le=4)
     embedding_batch_size: int = Field(default=8, ge=1, le=64)
     manifest_schema_version: str = "1.0"
+    litebridge_enable_tavily_web: bool = False
+    tavily_api_key: SecretStr | None = None
+    litebridge_web_timeout_ms: int = Field(default=5000, gt=0, le=60000)
+    litebridge_web_max_results: int = Field(default=5, ge=1, le=5)
+    litebridge_web_cache_ttl_seconds: int = Field(default=300, gt=0, le=86400)
+    litebridge_web_cache_max_entries: int = Field(default=64, gt=0, le=1024)
+    litebridge_tavily_search_estimated_cost_microusd: int = Field(default=8000, ge=0, le=1_000_000)
+
+    # LiteBridge Generation Providers (all disabled by default)
+    litebridge_enable_ollama: bool = False
+    litebridge_ollama_base_url: str = "http://127.0.0.1:11434"
+    litebridge_ollama_model: str = "qwen2.5:1.5b"
+
+    litebridge_enable_local_openai_compatible: bool = False
+    litebridge_local_openai_compatible_base_url: str = "http://127.0.0.1:8000"
+    litebridge_local_openai_compatible_model: str = ""
+    litebridge_local_openai_compatible_api_key: SecretStr | None = None
+
+    litebridge_enable_openai: bool = False
+    litebridge_openai_model: str = ""
+    openai_api_key: SecretStr | None = None
+
+    litebridge_enable_anthropic: bool = False
+    litebridge_anthropic_model: str = ""
+    anthropic_api_key: SecretStr | None = None
+
+    litebridge_enable_gemini: bool = False
+    litebridge_gemini_model: str = ""
+    gemini_api_key: SecretStr | None = None
+
+    # Phase L7 LiteBridge Interfaces (SDK, API, and MCP)
+    litebridge_enable_interfaces: bool = False
+    litebridge_interface_package_ttl_seconds: int = Field(default=300, gt=0, le=86400)
+    litebridge_interface_package_max_entries: int = Field(default=64, gt=0, le=10000)
+    litebridge_interface_allow_external_retrieval: bool = False
+    litebridge_interface_allow_external_generation: bool = False
+    litebridge_interface_allow_private_evidence_export: bool = False
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod

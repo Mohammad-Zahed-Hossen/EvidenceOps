@@ -139,3 +139,250 @@
   1. **Framework-Independent Local Provider Boundary**: Introduced `GenerationProvider` protocol and `create_generation_provider` factory. Ollama (`OllamaGenerationProvider`) remains the verified default running `qwen2.5:1.5b`. Added `OpenAICompatibleLocalProvider` strictly restricted to local loopback HTTP endpoints (`127.0.0.1` or `localhost`, e.g. LM Studio or vLLM). It strictly rejects external IPs, public hostnames, HTTPS, user-supplied endpoints in API requests, and API keys.
   2. **Fact-Family Split Integrity**: Augmented `EvaluationSample` with a machine-readable `fact_family_id` field. Re-partitioned the frozen 100-item controlled benchmark (`evidenceops-controlled-v1.json`) across 52 distinct fact families so that 100% of variants testing the same atomic fact belong to one split only (60 dev / 20 val / 20 test). Cross-split leakage is strictly prohibited by `validate_evaluation_dataset`.
   3. **Controller Benchmark Comparison**: Learned controller trained strictly on the dev split achieves 20/20 (100%) initial routing agreement on the held-out test split, confirming policy parity. In accordance with empirical rigor, the heuristic controller is retained as the production default, and no superior generalization is claimed from the 20-item test split. Human review remains formally marked as pending.
+
+### ADR-025: LiteBridge Phase L0 Branch and Architecture Baseline
+- **Context**: LiteBridge is designed as an experimental, model-agnostic retrieval and context-preparation middleware layer that reuses EvidenceOps's verified local retrieval, evidence validation, and provider contracts. Developing this capability must not destabilize the verified Phase 6 EvidenceOps baseline, create architectural drift, or introduce premature external network dependencies.
+- **Decision**:
+  1. **Branch-First Isolation**: All LiteBridge experimentation is strictly isolated on branch `experiment/litebridge-bridge`. The `main` branch remains the stable, protected EvidenceOps production baseline.
+  2. **In-Repository Additive Placement**: LiteBridge is initially housed inside this repository under `src/evidenceops/bridge/` (to be created in Phase L1), preventing dual-repository overhead while interfaces stabilize.
+  3. **Strict Unidirectional Dependency Direction**: The dependency rule is strictly `LiteBridge → stable EvidenceOps public services/contracts`. EvidenceOps core modules (`ingestion`, `retrieval`, `evidence`, `generation`, `graph`, `api`, `mcp_server`, `cli`, `dashboard`) must never import or depend on LiteBridge.
+  4. **Local-Only Default Profile**: Phase L0 defaults to `local_only` (zero outbound web requests, zero external LLM adapters, zero credentials). External providers require explicit opt-in configuration in future phases. Private evidence must never silently fall back to an external provider.
+  5. **No Runtime Scaffolding in L0**: L0 is documentation-first. Public contracts are defined at the design level in `docs/architecture/LiteBridge_L0_Architecture_Baseline.md` and `LiteBridge_SSOT.md`. No runtime code, empty package scaffolds, web clients, or provider adapters are created in L0. LiteBridge is not yet model-agnostic at runtime; it is only architecturally chartered for that outcome.
+  6. **Criteria for Standalone Repository Extraction**: Eventual extraction to an independent repository requires meeting four preconditions:
+     - Public contracts (`ContextPackage`, `RetrievalPolicy`, `GenerationPolicy`, `SourcePolicy`, `BudgetPolicy`) are stabilized and versioned.
+     - Independent package lifecycle and versioning are established without breaking EvidenceOps.
+     - Multiple consumer applications or frameworks are identified and verified.
+     - Complete decoupling from EvidenceOps internal data stores (operating solely over public abstract protocols).
+
+### ADR-026: LiteBridge Core-Port-Adapter Boundary and Future Extraction Policy
+- **Context**: In Phase L0 (ADR-025), LiteBridge established a branch-first isolation and unidirectional dependency (`LiteBridge → EvidenceOps`). However, unidirectional dependency alone does not prevent LiteBridge core code from directly importing and coupling to EvidenceOps domain models, Qdrant clients, BM25 indices, LangGraph nodes, or API schemas. If LiteBridge core imports these concrete types directly, LiteBridge becomes an EvidenceOps-specific internal feature folder rather than a portable, extractable retrieval-planning and context-preparation product.
+- **Decision**:
+  1. **Product Boundary Ground Truth**: Explicitly declare that **LiteBridge is the product boundary; EvidenceOps is the first adapter and testbed**.
+  2. **Strict Inverted Dependency Hierarchy**:
+     ```text
+     LiteBridge core contracts and services
+             ↑
+     LiteBridge adapters
+             ↑
+     EvidenceOps local-retrieval adapter
+             ↑
+     EvidenceOps public services/contracts
+     ```
+     - Forbidden direction: `EvidenceOps core → LiteBridge`.
+     - Also forbidden: `LiteBridge core → EvidenceOps-specific retrieval models, Qdrant clients, BM25 internals, raw loaders, LangGraph nodes, API routes, dashboard code, generation client internals`.
+     - Only an isolated adapter module (`adapters/evidenceops_local.py`) may import verified public EvidenceOps interfaces (`LocalDocumentationService`).
+  3. **Core, Port, and Adapter Architectural Separation**:
+     - **LiteBridge Core**: Owns public contracts (`ContextPackage`, `EvidenceRecord`, policies, budget semantics), evidence ordering, citation identity (`[C1]`, `[C2]`), safe context rendering, reproducibility identity, public facade (`prepare_context()`, `answer()`), and sanitized errors. Contains zero imports of EvidenceOps internal types.
+     - **LiteBridge Ports**: Owns narrow provider-neutral protocols (e.g. `EvidenceRetriever`) returning LiteBridge-neutral candidate records (`RawEvidenceCandidate`). Exposes zero backend-specific, framework-specific, or client-specific objects. Fully testable via lightweight doubles without EvidenceOps installed or running.
+     - **LiteBridge Adapters**: Translates concrete backend integrations into LiteBridge ports. Only adapters and factories may import integration-specific code or vendor SDKs.
+     - **Composition Root**: Wires core services with adapters (`factory.py`).
+  4. **Why LiteBridge Cannot Expose EvidenceOps Types**: Exposing EvidenceOps types in LiteBridge's public contracts would permanently couple downstream users, SDK consumers, and LLM applications to EvidenceOps, defeating LiteBridge's purpose as a reusable, model-agnostic context middleware product.
+  5. **Why EvidenceOps Remains First Adapter & Testbed**: EvidenceOps provides an existing, verified local-first retrieval, sparse/dense indexing, and citation-validation pipeline that serves as an ideal zero-cloud reference implementation and testbed for LiteBridge without requiring paid APIs or remote services.
+  6. **Consequences & Accepted Trade-Off**: Writing an explicit adapter layer introduces a small translation boundary between EvidenceOps and LiteBridge ports, but guarantees complete independence of core logic, unblocks future extraction, and ensures testability without heavy runtime services.
+  7. **Rejected Alternative**: Directly importing EvidenceOps services across LiteBridge core without an adapter layer. Rejected because it permanently entangles LiteBridge with EvidenceOps schemas, Qdrant/BM25 internals, and application runtime semantics.
+  8. **Standalone Extraction Gate (Six Mandatory Preconditions)**:
+     - Public contracts contain no EvidenceOps-specific classes or types.
+     - Core unit tests run using fake ports without running or importing EvidenceOps runtime services.
+     - The EvidenceOps adapter passes the identical contract tests as at least one non-EvidenceOps connector.
+     - The package can prepare a `ContextPackage` without a provider SDK installed.
+     - Public SDK documentation does not require users to understand EvidenceOps.
+     - Moving the package requires changing only composition/import wiring, not rewriting core behavior.
+  9. **No Runtime Implementation**: This ADR is documentation and architecture governance prior to Phase L1; no implementation code, tests, dependencies, or configuration are modified in this task.
+
+### ADR-027: LiteBridge Phase L1 Generator-Independent Context Mode
+- **Context**: Phase L1 implements the core, generator-independent context-preparation layer (`prepare_context()`). The implementation must adhere strictly to the Core-Port-Adapter boundary established in ADR-026 and `LiteBridge_SSOT.md` (v1.1), ensuring that LiteBridge core remains portable and decoupled from EvidenceOps models and LLM generation providers.
+- **Decision**:
+  1. **Primary Product Boundary**: `ContextPackage` is the primary public output of LiteBridge. Downstream LLM applications consume this immutable package. Generation is optional and separated from context preparation.
+  2. **Strict Generator Independence**: `prepare_context()` contains zero imports, zero configuration, and zero calls to any LLM generation provider or LangGraph orchestration node. Calling `prepare_context()` executes retrieval and context packaging only.
+  3. **Port-Based Local Retrieval**: Core `LiteBridge` service depends exclusively on the `EvidenceRetriever` protocol (`ports.py`). Retrieval is executed via a single bounded call per request.
+  4. **Isolated EvidenceOps Adapter**: `EvidenceOpsLocalRetrieverAdapter` (`adapters/evidenceops_local.py`) is the sole module permitted to import EvidenceOps retrieval services (`LocalDocumentationService`). It translates `DocumentationSearchResult` into LiteBridge-neutral `RawEvidenceCandidate` tuples.
+  5. **Composition Boundary**: `build_litebridge()` (`factory.py`) wires the adapter into LiteBridge with neutral reproducibility identifiers (`adapter_id`, `corpus_identity`, `index_identity`, `code_identity`) without exposing Qdrant/BM25 internals.
+  6. **True Contract Immutability**: All public contracts (`ContextPackage`, `EvidenceRecord`, `RetrievalPolicy`, `RawEvidenceCandidate`, `RetrievalBatch`) enforce `frozen=True`, `extra="forbid"`, and use immutable `tuple` collections instead of mutable lists or dicts.
+  7. **Whole-Item Extractive Budget Enforcement**: Evidence items are selected in retrieval rank order and included only if the entire item fits within character and token budgets (evaluated against the final rendered `context_text` including headers and citation markers). Items are never silently truncated in the middle. Stop reason reflects precedence: `NO_EVIDENCE` if 0 candidates returned; `BUDGET_EXCEEDED` if candidates returned but none or only some fit; `SUCCESS` if all candidates fit.
+  8. **Deterministic Package Identity**: `package_id` is derived strictly from stable inputs (normalized query hash, policy, selected evidence IDs, reproducibility metadata) and strictly excludes non-deterministic execution timings or timestamps.
+  9. **Single-Inheritance Error Hierarchy**: All LiteBridge errors inherit strictly from `LiteBridgeError(Exception)` without multiple-inheritance complexities. Underlying causes are preserved via `__cause__` while keeping public representations sanitized.
+  10. **Deferred Capabilities**: Web search, external page fetching, external LLM adapters, context compression, and API/MCP tools remain strictly deferred to subsequent phases.
+
+### ADR-028: LiteBridge Phase L2 Source Registry and Private Local Source Policy
+- **Context**: Phase L2 extends LiteBridge with source-registry and source-selection capabilities so that LiteBridge can safely identify, configure, and select registered document sources while preserving the generator-independent Core-Port-Adapter boundary established in L0/L1.
+- **Decision**:
+  1. **Source Agnostic Core Boundary**: LiteBridge core owns the public domain contracts `SourceDescriptor`, `SourcePolicy`, `PrivacyClassification`, `SourceFreshness`, and the operational `SourceRegistry`. Core has zero imports of EvidenceOps models, Qdrant/BM25 internals, database drivers, or LLM generation providers.
+  2. **Allowlist-Based In-Memory Source Registry**: Sources are registered in-memory via `SourceDescriptor` and `EvidenceRetriever`. Sources cannot be arbitrary user-supplied filesystem paths, URLs, database connection strings, or raw queries.
+  3. **Strict Single-Source Selection in L2**: Exactly one local source is resolved per `prepare_context()` call:
+     - Empty `SourcePolicy` or `None` resolves the deterministic registered default source (`evidenceops_local_docs`).
+     - A single allowed source ID in `SourcePolicy` resolves that registered source if enabled.
+     - Specifying more than one source ID is rejected prior to retrieval with `LiteBridgeValidationError`.
+     - Specifying an unknown or disabled source raises `LiteBridgeSourceError` prior to retrieval.
+     - No multi-source fan-out, planning, or evidence fusion is performed in L2.
+  4. **Direct-Retriever Compatibility**: `LiteBridge(retriever=...)` remains supported for backward compatibility and testing. Direct-retriever mode permits `source_policy=None` or empty `SourcePolicy()`; specifying an explicit source ID in direct-retriever mode raises `LiteBridgeSourceError`.
+  5. **Required Provenance Identity**: `source_id: str` is required (with no fake public defaults) on `RawEvidenceCandidate` and `EvidenceRecord`. Returned candidate `source_id` is validated against the resolved source ID (mismatches raise `LiteBridgeRetrievalError`).
+  6. **Core-Guaranteed Reproducibility Integrity**: Core-resolved `source_id` and `adapter_id` metadata take precedence and cannot be overwritten by adapter-provided reproducibility metadata. `ContextPackage.package_id` deterministically incorporates `source_id` and excludes timing values.
+  7. **Declarative Timeout and Zero Retries**: `timeout_ms` and `max_retries=0` are declarative contract properties. If an upstream service raises `TimeoutError`, it is mapped to a sanitized `LiteBridgeTimeoutError` without unsafe thread cancellation, process termination, or retries. Existing `LiteBridgeTimeoutError` instances pass through unwrapped.
+  8. **Deferred Capabilities**: Multi-source planning/fusion (Phase L4), web search and page retrieval (Phase L3), hosted/hybrid execution profiles, and LLM answer generation remain strictly out of scope.
+
+### ADR-029: LiteBridge Phase L3 Safe Web Search and Page Retrieval (Hardened)
+- **Context**: Phase L3 implements an optional, opt-in web search and safe page-retrieval capability. The default LiteBridge behavior must remain fully local and generator-independent with zero paid API keys, zero network calls, and zero external dependencies required. Web retrieval introduces external attack surfaces (SSRF, data leakage, unbounded latency, rate limits), requiring strict defense-in-depth boundaries.
+- **Decision**:
+  1. **Default Local-Only Invariant**: Default `build_litebridge()` operates 100% locally with zero network calls, zero API keys required, and no web source registered.
+  2. **Strict Opt-In Web Retrieval Guardrails**: Web retrieval is activated only when all 5 conditions are simultaneously satisfied:
+     - `ExecutionProfile.HYBRID` requested;
+     - `tavily_web_search` source explicitly selected in `SourcePolicy`;
+     - `WebRetrievalPolicy(allow_external_query=True, ...)` provided;
+     - `LITEBRIDGE_ENABLE_TAVILY_WEB=true` configured in settings;
+     - `TAVILY_API_KEY` present and non-blank in factory composition.
+     If any condition is missing, web retrieval is rejected before any network call.
+  3. **Core-Port-Adapter Decoupling**: Core modules (`contracts.py`, `ports.py`, `errors.py`, `service.py`, `context_builder.py`, `source_registry.py`) contain zero imports of `httpx`, `requests`, `urllib`, `socket`, `importlib`, `ipaddress`, EvidenceOps internals, or LLM providers, verified by an AST import audit covering direct and dynamic imports.
+  4. **SSRF-Hardened Page Fetcher with Documented DNS-Rebinding Residual Risk**: `SafeWebFetcher` enforces HTTPS-only, no credentials, default port 443 only, no URL fragments, and no IP literals. Pre-request DNS resolution verifies that resolved IPs are globally routable. Evaluation of `httpx 0.28.1` and `httpcore 1.0.9` confirmed that no version-stable public API exists for connection-level IP pinning while preserving TLS SNI and certificate verification without hooking into private methods (e.g. `_connect`). LiteBridge explicitly documents the DNS-rebinding TOCTOU residual risk and avoids fragile private hacks. Phase L3 remains not fully security-verified against TOCTOU rebinding.
+  5. **Streaming Response Size Cap**: `SafeWebFetcher` reads response bodies incrementally via `resp.iter_bytes()`, immediately aborting the stream and raising `LiteBridgeRetrievalError` when byte count exceeds `eff_max_bytes`. It never materializes the full body (`resp.content` or `resp.text`) before size validation.
+  6. **Transport Policy Enforcement & Private Test Seam**: `SafeWebFetcher` directly owns client creation with `trust_env=False` and `follow_redirects=False`. Callers cannot inject a preconfigured `httpx.Client` to bypass these policies. An optional `_transport` parameter serves as an internal test seam and is never exposed in production composition. Redirect hops (max 3) are manually re-validated on every hop.
+  7. **Sanitized Error and Warning Boundaries**: Raw exception text (`f"{err}"`, `str(exc)`) is strictly eliminated from public errors and warnings across all LiteBridge modules. Upstream errors are preserved for debugging only through exception chaining (`raise ... from err`). Recoverable page-fetch failures emit only a fixed warning: `"A configured page could not be fetched safely."`
+  8. **Strict Domain Allowlist**: Domain entries in `LITEBRIDGE_WEB_ALLOWED_FETCH_DOMAINS` are parsed once into lowercase, trimmed, deduplicated exact hostnames. Wildcards, URLs, ports, IPs, and empty entries are rejected. An empty allowlist safely disables page fetching while preserving search snippets.
+  9. **Policy-to-Settings Clamping**: `WebRetrieverAdapter` clamps caller-requested web limits against configured maximums:
+     `effective_results = min(policy.web.max_search_results, settings.litebridge_web_max_results)`
+     `effective_page_fetches = min(policy.web.max_page_fetches, settings.litebridge_web_max_page_fetches)`
+     A caller can never increase configured resource limits.
+  10. **Candidate Source-Kind Validation**: `service.py` validates candidate source kinds against the source descriptor: local document descriptors permit only `LOCAL_DOCUMENT`; web search descriptors permit both `WEB_SEARCH_SNIPPET` and `WEB_PAGE_EXCERPT`.
+  11. **Thread-Safe In-Memory TTL Caching**: `WebRetrievalCache` protects its internal `OrderedDict` with `threading.RLock()` across all read/write/evict/clear operations. Cache hits return candidates with `web_calls=0`.
+  12. **Package ID Determinism**: `package_id` deterministically incorporates `canonical_url` and `content_hash` of selected web evidence, but strictly excludes `fetched_at_utc`, network timings, and cache status.
+  13. **Zero Live Tests**: All testing is 100% mocked via mock transports and synthetic resolvers; zero live network calls or paid API requests are made.
+### ADR-030: Defer Direct Web Page Retrieval; Verify L3 as Snippet-Only Search
+- **Context**: The Phase L1–L3 independent security audit confirmed a Time-of-Check to Time-of-Use (TOCTOU) DNS-rebinding risk in direct arbitrary web page fetching (`SafeWebPageFetcher`) because `httpx`/`httpcore` provides no stable public API to pin socket connection to a pre-validated IP while preserving TLS SNI and certificate verification. This created a tension: either accept the residual risk, use private unstable `httpcore` hooks, keep dormant experimental code, or rescope the phase.
+- **Decision**:
+  1. **Rejected Alternatives**:
+     - *Accepting unmitigated risk*: Rejected because it lowers zero-trust security guarantees for the capstone and creates false security claims.
+     - *Private httpcore DNS-pinning hooks*: Rejected because depending on private `httpcore.HTTPConnection._connect` is brittle, unstable across dependency updates, and an unsuitable security foundation.
+     - *Dormant experimental fetch flags (`allow_experimental_fetch`)*: Rejected because dormant insecure code remains active attack surface and technical debt.
+  2. **Complete Removal of Direct Page Fetching from Active Runtime**: Deleted `SafeWebPageFetcher`, `WebPageFetcher`, `FetchedWebPage`, and `SourceKind.WEB_PAGE_EXCERPT`. Removed all page-fetch configuration (`LITEBRIDGE_WEB_MAX_PAGE_FETCHES`, `LITEBRIDGE_WEB_MAX_RESPONSE_BYTES`, `LITEBRIDGE_WEB_MAX_REDIRECTS`, `LITEBRIDGE_WEB_ALLOWED_FETCH_DOMAINS`) and domain allowlist validation.
+  3. **Verified Snippet-Only Web Search**: Rescoped Phase L3 strictly to provider-neutral search snippet retrieval (initially backed by Tavily Basic Search). The active L3 product makes zero outbound connections to search-result URLs; its sole external network operation is bounded requests to the fixed Tavily Search API endpoint.
+  4. **Strict Opt-In & Preserved Invariants**: Web snippet retrieval continues to require all 5 explicit opt-in conditions (`ExecutionProfile.HYBRID`, `SourcePolicy(allowed_source_ids=("tavily_web_search",))`, `WebRetrievalPolicy(allow_external_query=True)`, `LITEBRIDGE_ENABLE_TAVILY_WEB=true`, and `TAVILY_API_KEY`). Default operation remains 100% local-only with no keys or network required.
+  5. **Deferred Capability**: Direct arbitrary web page retrieval is formally categorized as a **Deferred Security Milestone** requiring a dedicated future security architecture.
+  6. **Consequences & Exit Gate**: Phase L3 is certified as **Complete and verified — snippet-only web retrieval**. Phase L4 (`Planner and Budget Policy`) is **unblocked**.
+
+### ADR-031: LiteBridge L4 Deterministic Planner and Hard Budget Policy
+- **Context**: Phase L4 introduces query routing planning and resource budgeting to LiteBridge. Many RAG frameworks employ unbounded LLM-based agent loops, recursive query decomposition, or speculative multi-hop execution that incur unpredictable latency, token overhead, and external API cost. LiteBridge requires an explainable, cost-aware, and reproducible planning layer that preserves generator independence and zero-paid-API default operation.
+- **Decision**:
+  1. **Deterministic Single-Action Routing Planner**: `DeterministicPlanner` evaluates extracted query features (`QueryFeatures`: freshness cues, explicit temporal years, local technical reference cues), the execution profile, and caller policies to select exactly one registered source (`LOCAL`, `WEB`) or emit `BLOCKED`. It makes zero LLM calls, zero agent loops, and zero speculative retries.
+  2. **Deliberate Deferral of Decomposition, Multi-Hop, and Fusion**: Query decomposition, iterative multi-hop retrieval, and multi-source evidence fusion are deliberately deferred to future phases. L4 is strictly a transparent routing and budget controller.
+  3. **Separation of Budget Authorities**:
+     - `RetrievalPolicy` exclusively owns context character and token ceilings (`max_context_chars`, `max_estimated_tokens`).
+     - `BudgetPolicy` exclusively owns execution calls, cost, and wall-clock ceilings (`max_retrieval_calls`, `max_web_calls`, `max_wall_clock_ms`, `max_estimated_external_cost_microusd`).
+     - Duplicate context/token limits are strictly eliminated from `BudgetPolicy` to prevent dual authorities.
+  4. **Strict Boundary Encapsulation (No Public `get_retriever`)**: `SourceRegistry` exposes read-only descriptor inspection (`get_descriptor`, `default_descriptor`, `has_source`, `list_descriptors`). Direct retriever object resolution remains internal to `resolve()`, ensuring callers cannot bypass the planner or budget guard.
+  5. **Honest Wall-Clock Semantics**:
+     - Hard preflight limits: `max_retrieval_calls`, `max_web_calls`, `max_estimated_external_cost_microusd`.
+     - Bounded web timeout: web search adapter clamps network timeout to `policy.budget.max_wall_clock_ms`.
+     - Post-execution wall-clock reporting: synchronous local retrieval measures elapsed wall-clock time and reports `StopReason.BUDGET_EXCEEDED` alongside a sanitized fixed warning if the budget was exceeded after retrieval completed. Wall-clock control is not falsely labeled as universally hard pre-emption.
+  6. **Accurate Web Call Cost Accounting**: External cost is charged only for actual web calls: `estimated_external_cost_microusd = descriptor.estimated_external_cost_microusd * actual_web_calls`. In-memory cache hits incur zero external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
+  7. **Backward-Compatible Defaults**: Default `RetrievalPolicy()` uses `BudgetPolicy()` (local only, `max_web_calls=0`). Under `HYBRID` profile with `web.allow_external_query=True`, `RetrievalPolicy` automatically defaults `budget` to permit 1 web call and up to 1,000,000 uUSD unless explicitly configured, preserving 100% backward compatibility with L1–L3 calls.
+  8. **Deterministic Package Identity**: `package_id` deterministically incorporates `planner_decision` route and `reason_codes`, `effective_budget` parameters, and complete stable `source_descriptor` identity (`source_id`, `source_kind`, `privacy_classification`, `estimated_external_cost_microusd`), while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
+  9. **Consequences & Exit Gate**: Phase L4 was certified complete. Phase L5 (`External LLM Provider Adapters`) was unblocked.
+
+### ADR-032: LiteBridge L5 Optional Generation Providers and Syntactic Citation-Gated Answers
+- **Context**: Phase L5 introduces optional answer generation to LiteBridge. Many RAG systems tightly couple generation into the retrieval pipeline, depend on heavyweight vendor SDKs (introducing security and transitive dependency bloat), or hallucinate ungrounded citations without validation. LiteBridge requires answer generation that consumes an already-built immutable ContextPackage while keeping prepare_context() 100% generator-independent, maintaining zero paid API keys by default, and validating citations fail-closed.
+- **Decision**:
+  1. **Strict Pipeline Decoupling**: answer = bridge.answer(context_package, generation_policy=None) is completely decoupled from retrieval. answer() consumes a finished, immutable ContextPackage; it never retrieves, plans, reranks, calls source registries, alters budgets, or mutates the package. prepare_context() remains 100% generator-independent with zero imports or awareness of generation providers.
+  2. **Zero Vendor SDK Dependencies**: No vendor SDKs (openai, anthropic, google-genai, ollama) are added to project dependencies. All 5 generation adapters (OllamaGenerationAdapter, OpenAICompatibleLocalAdapter, OpenAIGenerationAdapter, AnthropicGenerationAdapter, GeminiGenerationAdapter) use standard-library typing and internal adapter-owned httpx.Client(trust_env=False, follow_redirects=False).
+  3. **Strict Network & Loopback Guardrails**:
+     - Local endpoints (Ollama, OpenAICompatibleLocal) enforce HTTP-only, literal 127.0.0.1 / [::1] or loopback-resolved localhost, zero credentials, zero query/fragments, and zero unexpected subpaths.
+     - Single request rule: exactly one HTTP request, zero retries, zero fallback to secondary providers.
+     - Ollama uses native /api/chat only; OpenAI-compatible endpoints are isolated in OpenAICompatibleLocalAdapter.
+  4. **Disabled by Default & Explicit Nonblank Model**: All generation providers are disabled by default (LITEBRIDGE_ENABLE_*=false). If a provider is enabled in configuration, a nonblank model name (and API key for authenticated endpoints) is strictly required at startup.
+  5. **Privacy Boundary & Per-Call Opt-In**: Any LOCAL_DOCUMENT evidence marks the ContextPackage private. A hosted provider (hosted_openai, hosted_anthropic, hosted_gemini) will refuse to send private evidence and fails closed with GenerationStatus.POLICY_BLOCKED and PRIVATE_EVIDENCE_EXPORT_NOT_ALLOWED unless allow_private_evidence_export=True is explicitly passed in GenerationPolicy. Environment variables cannot silently grant export consent.
+  6. **Syntactic Citation Validation & Fail-Closed Guard**:
+     - Validation is strictly syntactic: it verifies cited tokens exist in context_package.evidence without falsely overclaiming semantic verification.
+     - Strict parser scans all citation-like tokens (\[[cC][^\]]*\]). Any malformed ([CX], [C1 ], [C0], [c1]) or unknown ([C999]) token immediately fails closed to GenerationStatus.INVALID_CITATIONS with fixed abstention text, even if a valid citation is present.
+     - Successful answers require at least one valid citation and zero malformed/unknown tokens.
+  7. **Sanitized Failure & Deterministic Identity**:
+     - answer() never raises unhandled provider exceptions and never exposes raw upstream error text, URLs, paths, or secrets in GroundedAnswer or warnings. Failures return structured GroundedAnswer with sanitized abstention text.
+     - answer_id is derived deterministically from package ID, provider ID, model ID, normalized policy, final answer text, status, and cited IDs (excluding timings and usage).
+  8. **Consequences & Exit Gate**: Phase L5 was certified complete and verified with 100% mocked transports. Phase L6 (Context Compression and Quality Controls) was unblocked.
+
+### ADR-033: LiteBridge L6 Deterministic Extractive Context Compression and Quality Controls
+- **Context**: Phase L6 introduces context compression and quality controls to LiteBridge. Many compression approaches use LLM-based abstractive summarizers (introducing non-determinism, hallucination risk, token costs, and high latency) or naive token-truncation algorithms that sever sentences mid-phrase, drop citations, or falsify budget adherence by checking unrendered excerpts instead of the full prompt context. LiteBridge requires an explainable, deterministic, citation-preserving extractive compression mechanism that adheres to strict safety boundaries.
+- **Decision**:
+  1. **Deterministic Extractive-Only Scope**: `compress_context()` operates exclusively via complete sentence selection or whole-item retention/dropping. Zero abstractive summarization, zero token truncation mid-sentence, zero rephrasing, and zero LLM calls.
+  2. **Strict Generator and Retrieval Independence**: `compress_context()` never invokes retrieval, planning, budget computation, or generation providers. It consumes an already-built `ContextPackage` and produces a valid new `ContextPackage`.
+  3. **Conservative Deduplication Policy**: Exact retrieval duplicate copies (`source_id`, `source_kind`, `document_id`, `chunk_id`, exact normalized excerpt) are only dropped when callers explicitly configure both `allow_evidence_drop=True` AND `deduplicate_exact_retrieval_copies=True`. By default, both are `False`, preserving all evidence.
+  4. **Target Checks Against Final Rendered Context**: Target token and character limits are evaluated against the complete rendered context string—including `UNTRUSTED_CONTENT` wrapper boundaries, provenance headers, labels, citation tags `[C#]`, and closing `[END C#]` markers—ensuring honest budget compliance.
+  5. **Integer Arithmetic for Compression Ratio**: Compression basis points are calculated with pure integer arithmetic: `(original_tokens - compressed_tokens) * 10_000 // original_tokens`, eliminating floating-point rounding instability across platforms.
+  6. **Citation and Provenance Invariant**: Retained evidence preserves its original citation ID (`[C1]`, `[C3]`) and metadata. Citations are never renumbered. Any downstream L5 answer citing a dropped evidence item fails closed under syntactic citation validation (`INVALID_CITATIONS`).
+  7. **Preserved Retrieval Metadata**: Retrieval `stop_reason`, `planner_decision`, `budget_used`, `retrieval_calls`, and `web_calls` are immutable and preserved verbatim from the parent package. An unmet compression target is a compression outcome (`CompressionOutcome.TARGET_UNACHIEVABLE`), not a retrieval failure.
+  8. **Deterministic Package Identity**: Compressed package `package_id` deterministically incorporates the parent package ID, normalized compression policy, retained evidence IDs/citations/excerpt hashes, and stable report fields.
+  9. **Ordered Boundary Concatenation Check**: Quality verification proves that compressed text is an ordered, non-overlapping sequence of original complete sentences without unsafe fragment assembly.
+  10. **Consequences & Audit Gate**: Phase L6 implementation completed. An independent read-only architecture and security audit identified 10 findings (F01–F10) across Phases L4–L6, holding the exit gate until remediated. Phase L7 remains blocked pending independent re-audit.
+
+### ADR-034: LiteBridge L4–L6 Independent Audit Remediation (F01–F10)
+- **Context**: An independent audit of Phases L4–L6 identified 10 technical findings (F01–F10) spanning planner routing diagnostics, budget preflight enforcement, sentence boundary parsing and separator preservation, deterministic package and descendant identity lineage, explicit provider selection defaults, loopback error sanitization and IPv6 bracketed formatting, floating-point answer ID precision, and Core-Port-Adapter boundary isolation.
+- **Decision**:
+  1. **F01 & F09: Truthful Routing Diagnostics and Budget Preflight**:
+     - Added `PlannerReason.LOCAL_SOURCE_UNAVAILABLE` and `StopReason.SOURCE_UNAVAILABLE` when a locally routed source is disabled or unavailable.
+     - Preflight budget check in `BudgetGuard` immediately rejects queries with `INSUFFICIENT_RETRIEVAL_BUDGET` whenever an external source or external cost descriptor is routed with zero allowed budget, preventing silent budget bypass.
+  2. **F02 & F03: Conservative Boundary Parser and Separator Preservation**:
+     - Replaced fragmented splitting logic with a shared pure parser `parse_sentence_boundaries()`.
+     - Preserves original whitespace and separators for all selected boundaries without synthetic space insertions.
+     - Handles multiline list item continuations, structured indentation, and inline punctuation safely.
+     - Quality control assertions in `quality_controls.py` share the same pure parser, eliminating boundary disagreements.
+  3. **F04 & F10: Deterministic Package Identity and Descendant Lineage**:
+     - Resolved ADR-031 descriptor-identity claim by incorporating full stable source descriptor identity (`source_id`, `source_kind`, `privacy_classification`, `estimated_external_cost_microusd`) and planner `reason_codes` into `_derive_package_id()`.
+     - Explicitly compressed empty packages (`evidence=()`) and no-reduction packages derive deterministic descendant package IDs distinct from their parent, with repeated identical runs yielding the same descendant ID.
+     - Complete compression policy fields are hashed into descendant IDs.
+  4. **F05: Explicit Generation Provider Selection**:
+     - `GenerationPolicy.provider_id` defaults to `None`.
+     - `LiteBridge.answer()` fails closed with status `PROVIDER_UNAVAILABLE`, abstention reason `PROVIDER_NOT_CONFIGURED`, and zero provider calls when no provider is explicitly specified.
+  5. **F06: Loopback Sanitization and IPv6 Support**:
+     - Sanitized loopback error messages, removing raw exceptions and user-controlled strings.
+     - Robust integer port parsing inside try/except with 1..65535 boundary enforcement.
+     - Formats IPv6 loopback host as bracketed `[::1]`.
+  6. **F07: Deterministic Answer ID Policy Inputs**:
+     - `derive_answer_id()` uses full float precision `str(policy.temperature)` and explicitly includes `policy.timeout_ms`.
+  7. **F08: Core-Port-Adapter Boundary Isolation**:
+     - Eliminated eager imports of EvidenceOps retrieval services in `bridge/__init__.py` using module-level `__getattr__`.
+     - `bridge/factory.py` delegates documentation service creation lazily, ensuring core modules contain zero direct EvidenceOps retrieval dependencies at load time.
+  8. **Consequences & Status**:
+     - Remediations for F01–F10 are implemented and verified by 18 focused regression tests and full test suite (218 bridge tests, 728 total tests).
+     - Status: **Remediation completed and certified**. Phase L7 implementation approved with mandatory safety corrections.
+
+### ADR-035: LiteBridge L7 API, SDK, and MCP Interfaces
+- **Context**: Phase L7 introduces external consumption interfaces for LiteBridge (API, SDK, and MCP Interfaces). Directly exposing internal backend mechanisms, deterministic IDs, arbitrary model overrides, or multi-source inputs creates severe security, cost, and architecture-boundary risks. Ten mandatory safety corrections were established prior to implementation.
+- **Decision**:
+  1. **Opaque Random Context Handles**: Interfaces generate cryptographically secure, random opaque handles (`ctx_<urlsafe_token>`) via `InterfacePackageStore`. A deterministic `package_id` is never used as an access token; guessed package IDs are rejected with 404 or ToolError.
+  2. **Façade-Only Python SDK**: `LiteBridgeSDK` wraps strictly public facade methods (`prepare_context()`, `compress_context()`, `answer()`, `list_capabilities()`). It never accesses private registry attributes (`_source_registry`, `_generation_registry`) or internal adapter implementations.
+  3. **Exact Bounded L6 Compression Policy**: API and MCP interfaces accept only the real bounded L6 policy fields (`target_max_context_chars`, `target_max_estimated_tokens`, `max_sentences_per_evidence`, `deduplicate_exact_retrieval_copies`, `allow_evidence_drop`). Unsupported fields or strategies are rejected.
+  4. **Server-Owned Model Configuration**: Clients select only registered `provider_id`s. Model overrides, endpoints, and credentials cannot be injected by callers; `model` override attempts are rejected with 422 or ToolError.
+  5. **Single Source Selection Only**: Interfaces accept at most one optional `source_id: str | None`, constructing the internal `SourcePolicy`. Multi-source selection lists are strictly prohibited at the interface boundary.
+  6. **Server-Level Dual Consent for External Retrieval**: Added `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`. Web or hybrid retrieval requires both this server-level flag and explicit per-call client consent (`allow_external_query=True`).
+  7. **Local Boundary Enforcement**: Local API security is enforced via `LocalRequestBoundary` middleware and loopback host configuration (`127.0.0.1`/`localhost`), not router registration alone. Remote deployment is blocked without explicit authentication.
+  8. **Strict Input Validation in FastMCP (`extra="forbid"`)**: All FastMCP tool argument models enforce `extra="forbid"`. Injected fields, paths, or arbitrary metadata are rejected before execution.
+  9. **Handle Lifecycle on Compression**: Storing a package returns a fresh opaque handle. Compressing a package yields a new opaque handle for the descendant package while preserving the parent handle until TTL expiry.
+  10. **Sanitized Capabilities Metadata**: The capabilities endpoint exposes only public display names, IDs, enabled status, provider locations, and source kinds. Zero credentials, adapter IDs, URLs, model endpoints, or file paths are ever exposed.
+- **Consequences**:
+  - Full suite passed (747 passed, 1 skipped).
+  - Gate L7 satisfied. Phase L7 completed. LiteBridge provides safe, bounded SDK, API, and MCP access.
+
+### ADR-036: LiteBridge L8 Frozen Evaluation Protocol and Learned-Controller Gate
+- **Context**: Phase L8 introduces a reproducible evaluation framework to measure LiteBridge's retrieval planning, context preparation, extractive context compression, citation integrity, latency, and estimated resource usage under frozen, deterministic conditions. Benchmarking must not rely on unversioned live APIs, mutable web search results, or subjective LLM judges. In addition, an optional learned routing controller was evaluated as an offline exploratory experiment.
+- **Decision**:
+  1. **Frozen Dataset & Integrity Verification**: Created `eval/litebridge/` with hand-authored benchmark cases (`cases.jsonl`), local documentation fixtures (`fixture_local_evidence.jsonl`), and web snippets (`fixture_web_snippets.jsonl`). Partitioned into 40 cases with strictly disjoint splits: 12 train, 12 validation, and 16 held-out test cases. The runner verifies SHA-256 hashes against `manifest.json` before execution, failing closed on any tampering or split overlap.
+  2. **Zero Live Network & CPU Execution**: Evaluation operates entirely on CPU without live calls to Tavily, OpenAI, Anthropic, Gemini, Ollama, or remote databases. Web snippets provide canonical HTTPS URLs without live internet traffic.
+  3. **Strict Single-Action Baselines**: Evaluates seven clearly defined baselines under identical frozen inputs: `no_retrieval`, `fixed_local`, `fixed_web`, `heuristic_planner`, `heuristic_plus_compression`, `learned_planner_experiment`, and `evidenceops_adapter_conformance`.
+  4. **Bounded L6 Compression Evaluation & Invariant Rule**: Context compression uses real `CompressionPolicy` bounds (`target_max_context_chars=1200`, `target_max_estimated_tokens=300`, `max_sentences_per_evidence=3`, `deduplicate_exact_retrieval_copies=True`, `allow_evidence_drop=False`). Achieved 100% support-preservation rate across answerable cases with evidence. A hard runner invariant mandates that any drop below 100% halts execution and marks L8 incomplete.
+  5. **Portability Conformance Baseline**: Conformance evaluation tests `EvidenceOpsLocalRetrieverAdapter` against a `FakeLocalDocumentationService` to prove interoperability with the non-EvidenceOps web fixture without requiring live Qdrant, FastEmbed, or Ollama processes.
+  6. **Statistical Latency Distribution (10 Timed Passes)**: Runs 1 warm-up pass followed by 10 timed execution passes across all baselines and cases. Collects 400 measurements per baseline to report robust percentiles (mean, median, p50, p90, p95, min, max).
+  7. **Deterministic Digest Reproducibility**: Derives a stable SHA-256 `determinism_digest` across all non-timing report fields. Independent evaluation runs produce identical digests (`1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b`), proving exact run determinism while outputting to separate timestamped artifact directories.
+  8. **Offline Learned Controller Experiment & Predeclared Non-Adoption**: Evaluated an offline `LogisticRegression` classifier using only 8 deterministic non-LLM query and budget features. Fitted strictly on `train` (12 cases), evaluated on `validation` (12 cases), and evaluated once on `test` (16 cases). Predeclared decision: **Learned controller not adopted: offline candidate only, runtime adoption deferred.** The L4 `DeterministicPlanner` remains the sole production planner in LiteBridge runtime.
+  9. **Honest Metric Boundaries**: Character-based token counts (`chars / 4`) and configured micro-USD estimates are explicitly reported as approximations, not billing or financial savings. Citation validity and provenance preservation are verified structurally without claiming semantic entailment.
+- **Consequences**:
+  - Phase L8 evaluation suite is fully implemented, verified, and passing (21 new eval unit tests, 768 total passed tests).
+  - Gate L8 satisfied. Next phase: **Phase L9 — Release Hardening**.
+
+### ADR-037: LiteBridge L9 Release Hardening and Security Boundary Verification
+- **Decision**: L9 completes the final hardening, security audit, documentation, and release-readiness verification for LiteBridge on `experiment/litebridge-bridge`. Verified and hardened boundaries include:
+  1. **Prompt Injection & Evidence Delimiters**: Retrieved evidence remains strictly wrapped inside untrusted delimiters (`[UNTRUSTED_RETRIEVED_DATA]`), keeping system instructions separate from untrusted content. Citation validation fails closed on malformed or unknown citation markers.
+  2. **Provider Failure & Sanitization Audit**: Mock-transport and hostile-failure tests verify that provider exceptions (timeouts, auth errors, connection drops, database leaks) return structured `GroundedAnswer` with sanitized warnings, zero leaked credentials or file paths, zero mutations to `ContextPackage`, and at most one provider invocation. Local retrieval remains fully operational.
+  3. **Core Portability & Import Decoupling**: AST analysis and fresh-process execution verify that core LiteBridge modules do not import or load framework, retrieval, generation adapter, API, MCP, or evaluation implementation modules.
+  4. **Tracked-Text Secret Hygiene Scanner**: Implemented safe scanner in `scripts/verify_litebridge_release.py` that enumerates `git ls-files`, filters to text allowlist, skips `.env` before any read, never prints secret values, and verifies zero detected tracked credentials.
+  5. **Non-Destructive Offline Release Verifier**: `scripts/verify_litebridge_release.py` runs offline with zero network calls, verifies L8 manifest SHA-256 digests, and executes two isolated evaluation runs to confirm matching `determinism_digest` (`1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b`).
+  6. **Truthful Documentation & Non-Claims**: Documentation explicitly states that syntactic citation validation does not constitute semantic claim support; fixture benchmarks are not production performance/cost proof; learned planner runtime adoption is deferred; and direct arbitrary web page retrieval remains a deferred security milestone.
+- **Consequences**:
+  - Phase L9 release hardening is complete, verified, and passing (21 dedicated security tests, 252 bridge/eval tests, 789 total repository tests).
+  - Gate L9 satisfied. LiteBridge experimental track is ready for experimental release on `experiment/litebridge-bridge`.

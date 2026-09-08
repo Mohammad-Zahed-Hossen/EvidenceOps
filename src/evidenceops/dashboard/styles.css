@@ -908,3 +908,453 @@ textarea {
   .field-hint { flex-wrap: wrap; gap: 0.25rem; }
   .footer { padding: 0.75rem; }
 }
+
+/* ========================================================================== */
+/* UX U1: Accessible Tab Navigation                                          */
+/* ========================================================================== */
+.nav-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.4rem;
+  background: rgba(14, 21, 32, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+}
+
+.nav-tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.825rem;
+  font-weight: 600;
+  padding: 0.45rem 0.95rem;
+  border-radius: 20px;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+.nav-tab.active {
+  color: #0c1017;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal));
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.35);
+}
+
+.tab-panel.hidden {
+  display: none !important;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* ========================================================================== */
+/* UX U1: Status Indicators & Capability Chips                              */
+/* ========================================================================== */
+.status-dot.enabled {
+  background-color: var(--status-ready);
+  box-shadow: 0 0 8px var(--status-ready);
+}
+
+.status-dot.disabled {
+  background-color: var(--status-warning);
+  box-shadow: 0 0 8px var(--status-warning);
+}
+
+.status-dot.unavailable {
+  background-color: var(--status-danger);
+  box-shadow: 0 0 8px var(--status-danger);
+}
+
+.status-dot.neutral {
+  background-color: var(--status-neutral);
+}
+
+/* ========================================================================== */
+/* UX U1: Grounded QA Answer Action Bar & Interactive Citations              */
+/* ========================================================================== */
+.answer-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.action-buttons-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.775rem;
+  border-radius: var(--radius-sm);
+}
+
+.action-feedback {
+  font-size: 0.75rem;
+  color: var(--accent-teal);
+  font-weight: 600;
+}
+
+.action-feedback.hidden {
+  display: none;
+}
+
+/* Citation token inside answer text */
+.citation-ref-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: baseline;
+  padding: 0.1rem 0.4rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(0, 210, 255, 0.12);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 0.15rem;
+  transition: var(--transition);
+  min-height: 24px;
+}
+
+.citation-ref-btn:hover {
+  background: var(--accent-cyan);
+  color: #0c1017;
+  box-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+}
+
+.citation-ref-btn:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 1px;
+}
+
+/* Pulsing highlight for selected citation card */
+.citation-highlighted {
+  box-shadow: 0 0 0 2px var(--accent-cyan), 0 0 16px rgba(0, 210, 255, 0.4) !important;
+  border-color: var(--accent-cyan) !important;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+/* ========================================================================== */
+/* UX U1: LiteBridge Context Lab                                             */
+/* ========================================================================== */
+.lab-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inspector-meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(14, 21, 32, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+}
+
+.handle-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.handle-title {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.opaque-handle-code {
+  font-family: monospace;
+  color: var(--accent-cyan);
+  font-weight: 700;
+  background: rgba(0, 210, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  font-size: 0.825rem;
+}
+
+.package-id-code {
+  font-family: monospace;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.lab-metrics-strip {
+  margin-bottom: 1rem;
+}
+
+.warnings-box {
+  padding: 0.75rem 1rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--status-warning);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+}
+
+.warnings-list {
+  margin-top: 0.25rem;
+  padding-left: 1.25rem;
+}
+
+/* Untrusted Content Boundary */
+.untrusted-content-box {
+  background: rgba(10, 14, 20, 0.75);
+  border: 1px dashed rgba(244, 63, 94, 0.45);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.untrusted-label {
+  display: block;
+  font-size: 0.675rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--status-danger);
+  margin-bottom: 0.35rem;
+}
+
+.untrusted-excerpt {
+  font-size: 0.825rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.compression-controls-box {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.compression-desc {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.warning-label {
+  color: var(--status-warning);
+}
+
+.compression-report-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(14, 21, 32, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.report-title {
+  font-size: 0.85rem;
+}
+
+.diff-view-section {
+  margin-top: 1rem;
+}
+
+.diff-view-title {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.diff-card {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+  background: var(--bg-card);
+}
+
+.diff-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.diff-blocks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.diff-block-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+/* ========================================================================== */
+/* UX U1: Runs & System View                                                 */
+/* ========================================================================== */
+.system-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.runs-disclaimer-banner {
+  padding: 0.65rem 0.85rem;
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--status-warning);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.session-run-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+  background: rgba(19, 27, 38, 0.7);
+  transition: var(--transition);
+}
+
+.session-run-card:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(24, 35, 50, 0.7);
+}
+
+.session-run-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-run-query {
+  font-weight: 600;
+  font-size: 0.825rem;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.session-run-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  align-items: center;
+}
+
+.capabilities-panel .cap-group {
+  margin-top: 0.75rem;
+}
+
+.capabilities-panel .cap-group-title {
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.cap-item-card {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.35rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(14, 21, 32, 0.5);
+  font-size: 0.775rem;
+}
+
+/* ========================================================================== */
+/* Responsiveness & Accessibility                                            */
+/* ========================================================================== */
+@media (max-width: 1024px) {
+  .system-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .nav-tabs {
+    justify-content: center;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .header-status {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .diff-blocks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
