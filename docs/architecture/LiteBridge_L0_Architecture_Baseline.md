@@ -312,11 +312,21 @@ Phase L7 establishes safe external interfaces over the LiteBridge public facade:
 - **Strict MCP Schemas (`extra="forbid"`):** FastMCP tool argument models enforce `extra="forbid"`, rejecting unknown arguments prior to execution.
 - **Sanitized Capabilities Metadata:** The capabilities endpoint returns only public display names, IDs, enabled status, provider locations, and source kinds with zero secrets, adapter IDs, URLs, model endpoints, or file paths.
 
+### 14. Architecture Amendment: Phase L8 (Frozen Evaluation and Learned-Controller Gate)
+Phase L8 implements reproducible, leakage-free benchmark evaluation and offline controller experimentation:
+- **Frozen Corpus & Zero Network:** 40 hand-authored cases partitioned into strictly disjoint splits (12 train, 12 validation, 16 test) with zero live network calls. All local documentation and web snippets are provided by static, SHA-256 verified JSONL fixtures.
+- **Manifest Integrity Invariant:** `eval/litebridge/manifest.json` tracks file hashes; any file alteration or tampering raises `ManifestIntegrityError` and aborts evaluation immediately.
+- **Multi-Connector Portability Conformance:** `EvidenceOpsLocalRetrieverAdapter` passes identical contract conformance tests as the static fixture retriever via `FakeLocalDocumentationService`, verifying adapter portability without live Qdrant/FastEmbed infrastructure.
+- **Support-Preservation Invariant:** Extractive context compression enforces a 100% support-preservation rate across all answerable cases.
+- **Determinism Digest:** Runs emit an immutable SHA-256 `determinism_digest` across all non-timing fields, guaranteeing deterministic artifact repeatability across distinct executions.
+- **Latency Distribution:** Deterministic multi-pass benchmarking (10 timed passes) measures p50, p90, p95, and p99 percentiles across runs.
+- **Learned Controller Predeclared Non-Adoption Gate:** An offline `LogisticRegression(random_state=42)` classifier trained on 8 lexical/budget features is evaluated on the validation split. Per predefined Phase L8 governance, a 12-case validation set cannot justify replacing the production heuristic planner. The candidate is recorded as offline-only; runtime `prepare_context()` continues using `DeterministicPlanner`.
+
 ---
 
 ## H. Resume Guide
 
 ```text
-Current status: Phase L7 (API, SDK, and MCP Interfaces) completed and verified.
-Next phase: Phase L8 — Evaluation and Learned Controller.
+Current status: Phase L8 (Evaluation and Learned Controller) completed and verified.
+Next phase: Phase L9 — Release Hardening.
 ```

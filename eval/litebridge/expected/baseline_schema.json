@@ -1,0 +1,376 @@
+{
+  "$defs": {
+    "AggregateMetrics": {
+      "additionalProperties": false,
+      "description": "Aggregated evaluation metrics for a partition or full benchmark run.",
+      "properties": {
+        "case_count": {
+          "title": "Case Count",
+          "type": "integer"
+        },
+        "route_accuracy": {
+          "title": "Route Accuracy",
+          "type": "number"
+        },
+        "source_accuracy": {
+          "title": "Source Accuracy",
+          "type": "number"
+        },
+        "evidence_recall": {
+          "title": "Evidence Recall",
+          "type": "number"
+        },
+        "answerability_correctness": {
+          "title": "Answerability Correctness",
+          "type": "number"
+        },
+        "blocked_correctness": {
+          "title": "Blocked Correctness",
+          "type": "number"
+        },
+        "total_retrieval_calls": {
+          "title": "Total Retrieval Calls",
+          "type": "integer"
+        },
+        "total_web_calls": {
+          "title": "Total Web Calls",
+          "type": "integer"
+        },
+        "total_estimated_external_cost_microusd": {
+          "title": "Total Estimated External Cost Microusd",
+          "type": "integer"
+        },
+        "avg_context_characters": {
+          "title": "Avg Context Characters",
+          "type": "number"
+        },
+        "avg_estimated_tokens": {
+          "title": "Avg Estimated Tokens",
+          "type": "number"
+        },
+        "citation_validity_rate": {
+          "title": "Citation Validity Rate",
+          "type": "number"
+        },
+        "provenance_preservation_rate": {
+          "title": "Provenance Preservation Rate",
+          "type": "number"
+        },
+        "support_preservation_rate": {
+          "title": "Support Preservation Rate",
+          "type": "number"
+        },
+        "char_reduction_pct": {
+          "default": 0.0,
+          "title": "Char Reduction Pct",
+          "type": "number"
+        },
+        "token_reduction_pct": {
+          "default": 0.0,
+          "title": "Token Reduction Pct",
+          "type": "number"
+        },
+        "compression_outcome_distribution": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Compression Outcome Distribution",
+          "type": "object"
+        },
+        "stop_reason_distribution": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Stop Reason Distribution",
+          "type": "object"
+        },
+        "latency": {
+          "$ref": "#/$defs/LatencyDistribution"
+        }
+      },
+      "required": [
+        "case_count",
+        "route_accuracy",
+        "source_accuracy",
+        "evidence_recall",
+        "answerability_correctness",
+        "blocked_correctness",
+        "total_retrieval_calls",
+        "total_web_calls",
+        "total_estimated_external_cost_microusd",
+        "avg_context_characters",
+        "avg_estimated_tokens",
+        "citation_validity_rate",
+        "provenance_preservation_rate",
+        "support_preservation_rate",
+        "latency"
+      ],
+      "title": "AggregateMetrics",
+      "type": "object"
+    },
+    "BaselineName": {
+      "description": "Named benchmark baselines.",
+      "enum": [
+        "no_retrieval",
+        "fixed_local",
+        "fixed_web",
+        "heuristic_planner",
+        "heuristic_plus_compression",
+        "learned_planner_experiment",
+        "evidenceops_adapter_conformance"
+      ],
+      "title": "BaselineName",
+      "type": "string"
+    },
+    "CaseResult": {
+      "additionalProperties": false,
+      "description": "Outcome for a single evaluation case under a specific baseline.",
+      "properties": {
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "split": {
+          "$ref": "#/$defs/EvaluationSplit"
+        },
+        "baseline_name": {
+          "$ref": "#/$defs/BaselineName"
+        },
+        "route": {
+          "title": "Route",
+          "type": "string"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_recall": {
+          "title": "Evidence Recall",
+          "type": "number"
+        },
+        "context_characters": {
+          "title": "Context Characters",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "title": "Estimated Tokens",
+          "type": "integer"
+        },
+        "stop_reason": {
+          "title": "Stop Reason",
+          "type": "string"
+        },
+        "retrieval_calls": {
+          "title": "Retrieval Calls",
+          "type": "integer"
+        },
+        "web_calls": {
+          "title": "Web Calls",
+          "type": "integer"
+        },
+        "estimated_external_cost_microusd": {
+          "title": "Estimated External Cost Microusd",
+          "type": "integer"
+        },
+        "citation_ids_valid": {
+          "title": "Citation Ids Valid",
+          "type": "boolean"
+        },
+        "provenance_preserved": {
+          "title": "Provenance Preserved",
+          "type": "boolean"
+        },
+        "support_preserved": {
+          "title": "Support Preserved",
+          "type": "boolean"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "case_id",
+        "split",
+        "baseline_name",
+        "route",
+        "evidence_recall",
+        "context_characters",
+        "estimated_tokens",
+        "stop_reason",
+        "retrieval_calls",
+        "web_calls",
+        "estimated_external_cost_microusd",
+        "citation_ids_valid",
+        "provenance_preserved",
+        "support_preserved",
+        "duration_ms"
+      ],
+      "title": "CaseResult",
+      "type": "object"
+    },
+    "EnvironmentMetadata": {
+      "additionalProperties": false,
+      "description": "Sanitized environment details for benchmark execution.",
+      "properties": {
+        "python_version": {
+          "title": "Python Version",
+          "type": "string"
+        },
+        "platform": {
+          "title": "Platform",
+          "type": "string"
+        },
+        "cpu_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cpu Count"
+        },
+        "timed_passes_per_baseline": {
+          "default": 10,
+          "title": "Timed Passes Per Baseline",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "python_version",
+        "platform"
+      ],
+      "title": "EnvironmentMetadata",
+      "type": "object"
+    },
+    "EvaluationSplit": {
+      "description": "Dataset partition splits.",
+      "enum": [
+        "train",
+        "validation",
+        "test"
+      ],
+      "title": "EvaluationSplit",
+      "type": "string"
+    },
+    "LatencyDistribution": {
+      "additionalProperties": false,
+      "description": "Statistical summary of execution wall-clock latencies in milliseconds.",
+      "properties": {
+        "sample_count": {
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "mean_ms": {
+          "title": "Mean Ms",
+          "type": "number"
+        },
+        "median_ms": {
+          "title": "Median Ms",
+          "type": "number"
+        },
+        "p50_ms": {
+          "title": "P50 Ms",
+          "type": "number"
+        },
+        "p90_ms": {
+          "title": "P90 Ms",
+          "type": "number"
+        },
+        "p95_ms": {
+          "title": "P95 Ms",
+          "type": "number"
+        },
+        "min_ms": {
+          "title": "Min Ms",
+          "type": "number"
+        },
+        "max_ms": {
+          "title": "Max Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sample_count",
+        "mean_ms",
+        "median_ms",
+        "p50_ms",
+        "p90_ms",
+        "p95_ms",
+        "min_ms",
+        "max_ms"
+      ],
+      "title": "LatencyDistribution",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Full benchmark evaluation report artifact.",
+  "properties": {
+    "dataset_id": {
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "determinism_digest": {
+      "title": "Determinism Digest",
+      "type": "string"
+    },
+    "environment": {
+      "$ref": "#/$defs/EnvironmentMetadata"
+    },
+    "learned_controller_status": {
+      "title": "Learned Controller Status",
+      "type": "string"
+    },
+    "baselines": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "$ref": "#/$defs/AggregateMetrics"
+        },
+        "type": "object"
+      },
+      "title": "Baselines",
+      "type": "object"
+    },
+    "case_results": {
+      "items": {
+        "$ref": "#/$defs/CaseResult"
+      },
+      "title": "Case Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "manifest_sha256",
+    "determinism_digest",
+    "environment",
+    "learned_controller_status",
+    "baselines",
+    "case_results"
+  ],
+  "title": "EvaluationReport",
+  "type": "object"
+}

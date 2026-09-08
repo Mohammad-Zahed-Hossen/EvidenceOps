@@ -1,0 +1,60 @@
+{
+  "dataset_id": "litebridge-frozen-benchmark-v1",
+  "schema_version": "1.0.0",
+  "source_fixtures": {
+    "fixture_local_docs": {
+      "filename": "fixture_local_evidence.jsonl",
+      "sha256": "9c93040af498a7525fe10d2200843b0073a870a576bddb9ffa9cf004a3075f9b",
+      "count": 25,
+      "source_type": "LOCAL_DOCUMENT"
+    },
+    "fixture_web_search": {
+      "filename": "fixture_web_snippets.jsonl",
+      "sha256": "cc8475aaae8a2b61340abc853ee29e07a82a9ca27e869f3c20dd3e3d5d002a8a",
+      "count": 20,
+      "source_type": "WEB_SEARCH_SNIPPET"
+    }
+  },
+  "files": {
+    "cases.jsonl": {
+      "sha256": "66aac3ba29020cf1525569d759a98ac862d3f4ac676f684d7faa895972c4f84d",
+      "count": 40
+    },
+    "fixture_local_evidence.jsonl": {
+      "sha256": "9c93040af498a7525fe10d2200843b0073a870a576bddb9ffa9cf004a3075f9b",
+      "count": 25
+    },
+    "fixture_web_snippets.jsonl": {
+      "sha256": "cc8475aaae8a2b61340abc853ee29e07a82a9ca27e869f3c20dd3e3d5d002a8a",
+      "count": 20
+    },
+    "splits.json": {
+      "sha256": "239fb307a4a53ff2db4edd9d783e6adfe697fc064cad7f21fa649662f3f90ea9"
+    }
+  },
+  "splits": {
+    "train": {
+      "count": 12
+    },
+    "validation": {
+      "count": 12
+    },
+    "test": {
+      "count": 16
+    },
+    "total": {
+      "count": 40
+    }
+  },
+  "evaluation_policy_version": "1.0.0",
+  "litebridge_evaluation_code_version": "0.1.0",
+  "limitations": [
+    "Synthetic frozen fixtures; not real-world web or document crawls.",
+    "Zero live network calls; web search is simulated with canonical HTTPS fixtures.",
+    "No live LLM generator or external judge model invoked.",
+    "Token counts are deterministic character-based estimates (chars / 4), not provider BPE tokens.",
+    "External costs are configured micro-USD estimates, not financial billing records.",
+    "Route and source accuracies measure policy adherence against task specifications, not semantic entailment.",
+    "Learned controller is an offline-only candidate and is not adopted for runtime deployment."
+  ]
+}

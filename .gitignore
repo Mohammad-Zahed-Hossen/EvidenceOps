@@ -47,6 +47,8 @@ eval/reports/
 eval/generated/
 eval/runs/
 *.jsonl
+!eval/litebridge/
+!eval/litebridge/*.jsonl
 *.parquet
 
 # Node and dashboard

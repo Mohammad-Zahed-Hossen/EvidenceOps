@@ -42,27 +42,31 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: L4–L6 independent audit remediation completed pending independent re-audit
+### Status: Phase L8 completed and locally verified
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Phase L7 (API, SDK, and MCP Interfaces).
-- **Phase L7 Implementation Summary:**
-  - **Facade-Only Python SDK:** `LiteBridgeSDK` wraps public facade methods without accessing private registry attributes or adapters.
-  - **Opaque Context Handles:** In-memory `InterfacePackageStore` assigns cryptographically random opaque handles (`ctx_<token>`) with TTL eviction; guessed package IDs cannot retrieve packages.
-  - **Server-Owned Model Configuration:** API and MCP interfaces reject `model` overrides, arbitrary endpoints, URLs, credentials, and multiple source selection.
-  - **Dual Consent for External Retrieval:** Added `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`; web retrieval requires both server setting and per-call client consent.
-  - **Local Boundary Enforcement:** Local API security is guarded by `LocalRequestBoundary` middleware and loopback host configuration (`127.0.0.1`/`localhost`).
-  - **Strict MCP Argument Validation:** All FastMCP tool argument models enforce `extra="forbid"`, rejecting unknown arguments prior to execution.
-  - **Sanitized Capability Metadata:** Public `/capabilities` endpoint and tool expose only sanitized display names, IDs, enabled status, provider locations, and source kinds.
+- **Current Baseline:** Phase L8 (Evaluation and Learned Controller).
+- **Phase L7 Summary (Completed):** Phase L7 (API, SDK, and MCP Interfaces) certified with 10 mandatory safety corrections, opaque handles, server-owned models, dual consent, and strict MCP validation.
+- **Phase L8 Implementation Summary:**
+  - **Frozen Benchmark Corpus:** 40 hand-authored cases partitioned into strictly disjoint splits (12 train, 12 validation, 16 test) with zero live network calls. Supported by static JSONL fixtures for local documentation (`fixture_local_evidence.jsonl`) and web search snippets (`fixture_web_snippets.jsonl`).
+  - **Manifest Verification:** Cryptographic SHA-256 validation (`eval/litebridge/manifest.json`) fails closed immediately on any fixture modification or split tampering.
+  - **Multi-Connector Portability Conformance:** `EvidenceOpsLocalRetrieverAdapter` conforms to identical retrieval contracts as the static fixture retriever using a `FakeLocalDocumentationService`.
+  - **Seven Evaluation Baselines:** Evaluates `no_retrieval`, `fixed_local`, `fixed_web`, `heuristic_planner`, `heuristic_plus_compression`, `learned_planner_experiment`, and `evidenceops_adapter_conformance` under identical query conditions.
+  - **Support-Preservation Invariant:** 100% support-preservation rate across all answerable cases under extractive compression; runner fails closed if support drops.
+  - **Deterministic Repeatability:** Runner computes a stable `determinism_digest` across all non-timing report fields, ensuring run-to-run verification without timestamp drift.
+  - **Latency Distribution:** Deterministic 10-pass benchmarking measures p50, p90, p95, and p99 latency without single-run volatility.
+  - **Learned Controller Predeclared Non-Adoption Gate:** Evaluated an offline `LogisticRegression(random_state=42)` classifier on the 12-case validation split. Because 12 cases cannot establish safe production superiority over the deterministic heuristic, the model is recorded as an offline candidate only and runtime adoption is deferred.
 - **Verification Results:**
-  - Focused bridge & interface tests: 244 passed, 0 failures.
-  - Full test suite: 747 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors (242 files clean).
-  - Type checking: Mypy passes with zero issues (116 source files).
+  - Focused evaluation & bridge tests: 252 passed, 0 failures (`tests/unit/eval/` and `tests/unit/bridge/`).
+  - Full test suite: 768 passed, 1 skipped (Windows symlink privilege), 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors (259 files clean).
+  - Type checking: Mypy passes with zero issues (126 source files).
+  - Reproducibility: Determinism digest `1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b` reproduced identically across independent runs.
 - **Known Limitations & Deferred Milestones:**
+  - Synthetic routing corpus (40 cases) is an offline benchmark, not real-world web scale.
   - Multi-hop retrieval and multi-source evidence fusion remain deferred.
   - Direct web page retrieval remains a Deferred Security Milestone.
 - **Next Phase:**
-  `Phase L8 — Evaluation and Learned Controller`.
+  `Phase L9 — Release Hardening`.

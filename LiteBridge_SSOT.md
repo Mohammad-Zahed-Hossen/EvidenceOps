@@ -1,13 +1,14 @@
 # LiteBridge System Specification
 
 **Status:** Approved planning baseline
-**Version:** 1.4 — Safe Python SDK, Local API, and Narrow MCP Interfaces (Phase L7).
+**Version:** 1.5 — Frozen Evaluation and Learned-Controller Gate (Phase L8).
 **Project type:** Model-agnostic external retrieval, planning, and context-preparation layer  
 **Reference implementation:** EvidenceOps  
 **Primary repository:** `D:\Code\Assignment\EvidenceOps`  
 **Experimental branch:** `experiment/litebridge-bridge`
 
 ### Document Changelog
+- **Version 1.5 (2026-09-08):** Phase L8 Reproducible Evaluation and Optional Learned-Controller Experiment. Implemented frozen evaluation corpus (40 hand-authored cases, 12 train / 12 validation / 16 test disjoint splits, SHA-256 verified manifest failing closed on tampering), zero-network local fixtures (`fixture_local_evidence.jsonl`, `fixture_web_snippets.jsonl`), multi-connector `EvidenceOpsLocalRetrieverAdapter` conformance against fake documentation service, 7 evaluation baselines, determinism digest across runs, 10-pass latency percentiles, 100% support-preservation invariant, and predeclared offline-only learned controller gate keeping deterministic planner in runtime. Exit gate passed.
 - **Version 1.4 (2026-09-08):** Phase L7 Safe Python SDK, Local API, and Narrow MCP Interfaces. Implemented `LiteBridgeSDK` wrapping public facade methods; opaque random `context_handle` generation (`ctx_...`) via `InterfacePackageStore` with TTL eviction; server-level dual consent for web retrieval via `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`; server-owned model configuration rejecting caller `model` overrides; single source selection enforcement; loopback API boundary enforcement; strict FastMCP argument validation (`extra="forbid"`); and sanitized capability introspection. Exit gate passed.
 - **Version 1.3 (2026-09-08):** Phase L4–L6 independent audit remediation baseline (F01–F10). Enforces explicit generation provider selection (`provider_id=None` default failing closed to `PROVIDER_UNAVAILABLE` / `PROVIDER_NOT_CONFIGURED` with zero provider calls); derives deterministic descendant package IDs for empty and no-reduction compression paths; incorporates complete source descriptor identity, planner reason codes, and compression policy into deterministic package IDs; enforces preflight budget checks for web/cost sources; returns truthful `LOCAL_SOURCE_UNAVAILABLE` / `SOURCE_UNAVAILABLE` diagnostics; sanitizes loopback error messages with bracketed IPv6 support; unifies sentence boundaries in a shared pure parser preserving original separators; and isolates Core-Port-Adapter boundary with lazy factory imports. Remediations completed and certified.
 - **Version 1.2 (2026-09-08):** Phase L6 deterministic extractive context compression and quality controls baseline. Extractive sentence/whole-item compression, final rendered context target checks, conservative deduplication, integer basis points, and citation preservation.
@@ -957,7 +958,7 @@ Exit gate: external clients cannot access arbitrary backends, URLs, paths, crede
 - evaluate once on held-out test;
 - measure cost, context, latency, quality, and portability.
 
-Exit gate: all conclusions are supported by reproducible artifacts and limitations are visible.
+Exit gate: all conclusions are supported by reproducible artifacts and limitations are visible. (Passed: certified with frozen evaluation manifest SHA-256 6fb78e4e..., 40 hand-authored cases in 12-train/12-val/16-test disjoint splits, 100% support preservation invariant, zero-network fixture harness, EvidenceOpsLocalRetrieverAdapter conformance, deterministic latency distribution over 10 passes, identical determinism_digest across runs, and predeclared offline-only learned controller gate keeping deterministic planner in runtime).
 
 ### Phase L9: Release hardening
 

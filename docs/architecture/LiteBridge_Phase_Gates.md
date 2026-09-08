@@ -82,3 +82,9 @@ Stop immediately and fail the gate if any of the following occur:
 - **Verification:** 10 mandatory safety corrections implemented and verified.
 - **Criteria Met:** Façade-only Python SDK, opaque random context handles, server-owned model configuration, server-level dual consent for web retrieval, loopback boundary enforcement, FastMCP strict argument models (`extra="forbid"`), and sanitized capabilities introspection.
 - **Next Gate:** Phase L8 (Evaluation and Learned Controller).
+
+### Phase L8 Gate Status: PASSED
+- **Verification:** Frozen evaluation corpus (40 cases, 12 train / 12 validation / 16 test disjoint splits, SHA-256 verified manifest failing closed on tampering), zero-network local fixtures, multi-connector EvidenceOpsLocalRetrieverAdapter conformance, 7 evaluation baselines, determinism digest across runs, 10-pass latency percentiles, 100% support-preservation invariant, and predeclared offline-only learned controller gate keeping deterministic planner in runtime.
+- **Criteria Met:** Reproducible benchmark artifacts under `eval/litebridge/`, deterministic evaluation runner producing identical determinism_digest across runs, and clear non-adoption decision for learned controller candidate.
+- **Adoption Decision:** Learned controller NOT adopted (offline candidate only; 12 validation cases insufficient to replace heuristic; runtime continues using DeterministicPlanner).
+- **Next Gate:** Phase L9 (Release Hardening).
