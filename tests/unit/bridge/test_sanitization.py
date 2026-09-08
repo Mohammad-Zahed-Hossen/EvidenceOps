@@ -18,8 +18,8 @@ from evidenceops.bridge.ports import WebSearchProvider
 from evidenceops.bridge.service import LiteBridge
 
 HOSTILE_SECRETS = (
-    "tvly-secret-value",
-    "Authorization: Bearer secret",
+    "mock_hostile_secret_value",
+    "Authorization: Bearer mock_secret",
     r"D:\private\path",
     "127.0.0.1",
     "raw provider failure response",
@@ -114,7 +114,7 @@ def test_tavily_search_adapter_does_not_leak_secrets(secret: str) -> None:
 
     client = httpx.Client(transport=httpx.MockTransport(hostile_handler))
     adapter = TavilySearchAdapter(
-        api_key="tvly-secret-key-12345",
+        api_key="mock_test_key_12345",
         client=client,
     )
 
@@ -124,7 +124,7 @@ def test_tavily_search_adapter_does_not_leak_secrets(secret: str) -> None:
     err = exc_info.value
     assert secret not in str(err)
     assert secret not in err.message
-    assert "tvly-secret-key-12345" not in str(err)
+    assert "mock_test_key_12345" not in str(err)
 
 
 @pytest.mark.parametrize("secret", HOSTILE_SECRETS)

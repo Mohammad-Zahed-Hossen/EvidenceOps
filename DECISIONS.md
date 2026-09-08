@@ -374,3 +374,15 @@
 - **Consequences**:
   - Phase L8 evaluation suite is fully implemented, verified, and passing (21 new eval unit tests, 768 total passed tests).
   - Gate L8 satisfied. Next phase: **Phase L9 — Release Hardening**.
+
+### ADR-037: LiteBridge L9 Release Hardening and Security Boundary Verification
+- **Decision**: L9 completes the final hardening, security audit, documentation, and release-readiness verification for LiteBridge on `experiment/litebridge-bridge`. Verified and hardened boundaries include:
+  1. **Prompt Injection & Evidence Delimiters**: Retrieved evidence remains strictly wrapped inside untrusted delimiters (`[UNTRUSTED_RETRIEVED_DATA]`), keeping system instructions separate from untrusted content. Citation validation fails closed on malformed or unknown citation markers.
+  2. **Provider Failure & Sanitization Audit**: Mock-transport and hostile-failure tests verify that provider exceptions (timeouts, auth errors, connection drops, database leaks) return structured `GroundedAnswer` with sanitized warnings, zero leaked credentials or file paths, zero mutations to `ContextPackage`, and at most one provider invocation. Local retrieval remains fully operational.
+  3. **Core Portability & Import Decoupling**: AST analysis and fresh-process execution verify that core LiteBridge modules do not import or load framework, retrieval, generation adapter, API, MCP, or evaluation implementation modules.
+  4. **Tracked-Text Secret Hygiene Scanner**: Implemented safe scanner in `scripts/verify_litebridge_release.py` that enumerates `git ls-files`, filters to text allowlist, skips `.env` before any read, never prints secret values, and verifies zero detected tracked credentials.
+  5. **Non-Destructive Offline Release Verifier**: `scripts/verify_litebridge_release.py` runs offline with zero network calls, verifies L8 manifest SHA-256 digests, and executes two isolated evaluation runs to confirm matching `determinism_digest` (`1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b`).
+  6. **Truthful Documentation & Non-Claims**: Documentation explicitly states that syntactic citation validation does not constitute semantic claim support; fixture benchmarks are not production performance/cost proof; learned planner runtime adoption is deferred; and direct arbitrary web page retrieval remains a deferred security milestone.
+- **Consequences**:
+  - Phase L9 release hardening is complete, verified, and passing (21 dedicated security tests, 252 bridge/eval tests, 789 total repository tests).
+  - Gate L9 satisfied. LiteBridge experimental track is ready for experimental release on `experiment/litebridge-bridge`.

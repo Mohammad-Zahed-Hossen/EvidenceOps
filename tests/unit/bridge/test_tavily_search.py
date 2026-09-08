@@ -43,7 +43,7 @@ def test_tavily_search_success() -> None:
         )
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
-    adapter = TavilySearchAdapter(api_key="tvly_secret_key_123", client=client)
+    adapter = TavilySearchAdapter(api_key="tvly_test_key", client=client)
 
     hits = adapter.search("python programming", max_results=3)
 
@@ -54,7 +54,7 @@ def test_tavily_search_success() -> None:
     assert hits[0].rank == 1
 
     assert captured_request["url"] == "https://api.tavily.com/search"
-    assert captured_request["auth"] == "Bearer tvly_secret_key_123"
+    assert captured_request["auth"] == "Bearer tvly_test_key"
     body = captured_request["body"]
     assert isinstance(body, dict)
     assert body["query"] == "python programming"

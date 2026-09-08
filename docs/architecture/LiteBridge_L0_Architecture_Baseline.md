@@ -322,11 +322,20 @@ Phase L8 implements reproducible, leakage-free benchmark evaluation and offline 
 - **Latency Distribution:** Deterministic multi-pass benchmarking (10 timed passes) measures p50, p90, p95, and p99 percentiles across runs.
 - **Learned Controller Predeclared Non-Adoption Gate:** An offline `LogisticRegression(random_state=42)` classifier trained on 8 lexical/budget features is evaluated on the validation split. Per predefined Phase L8 governance, a 12-case validation set cannot justify replacing the production heuristic planner. The candidate is recorded as offline-only; runtime `prepare_context()` continues using `DeterministicPlanner`.
 
+### 15. Architecture Amendment: Phase L9 (Release Hardening and Final Readiness Audit)
+Phase L9 establishes final hardening, security boundaries, and release-verification invariants:
+- **Prompt Injection & Evidence Isolation:** Retrieved evidence is rendered exclusively inside untrusted wrappers (`[UNTRUSTED_RETRIEVED_DATA]`), maintaining separation between untrusted data and system instructions.
+- **Provider Failure & Error Sanitization:** Provider exceptions (timeouts, auth failures, connection drops) are translated into structured `GroundedAnswer` with sanitized warnings, zero leaked credentials/paths, zero `ContextPackage` mutation, and single-invocation guarantees.
+- **Core Portability & Decoupling:** AST analysis and fresh-process execution enforce that core LiteBridge modules do not import or load backend retrieval services, generation adapters, API, MCP, or evaluation modules.
+- **Tracked-Text Secret Scanner:** `scripts/verify_litebridge_release.py` scans only `git ls-files` text paths, skips `.env` before read, and verifies zero detected tracked credentials.
+- **Offline Release Invariant Verifier:** `scripts/verify_litebridge_release.py` operates 100% offline without live network calls, confirms L8 manifest integrity, and verifies run-to-run determinism digest equality.
+- **Truthful Non-Claims:** Governance documentation explicitly records that syntactic citation validation is not semantic proof; fixture benchmarks are not production performance/cost proof; and direct page fetching remains deferred.
+
 ---
 
 ## H. Resume Guide
 
 ```text
-Current status: Phase L8 (Evaluation and Learned Controller) completed and verified.
-Next phase: Phase L9 — Release Hardening.
+Current status: Phase L9 (Release Hardening and Final Readiness Audit) completed and verified.
+Lifecycle: All LiteBridge phases (L1–L9) complete on experiment/litebridge-bridge. Ready for experimental release.
 ```

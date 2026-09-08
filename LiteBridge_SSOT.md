@@ -1,13 +1,14 @@
 # LiteBridge System Specification
 
 **Status:** Approved planning baseline
-**Version:** 1.5 — Frozen Evaluation and Learned-Controller Gate (Phase L8).
+**Version:** 1.6 — Release Hardening and Final Readiness Audit (Phase L9).
 **Project type:** Model-agnostic external retrieval, planning, and context-preparation layer  
 **Reference implementation:** EvidenceOps  
 **Primary repository:** `D:\Code\Assignment\EvidenceOps`  
 **Experimental branch:** `experiment/litebridge-bridge`
 
 ### Document Changelog
+- **Version 1.6 (2026-09-08):** Phase L9 Release Hardening and Final Readiness Audit. Implemented dedicated security test suite (21 tests covering prompt-injection untrusted boundaries, real API request model rejection, mock provider failure sanitization without credential/path leaks, single-call guarantees, core portability, and fresh-process isolation), non-destructive offline release verifier (`scripts/verify_litebridge_release.py`), zero-detected tracked secrets, frozen L8 manifest verification, two-run determinism confirmation, and truthful documentation of syntactic citations and deferred direct-page retrieval. Exit gate passed.
 - **Version 1.5 (2026-09-08):** Phase L8 Reproducible Evaluation and Optional Learned-Controller Experiment. Implemented frozen evaluation corpus (40 hand-authored cases, 12 train / 12 validation / 16 test disjoint splits, SHA-256 verified manifest failing closed on tampering), zero-network local fixtures (`fixture_local_evidence.jsonl`, `fixture_web_snippets.jsonl`), multi-connector `EvidenceOpsLocalRetrieverAdapter` conformance against fake documentation service, 7 evaluation baselines, determinism digest across runs, 10-pass latency percentiles, 100% support-preservation invariant, and predeclared offline-only learned controller gate keeping deterministic planner in runtime. Exit gate passed.
 - **Version 1.4 (2026-09-08):** Phase L7 Safe Python SDK, Local API, and Narrow MCP Interfaces. Implemented `LiteBridgeSDK` wrapping public facade methods; opaque random `context_handle` generation (`ctx_...`) via `InterfacePackageStore` with TTL eviction; server-level dual consent for web retrieval via `LITEBRIDGE_INTERFACE_ALLOW_EXTERNAL_RETRIEVAL=false`; server-owned model configuration rejecting caller `model` overrides; single source selection enforcement; loopback API boundary enforcement; strict FastMCP argument validation (`extra="forbid"`); and sanitized capability introspection. Exit gate passed.
 - **Version 1.3 (2026-09-08):** Phase L4–L6 independent audit remediation baseline (F01–F10). Enforces explicit generation provider selection (`provider_id=None` default failing closed to `PROVIDER_UNAVAILABLE` / `PROVIDER_NOT_CONFIGURED` with zero provider calls); derives deterministic descendant package IDs for empty and no-reduction compression paths; incorporates complete source descriptor identity, planner reason codes, and compression policy into deterministic package IDs; enforces preflight budget checks for web/cost sources; returns truthful `LOCAL_SOURCE_UNAVAILABLE` / `SOURCE_UNAVAILABLE` diagnostics; sanitizes loopback error messages with bracketed IPv6 support; unifies sentence boundaries in a shared pure parser preserving original separators; and isolates Core-Port-Adapter boundary with lazy factory imports. Remediations completed and certified.
@@ -970,7 +971,7 @@ Exit gate: all conclusions are supported by reproducible artifacts and limitatio
 - documentation and deployment examples;
 - clean release branch.
 
-Exit gate: a new developer can run local-only mode and reproduce the documented evaluation without paid credentials.
+Exit gate: a new developer can run local-only mode and reproduce the documented evaluation without paid credentials. (Passed: certified with offline release verifier script scripts/verify_litebridge_release.py, 21 dedicated security/portability/provider-failure tests, zero-detected tracked secrets, frozen L8 manifest verification, matching two-run determinism digest, untrusted evidence delimiter boundary, loopback request security, and honest documentation of syntactic citation and deferred direct-page-fetch limitations).
 
 ## Standalone Extraction Gate
 
@@ -1140,4 +1141,3 @@ The accurate final description should be:
 > LiteBridge is a model-agnostic, budget-aware retrieval and context-preparation layer that combines private document retrieval, approved web/API sources, evidence verification, and bounded context packaging before handing grounded evidence to a selected local or hosted LLM.
 
 EvidenceOps is its initial local retrieval and evidence-verification foundation. LiteBridge succeeds only if it becomes reusable across providers and demonstrates measurable context, cost, latency, or grounding benefits against fixed baselines.
-

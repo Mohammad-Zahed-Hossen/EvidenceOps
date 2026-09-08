@@ -42,31 +42,25 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Phase L8 completed and locally verified
+### Status: Phase L9 completed and locally verified
 
-LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
+LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Phase L8 (Evaluation and Learned Controller).
+- **Current Baseline:** Phase L9 (Release Hardening).
 - **Phase L7 Summary (Completed):** Phase L7 (API, SDK, and MCP Interfaces) certified with 10 mandatory safety corrections, opaque handles, server-owned models, dual consent, and strict MCP validation.
-- **Phase L8 Implementation Summary:**
-  - **Frozen Benchmark Corpus:** 40 hand-authored cases partitioned into strictly disjoint splits (12 train, 12 validation, 16 test) with zero live network calls. Supported by static JSONL fixtures for local documentation (`fixture_local_evidence.jsonl`) and web search snippets (`fixture_web_snippets.jsonl`).
-  - **Manifest Verification:** Cryptographic SHA-256 validation (`eval/litebridge/manifest.json`) fails closed immediately on any fixture modification or split tampering.
-  - **Multi-Connector Portability Conformance:** `EvidenceOpsLocalRetrieverAdapter` conforms to identical retrieval contracts as the static fixture retriever using a `FakeLocalDocumentationService`.
-  - **Seven Evaluation Baselines:** Evaluates `no_retrieval`, `fixed_local`, `fixed_web`, `heuristic_planner`, `heuristic_plus_compression`, `learned_planner_experiment`, and `evidenceops_adapter_conformance` under identical query conditions.
-  - **Support-Preservation Invariant:** 100% support-preservation rate across all answerable cases under extractive compression; runner fails closed if support drops.
-  - **Deterministic Repeatability:** Runner computes a stable `determinism_digest` across all non-timing report fields, ensuring run-to-run verification without timestamp drift.
-  - **Latency Distribution:** Deterministic 10-pass benchmarking measures p50, p90, p95, and p99 latency without single-run volatility.
-  - **Learned Controller Predeclared Non-Adoption Gate:** Evaluated an offline `LogisticRegression(random_state=42)` classifier on the 12-case validation split. Because 12 cases cannot establish safe production superiority over the deterministic heuristic, the model is recorded as an offline candidate only and runtime adoption is deferred.
+- **Phase L8 Summary (Completed):** Phase L8 (Evaluation and Learned Controller) certified with 40 frozen cases, 3 disjoint splits, 100% support-preservation rate, and offline-only learned controller non-adoption.
+- **Phase L9 Implementation Summary:**
+  - **Dedicated Security Suite:** Added 21 focused security tests in `tests/security/` covering prompt injection isolation (`[UNTRUSTED_RETRIEVED_DATA]`), API request model strictness (`extra="forbid"`), provider failure sanitization (zero leaked secrets or paths), single-invocation guarantees, core-port-adapter import boundary decoupling, and fresh-process isolation.
+  - **Tracked-Text Secret Scanner:** Implemented safe scanner in `scripts/verify_litebridge_release.py` that scans `git ls-files` text paths, rejects `.env` before any read, and confirms zero detected tracked secrets.
+  - **Offline Release Invariant Verifier:** `scripts/verify_litebridge_release.py` operates 100% offline without live network calls, confirms L8 manifest SHA-256 integrity, and verifies run-to-run determinism digest equality (`1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b`).
+  - **Truthful Documentation:** Documented non-claims regarding syntactic citations vs. semantic support, synthetic fixture vs. production web scale, and deferred direct-page retrieval.
 - **Verification Results:**
-  - Focused evaluation & bridge tests: 252 passed, 0 failures (`tests/unit/eval/` and `tests/unit/bridge/`).
-  - Full test suite: 768 passed, 1 skipped (Windows symlink privilege), 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors (259 files clean).
+  - Security suite: 21 passed in `tests/security/`.
+  - Bridge and eval suites: 252 passed in `tests/unit/bridge/` and `tests/unit/eval/`.
+  - Full test suite: 789 passed, 1 skipped (Windows symlink privilege), 0 failures.
+  - Code quality: Ruff check and ruff format pass with zero errors (264 files clean).
   - Type checking: Mypy passes with zero issues (126 source files).
-  - Reproducibility: Determinism digest `1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b` reproduced identically across independent runs.
-- **Known Limitations & Deferred Milestones:**
-  - Synthetic routing corpus (40 cases) is an offline benchmark, not real-world web scale.
-  - Multi-hop retrieval and multi-source evidence fusion remain deferred.
-  - Direct web page retrieval remains a Deferred Security Milestone.
-- **Next Phase:**
-  `Phase L9 — Release Hardening`.
+  - Release verifier: `scripts/verify_litebridge_release.py` exits 0 with zero findings.
+- **Next Action:**
+  All LiteBridge development phases (L1–L9) are complete, verified, and release-hardened on `experiment/litebridge-bridge`. Ready for experimental release.

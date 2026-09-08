@@ -88,3 +88,9 @@ Stop immediately and fail the gate if any of the following occur:
 - **Criteria Met:** Reproducible benchmark artifacts under `eval/litebridge/`, deterministic evaluation runner producing identical determinism_digest across runs, and clear non-adoption decision for learned controller candidate.
 - **Adoption Decision:** Learned controller NOT adopted (offline candidate only; 12 validation cases insufficient to replace heuristic; runtime continues using DeterministicPlanner).
 - **Next Gate:** Phase L9 (Release Hardening).
+
+### Phase L9 Gate Status: PASSED
+- **Verification:** 21 dedicated security, portability, prompt-injection, provider-failure, secret-hygiene, and release-verifier tests passing. Offline release verifier `scripts/verify_litebridge_release.py` runs cleanly without network calls, validates tracked-text hygiene, confirms L8 manifest integrity, and reproduces identical determinism digest (`1ba50be0137cc479a9fc92602090bf35a2e5d65ecf0328c5238653879478aa2b`) across two isolated evaluation runs.
+- **Criteria Met:** Security boundaries verified, provider failures sanitized with zero credential/path leaks, core-port-adapter fresh-process decoupling enforced, tracked text clean of secret keys, and honest boundaries documented.
+- **Adoption / Non-Claims:** No production-security, semantic-grounding, cost-saving, or universal-provider claim is established by this gate. Syntactic citation validation is not semantic proof; learned planner remains an offline candidate; direct page fetching remains deferred.
+- **Status:** Phase L9 Complete. Ready for experimental release on `experiment/litebridge-bridge`.
