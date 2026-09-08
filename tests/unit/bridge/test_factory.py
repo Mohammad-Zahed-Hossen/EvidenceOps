@@ -45,6 +45,7 @@ def test_build_litebridge_wires_registry_and_default_source() -> None:
         assert descriptor.timeout_ms == 5000
         assert descriptor.max_retries == 0
         assert descriptor.source_version is None
+        assert descriptor.estimated_external_cost_microusd == 0
 
 
 def test_build_litebridge_web_disabled_by_default() -> None:
@@ -102,3 +103,4 @@ def test_build_litebridge_web_enabled_wires_web_source() -> None:
         assert desc.privacy_classification == PrivacyClassification.PUBLIC_WEB
         assert desc.freshness == SourceFreshness.LIVE
         assert desc.supported_execution_profiles == (ExecutionProfile.HYBRID,)
+        assert desc.estimated_external_cost_microusd == 8000

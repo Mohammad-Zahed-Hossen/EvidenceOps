@@ -42,39 +42,41 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Complete and verified — snippet-only web retrieval
+### Status: Complete and verified — deterministic planner and budget policy (Phase L4)
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Rescoped L3 (Snippet-only web search retrieval; direct page fetching deferred).
-- **Phase L3 Completion Status:**
-  - **Snippet-Only Web Retrieval Verified**: Rescoped Phase L3 to provider-neutral search snippet retrieval (initially backed by Tavily Basic Search). All direct page fetching (`SafeWebPageFetcher`, `WebPageFetcher`, `FetchedWebPage`, `SourceKind.WEB_PAGE_EXCERPT`, domain allowlists, redirect limits) has been completely removed from the active runtime, configuration, and tests.
-  - **Local-First Default**: Default operation requires zero API keys, makes zero network calls, and registers no web sources.
-  - **Strict Opt-In Web Retrieval**: Web snippet queries go to the configured search provider only after explicit opt-in: `ExecutionProfile.HYBRID`, selected `tavily_web_search` source, `WebRetrievalPolicy(allow_external_query=True)`, `LITEBRIDGE_ENABLE_TAVILY_WEB=true`, and `TAVILY_API_KEY`.
-  - **Core Import Decoupling**: Core modules contain zero imports of `httpx`, `requests`, `urllib`, `socket`, `importlib`, or LLM providers, verified by AST import audits.
-  - **Zero Attack Surface for Untrusted URLs**: The active L3 product makes zero outbound connections to search-result URLs; its sole external network operation is bounded requests to the fixed Tavily Search API endpoint.
-  - **Sanitized Errors and Provenance**: Error messages strictly avoid leaking secrets, query text, or filesystem paths. Search results preserve canonical URL citations and untrusted evidence boundaries.
-  - **Thread-Safe In-Memory Cache**: `WebRetrievalCache` protects cached snippet batches with `threading.RLock()`. Cache hits make 0 provider calls (`web_calls == 0`).
+- **Current Baseline:** Phase L4 (Deterministic Planner and Hard Budget Policy).
+- **Phase L4 Completion Status:**
+  - **Deterministic Single-Action Planner**: Implemented `DeterministicPlanner` which analyzes query features (freshness cues, explicit temporal years, local technical reference cues) and policies to route queries to exactly one registered source (`LOCAL`, `WEB`) or emit `BLOCKED`. Zero LLM calls, zero agent loops, zero speculative retries, and complete generator independence.
+  - **Budget Authority Separation**: `RetrievalPolicy` exclusively owns context character and token ceilings (`max_context_chars`, `max_estimated_tokens`), while `BudgetPolicy` exclusively owns execution calls, cost, and wall-clock ceilings (`max_retrieval_calls`, `max_web_calls`, `max_wall_clock_ms`, `max_estimated_external_cost_microusd`).
+  - **Hard Preflight Budgets**: Call limits and estimated cost limits are enforced preflight before any retrieval action. Zero allowed calls immediately returns a blocked empty package.
+  - **Bounded Web Timeout**: Web retrieval network timeout is clamped against `policy.budget.max_wall_clock_ms`.
+  - **Post-Execution Wall-Clock Reporting**: Synchronous local retrieval evaluates wall clock post-execution and emits `StopReason.BUDGET_EXCEEDED` with a sanitized fixed warning if the budget was exceeded.
+  - **Accurate Web Cost Accounting**: External cost is charged only for actual web calls: `estimated_external_cost_microusd = descriptor.estimated_external_cost_microusd * actual_web_calls`. In-memory cache hits incur 0 external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
+  - **SourceRegistry Encapsulation**: Retriever resolution remains strictly internal (`resolve()`). Callers inspect read-only descriptors (`get_descriptor`, `default_descriptor`, `has_source`) without bypassing planning or budget guardrails.
+  - **Deterministic Package Identity**: `package_id` incorporates planner route, reason codes, and effective budget parameters, while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
 - **Deliverables:**
-  - `src/evidenceops/bridge/contracts.py`: Public contracts with `SourceKind.WEB_SEARCH_SNIPPET`, snippet `WebRetrievalPolicy`, and URL-provenance `EvidenceRecord`.
-  - `src/evidenceops/bridge/ports.py`: Provider-neutral `WebSearchProvider` protocol and `WebSearchHit` models.
-  - `src/evidenceops/bridge/adapters/tavily_search.py`: Isolated Tavily search adapter with sanitized error handling.
-  - `src/evidenceops/bridge/adapters/web_cache.py`: Thread-safe bounded LRU TTL cache.
-  - `src/evidenceops/bridge/adapters/web_retriever.py`: Snippet-only `WebRetrieverAdapter` with policy-to-settings clamping.
-  - `src/evidenceops/bridge/factory.py`: Composition root registering web search only when enabled with valid credentials.
+  - `src/evidenceops/bridge/contracts.py`: Added `BudgetPolicy`, `PlannerRoute`, `PlannerReason`, `QueryFeatures`, `PlannerDecision`, and budget/planner package fields.
+  - `src/evidenceops/bridge/budget.py`: `BudgetGuard` enforcing preflight checks, web-call cost calculation, and post-execution wall-clock evaluation.
+  - `src/evidenceops/bridge/planner.py`: Query feature extractor and `DeterministicPlanner` single-action routing engine.
+  - `src/evidenceops/bridge/source_registry.py`: Read-only descriptor lookup methods (`get_descriptor`, `default_descriptor`, `has_source`, `list_descriptors`).
+  - `src/evidenceops/bridge/context_builder.py`: Blocked package constructor and deterministic package identity incorporating planner decisions.
+  - `src/evidenceops/bridge/service.py`: Core `prepare_context()` integration with preflight budget checks, single-source dispatch, cost accounting, and post-execution wall-clock reporting.
+  - `src/evidenceops/settings.py`: Added `litebridge_tavily_search_estimated_cost_microusd = 8000`.
+  - `src/evidenceops/bridge/factory.py`: Wired source cost metadata (local = 0 uUSD, Tavily = 8000 uUSD).
+  - `src/evidenceops/bridge/adapters/web_retriever.py`: Clamped `max_results` by `max_evidence_items` and `timeout_ms` by `max_wall_clock_ms`.
 - **Verification Results:**
-  - Focused bridge tests: 111 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 620 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors.
-  - Type checking: Mypy passes with zero issues.
-  - Zero runtime references: AST and import tests verify page-fetch classes and modules are completely absent.
-  - Generator independence: Proven by exploding-stub tests across all retrieval modes.
+  - Focused bridge tests: 138 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 647 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors (211 files).
+  - Type checking: Mypy passes with zero issues (102 source files).
+  - AST audit: `test_generator_independence.py` confirms zero generator or EvidenceOps imports in `planner.py` or `budget.py`.
 - **Known Limitations & Deferred Milestones:**
-  - **Deferred Security Milestone (Direct Web Page Retrieval)**: Direct arbitrary web page fetching is excluded from active LiteBridge runtime and deferred to a dedicated future security-hardening milestone requiring a robust, stable DNS-pinning / rebinding defense design.
-  - Single-source selection only per call; no multi-source query planning, fan-out, or evidence fusion across local and web simultaneously.
-  - Declarative timeouts (`timeout_ms`) with zero retries; hard process cancellation is not implemented.
+  - Query decomposition, iterative multi-hop retrieval, and multi-source evidence fusion are deliberately deferred to future phases.
+  - **Deferred Security Milestone (Direct Web Page Retrieval)**: Arbitrary direct web page fetching remains excluded until a proven DNS-pinning/rebinding defense is designed.
   - Zero external LLM provider adapters (OpenAI, Anthropic, Gemini).
   - Context packaging only; answer generation (`answer()`) is not implemented.
 - **Next Phase:**
-  `L4 — Planner and Budget Policy` (UNBLOCKED).
+  `L5 — External LLM Provider Adapters` (UNBLOCKED).

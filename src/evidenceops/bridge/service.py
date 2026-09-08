@@ -4,10 +4,17 @@ from __future__ import annotations
 
 import time
 
-from evidenceops.bridge.context_builder import build_context_package, normalize_query
+from evidenceops.bridge.budget import BudgetGuard
+from evidenceops.bridge.context_builder import (
+    build_blocked_context_package,
+    build_context_package,
+    normalize_query,
+)
 from evidenceops.bridge.contracts import (
     ContextPackage,
     ExecutionProfile,
+    PlannerReason,
+    PlannerRoute,
     RetrievalPolicy,
     SourceDescriptor,
     SourceKind,
@@ -21,6 +28,7 @@ from evidenceops.bridge.errors import (
     LiteBridgeTimeoutError,
     LiteBridgeValidationError,
 )
+from evidenceops.bridge.planner import DeterministicPlanner
 from evidenceops.bridge.ports import EvidenceRetriever
 from evidenceops.bridge.source_registry import SourceRegistry
 
@@ -58,7 +66,7 @@ class LiteBridge:
         ):
             raise LiteBridgeProfileError(
                 f"Execution profile '{effective_policy.execution_profile.value}' is not supported "
-                "in Phase L3; only 'local_only' and 'hybrid' are supported."
+                "in Phase L4; only 'local_only' and 'hybrid' are supported."
             )
 
         if (
@@ -71,20 +79,8 @@ class LiteBridge:
 
         normalized_query, _, _ = normalize_query(query)
 
-        resolved_source_id: str | None = None
-        resolved_adapter_id: str | None = None
-        resolved_source_version: str | None = None
-        resolved_descriptor: SourceDescriptor | None = None
-
-        if self._source_registry is not None:
-            descriptor, active_retriever = self._source_registry.resolve(
-                source_policy, effective_policy.execution_profile
-            )
-            resolved_descriptor = descriptor
-            resolved_source_id = descriptor.source_id
-            resolved_adapter_id = descriptor.adapter_id
-            resolved_source_version = descriptor.source_version
-        else:
+        # Direct-retriever profile & policy validation
+        if self._source_registry is None:
             if effective_policy.execution_profile != ExecutionProfile.LOCAL_ONLY:
                 prof = effective_policy.execution_profile.value
                 raise LiteBridgeProfileError(
@@ -95,8 +91,91 @@ class LiteBridge:
                 raise LiteBridgeSourceError(
                     "Cannot specify allowed_source_ids with direct retriever"
                 )
+
+        # Validate explicit web source policy requirements prior to planning
+        if (
+            source_policy is not None
+            and self._source_registry is not None
+            and source_policy.allowed_source_ids
+        ):
+            target_id = source_policy.allowed_source_ids[0]
+            if self._source_registry.has_source(target_id):
+                desc = self._source_registry.get_descriptor(target_id, require_enabled=False)
+                if desc.source_kind == SourceKind.WEB_SEARCH_SNIPPET:
+                    if effective_policy.execution_profile != ExecutionProfile.HYBRID:
+                        raise LiteBridgeProfileError(
+                            "Web source requires 'hybrid' execution profile"
+                        )
+                    if (
+                        effective_policy.web is None
+                        or not effective_policy.web.allow_external_query
+                    ):
+                        raise LiteBridgeValidationError(
+                            "External web retrieval requires WebRetrievalPolicy "
+                            "with allow_external_query=True"
+                        )
+
+        # Planner step
+        planner = DeterministicPlanner()
+        decision = planner.plan(
+            normalized_query,
+            effective_policy,
+            source_policy,
+            self._source_registry,
+        )
+
+        if decision.route == PlannerRoute.BLOCKED:
+            reasons_str = ", ".join(r.value for r in decision.reason_codes)
+            warnings = (f"Retrieval was blocked by planner or budget policy: {reasons_str}",)
+            return build_blocked_context_package(
+                query=normalized_query,
+                policy=effective_policy,
+                decision=decision,
+                warnings=warnings,
+            )
+
+        resolved_source_id: str | None = None
+        resolved_adapter_id: str | None = None
+        resolved_source_version: str | None = None
+        resolved_descriptor: SourceDescriptor | None = None
+
+        if self._source_registry is not None:
+            target_source_id = decision.selected_source_id
+            eff_source_policy = (
+                SourcePolicy(allowed_source_ids=(target_source_id,))
+                if target_source_id
+                else source_policy
+            )
+            descriptor, active_retriever = self._source_registry.resolve(
+                eff_source_policy, effective_policy.execution_profile
+            )
+            resolved_descriptor = descriptor
+            resolved_source_id = descriptor.source_id
+            resolved_adapter_id = descriptor.adapter_id
+            resolved_source_version = descriptor.source_version
+        else:
             assert self._retriever is not None
             active_retriever = self._retriever
+
+        # Preflight budget guard check
+        budget_guard = BudgetGuard(effective_policy.budget)
+        preflight_result = budget_guard.check_preflight(decision, resolved_descriptor)
+        if not preflight_result.allowed:
+            reason_code = preflight_result.reason_code or PlannerReason.RETRIEVAL_BUDGET_EXHAUSTED
+            blocked_decision = decision.model_copy(
+                update={
+                    "route": PlannerRoute.BLOCKED,
+                    "selected_source_id": None,
+                    "reason_codes": (reason_code,),
+                }
+            )
+            warnings = (preflight_result.warning or "Retrieval blocked by preflight budget guard.",)
+            return build_blocked_context_package(
+                query=normalized_query,
+                policy=effective_policy,
+                decision=blocked_decision,
+                warnings=warnings,
+            )
 
         # If web source is resolved, enforce consent and profile requirements
         if (
@@ -190,4 +269,31 @@ class LiteBridge:
         merged_reproducibility = tuple((k, repro_dict[k]) for k in sorted(repro_dict.keys()))
         batch = batch.model_copy(update={"reproducibility": merged_reproducibility})
 
-        return build_context_package(query, effective_policy, batch, elapsed_ms)
+        budget_used = budget_guard.calculate_budget_used(
+            retrieval_calls=batch.retrieval_calls,
+            web_calls=batch.web_calls,
+            elapsed_ms=elapsed_ms,
+            descriptor=resolved_descriptor,
+        )
+
+        package = build_context_package(
+            query=query,
+            policy=effective_policy,
+            batch=batch,
+            elapsed_ms=elapsed_ms,
+            planner_decision=decision,
+            budget_used=budget_used,
+        )
+
+        # Post-execution wall-clock evaluation
+        new_stop_reason, new_warnings = budget_guard.evaluate_wall_clock(
+            elapsed_ms=elapsed_ms,
+            current_stop_reason=package.stop_reason,
+            current_warnings=package.warnings,
+        )
+        if new_stop_reason != package.stop_reason or new_warnings != package.warnings:
+            package = package.model_copy(
+                update={"stop_reason": new_stop_reason, "warnings": new_warnings}
+            )
+
+        return package

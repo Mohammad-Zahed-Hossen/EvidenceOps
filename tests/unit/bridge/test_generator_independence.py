@@ -84,6 +84,8 @@ def test_core_modules_have_zero_forbidden_imports() -> None:
         bridge_dir / "context_builder.py",
         bridge_dir / "service.py",
         bridge_dir / "source_registry.py",
+        bridge_dir / "planner.py",
+        bridge_dir / "budget.py",
     ]
 
     for file_path in core_files:

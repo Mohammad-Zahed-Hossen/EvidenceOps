@@ -257,3 +257,22 @@
   4. **Strict Opt-In & Preserved Invariants**: Web snippet retrieval continues to require all 5 explicit opt-in conditions (`ExecutionProfile.HYBRID`, `SourcePolicy(allowed_source_ids=("tavily_web_search",))`, `WebRetrievalPolicy(allow_external_query=True)`, `LITEBRIDGE_ENABLE_TAVILY_WEB=true`, and `TAVILY_API_KEY`). Default operation remains 100% local-only with no keys or network required.
   5. **Deferred Capability**: Direct arbitrary web page retrieval is formally categorized as a **Deferred Security Milestone** requiring a dedicated future security architecture.
   6. **Consequences & Exit Gate**: Phase L3 is certified as **Complete and verified — snippet-only web retrieval**. Phase L4 (`Planner and Budget Policy`) is **unblocked**.
+
+### ADR-031: LiteBridge L4 Deterministic Planner and Hard Budget Policy
+- **Context**: Phase L4 introduces query routing planning and resource budgeting to LiteBridge. Many RAG frameworks employ unbounded LLM-based agent loops, recursive query decomposition, or speculative multi-hop execution that incur unpredictable latency, token overhead, and external API cost. LiteBridge requires an explainable, cost-aware, and reproducible planning layer that preserves generator independence and zero-paid-API default operation.
+- **Decision**:
+  1. **Deterministic Single-Action Routing Planner**: `DeterministicPlanner` evaluates extracted query features (`QueryFeatures`: freshness cues, explicit temporal years, local technical reference cues), the execution profile, and caller policies to select exactly one registered source (`LOCAL`, `WEB`) or emit `BLOCKED`. It makes zero LLM calls, zero agent loops, and zero speculative retries.
+  2. **Deliberate Deferral of Decomposition, Multi-Hop, and Fusion**: Query decomposition, iterative multi-hop retrieval, and multi-source evidence fusion are deliberately deferred to future phases. L4 is strictly a transparent routing and budget controller.
+  3. **Separation of Budget Authorities**:
+     - `RetrievalPolicy` exclusively owns context character and token ceilings (`max_context_chars`, `max_estimated_tokens`).
+     - `BudgetPolicy` exclusively owns execution calls, cost, and wall-clock ceilings (`max_retrieval_calls`, `max_web_calls`, `max_wall_clock_ms`, `max_estimated_external_cost_microusd`).
+     - Duplicate context/token limits are strictly eliminated from `BudgetPolicy` to prevent dual authorities.
+  4. **Strict Boundary Encapsulation (No Public `get_retriever`)**: `SourceRegistry` exposes read-only descriptor inspection (`get_descriptor`, `default_descriptor`, `has_source`, `list_descriptors`). Direct retriever object resolution remains internal to `resolve()`, ensuring callers cannot bypass the planner or budget guard.
+  5. **Honest Wall-Clock Semantics**:
+     - Hard preflight limits: `max_retrieval_calls`, `max_web_calls`, `max_estimated_external_cost_microusd`.
+     - Bounded web timeout: web search adapter clamps network timeout to `policy.budget.max_wall_clock_ms`.
+     - Post-execution wall-clock reporting: synchronous local retrieval measures elapsed wall-clock time and reports `StopReason.BUDGET_EXCEEDED` alongside a sanitized fixed warning if the budget was exceeded after retrieval completed. Wall-clock control is not falsely labeled as universally hard pre-emption.
+  6. **Accurate Web Call Cost Accounting**: External cost is charged only for actual web calls: `estimated_external_cost_microusd = descriptor.estimated_external_cost_microusd * actual_web_calls`. In-memory cache hits incur zero external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
+  7. **Backward-Compatible Defaults**: Default `RetrievalPolicy()` uses `BudgetPolicy()` (local only, `max_web_calls=0`). Under `HYBRID` profile with `web.allow_external_query=True`, `RetrievalPolicy` automatically defaults `budget` to permit 1 web call and up to 1,000,000 uUSD unless explicitly configured, preserving 100% backward compatibility with L1–L3 calls.
+  8. **Deterministic Package Identity**: `package_id` deterministically incorporates `planner_decision` route and reasons, `effective_budget` parameters, and `source_descriptor` identity, while strictly omitting non-deterministic execution timings (`wall_clock_ms`) and usage values (`budget_used`).
+  9. **Consequences & Exit Gate**: Phase L4 is certified complete. Phase L5 (`External LLM Provider Adapters`) is unblocked.

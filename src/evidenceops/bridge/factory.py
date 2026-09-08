@@ -59,7 +59,8 @@ def build_litebridge(settings: Settings | None = None) -> LiteBridge:
         timeout_ms=5000,
         max_retries=0,
         source_version=None,
-        supported_execution_profiles=(ExecutionProfile.LOCAL_ONLY,),
+        supported_execution_profiles=(ExecutionProfile.LOCAL_ONLY, ExecutionProfile.HYBRID),
+        estimated_external_cost_microusd=0,
     )
 
     registry = SourceRegistry()
@@ -107,6 +108,7 @@ def build_litebridge(settings: Settings | None = None) -> LiteBridge:
             max_retries=0,
             source_version=None,
             supported_execution_profiles=(ExecutionProfile.HYBRID,),
+            estimated_external_cost_microusd=effective_settings.litebridge_tavily_search_estimated_cost_microusd,
         )
         registry.register(web_descriptor, web_adapter, make_default=False)
 

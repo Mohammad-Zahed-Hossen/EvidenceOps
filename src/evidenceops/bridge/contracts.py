@@ -51,6 +51,92 @@ class StopReason(StrEnum):
     RETRIEVAL_FAILED = "retrieval_failed"
 
 
+class BudgetPolicy(BaseModel):
+    """Caller limits for execution calls, timing, and estimated external costs."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    max_retrieval_calls: int = Field(default=1, ge=0, le=1)
+    max_web_calls: int = Field(default=0, ge=0, le=1)
+    max_wall_clock_ms: int = Field(default=10000, ge=100, le=60000)
+    max_estimated_external_cost_microusd: int = Field(
+        default=0,
+        ge=0,
+        le=1_000_000,
+    )
+
+
+class PlannerRoute(StrEnum):
+    """Routing decisions emitted by the deterministic planner."""
+
+    LOCAL = "local"
+    WEB = "web"
+    BLOCKED = "blocked"
+
+
+class PlannerReason(StrEnum):
+    """Explainable reason codes for planner and budget decisions."""
+
+    CALLER_SELECTED_SOURCE = "caller_selected_source"
+    DEFAULT_LOCAL = "default_local"
+    FRESHNESS_CUE = "freshness_cue"
+    EXTERNAL_QUERY_NOT_ALLOWED = "external_query_not_allowed"
+    WEB_SOURCE_UNAVAILABLE = "web_source_unavailable"
+    WEB_CALL_BUDGET_EXHAUSTED = "web_call_budget_exhausted"
+    EXTERNAL_COST_BUDGET_EXHAUSTED = "external_cost_budget_exhausted"
+    RETRIEVAL_BUDGET_EXHAUSTED = "retrieval_budget_exhausted"
+    INVALID_PROFILE = "invalid_profile"
+
+
+class QueryFeatures(BaseModel):
+    """Deterministic, planner-safe features extracted from the query."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    normalized_length: int = Field(ge=0)
+    token_like_count: int = Field(ge=0)
+    has_freshness_cue: bool
+    has_local_reference_cue: bool
+    has_explicit_time_reference: bool
+
+
+class PlannerDecision(BaseModel):
+    """Immutable, explainable decision produced by the deterministic planner."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    planner_id: str = "deterministic_heuristic"
+    planner_version: str = "l4_v1"
+    route: PlannerRoute
+    selected_source_id: str | None = None
+    reason_codes: tuple[PlannerReason, ...] = ()
+    features: QueryFeatures
+    effective_budget: BudgetPolicy
+
+    @field_validator("reason_codes", mode="before")
+    @classmethod
+    def _coerce_tuple(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(v)
+        return v
+
+    @model_validator(mode="after")
+    def _validate_decision(self) -> PlannerDecision:
+        if self.planner_id != "deterministic_heuristic":
+            raise ValueError("planner_id must be 'deterministic_heuristic'")
+        if self.planner_version != "l4_v1":
+            raise ValueError("planner_version must be 'l4_v1'")
+        if self.route == PlannerRoute.BLOCKED:
+            if self.selected_source_id is not None:
+                raise ValueError("selected_source_id must be None when route is BLOCKED")
+        elif self.route in (PlannerRoute.LOCAL, PlannerRoute.WEB):
+            if not self.selected_source_id or not isinstance(self.selected_source_id, str):
+                raise ValueError(
+                    f"selected_source_id must be a nonblank string when route is {self.route.value}"
+                )
+        return self
+
+
 class WebRetrievalPolicy(BaseModel):
     """Caller constraints for bounded web retrieval."""
 
@@ -71,6 +157,28 @@ class RetrievalPolicy(BaseModel):
     max_context_chars: int = Field(default=24000, ge=100, le=24000)
     max_estimated_tokens: int = Field(default=6000, ge=25, le=6000)
     web: WebRetrievalPolicy | None = None
+    budget: BudgetPolicy = Field(default_factory=BudgetPolicy)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_budget(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "budget" not in data or data["budget"] is None:
+                web_data = data.get("web")
+                allow_web = False
+                if isinstance(web_data, dict):
+                    allow_web = bool(web_data.get("allow_external_query", False))
+                elif isinstance(web_data, WebRetrievalPolicy):
+                    allow_web = web_data.allow_external_query
+                if allow_web and data.get("execution_profile") == ExecutionProfile.HYBRID:
+                    data["budget"] = BudgetPolicy(
+                        max_retrieval_calls=1,
+                        max_web_calls=1,
+                        max_estimated_external_cost_microusd=1_000_000,
+                    )
+                else:
+                    data["budget"] = BudgetPolicy()
+        return data
 
 
 SLUG_REGEX = re.compile(r"^[a-z0-9_-]+$")
@@ -125,6 +233,7 @@ class SourceDescriptor(BaseModel):
     max_retries: int
     source_version: str | None = None
     supported_execution_profiles: tuple[ExecutionProfile, ...] = (ExecutionProfile.LOCAL_ONLY,)
+    estimated_external_cost_microusd: int = Field(default=0, ge=0)
 
     @field_validator("source_id")
     @classmethod
@@ -294,3 +403,33 @@ class ContextPackage(BaseModel):
     stop_reason: StopReason
     warnings: tuple[str, ...] = Field(default_factory=tuple)
     reproducibility: tuple[tuple[str, str], ...] = Field(default_factory=tuple)
+    planner_decision: PlannerDecision
+    budget_used: tuple[tuple[str, int], ...] = Field(default_factory=tuple)
+
+    @field_validator("budget_used", mode="before")
+    @classmethod
+    def _coerce_budget_used(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(tuple(item) if isinstance(item, list) else item for item in v)
+        return v
+
+    @model_validator(mode="after")
+    def _validate_budget_used(self) -> ContextPackage:
+        expected_keys = (
+            "estimated_external_cost_microusd",
+            "retrieval_calls",
+            "wall_clock_ms",
+            "web_calls",
+        )
+        if self.budget_used:
+            actual_keys = tuple(k for k, _ in self.budget_used)
+            if actual_keys != expected_keys:
+                raise ValueError(
+                    f"budget_used keys must match {expected_keys} in order, got {actual_keys}"
+                )
+            for k, v in self.budget_used:
+                if not isinstance(v, int) or v < 0:
+                    raise ValueError(
+                        f"budget_used value for '{k}' must be a non-negative int, got {v}"
+                    )
+        return self

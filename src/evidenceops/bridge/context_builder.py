@@ -8,6 +8,10 @@ import math
 from evidenceops.bridge.contracts import (
     ContextPackage,
     EvidenceRecord,
+    PlannerDecision,
+    PlannerReason,
+    PlannerRoute,
+    QueryFeatures,
     RetrievalPolicy,
     StopReason,
 )
@@ -62,9 +66,39 @@ def build_context_package(
     policy: RetrievalPolicy,
     batch: RetrievalBatch,
     elapsed_ms: float,
+    planner_decision: PlannerDecision | None = None,
+    budget_used: tuple[tuple[str, int], ...] | None = None,
 ) -> ContextPackage:
     """Perform extractive whole-item budget selection and assemble immutable ContextPackage."""
     normalized_query, query_hash, orig_length = normalize_query(query)
+
+    effective_decision = planner_decision
+    if effective_decision is None:
+        features = QueryFeatures(
+            normalized_length=orig_length,
+            token_like_count=len(normalized_query.split()),
+            has_freshness_cue=False,
+            has_local_reference_cue=False,
+            has_explicit_time_reference=False,
+        )
+        effective_decision = PlannerDecision(
+            planner_id="deterministic_heuristic",
+            planner_version="l4_v1",
+            route=PlannerRoute.LOCAL,
+            selected_source_id="evidenceops_local_docs",
+            reason_codes=(PlannerReason.DEFAULT_LOCAL,),
+            features=features,
+            effective_budget=policy.budget,
+        )
+
+    effective_budget_used = budget_used
+    if effective_budget_used is None:
+        effective_budget_used = (
+            ("estimated_external_cost_microusd", 0),
+            ("retrieval_calls", batch.retrieval_calls),
+            ("wall_clock_ms", int(elapsed_ms)),
+            ("web_calls", batch.web_calls),
+        )
 
     if not batch.candidates:
         package_id = _derive_package_id(
@@ -72,6 +106,7 @@ def build_context_package(
             policy=policy,
             selected_records=(),
             reproducibility=batch.reproducibility,
+            planner_decision=effective_decision,
         )
         return ContextPackage(
             package_id=package_id,
@@ -93,6 +128,8 @@ def build_context_package(
             stop_reason=StopReason.NO_EVIDENCE,
             warnings=batch.warnings,
             reproducibility=batch.reproducibility,
+            planner_decision=effective_decision,
+            budget_used=effective_budget_used,
         )
 
     selected_records: list[EvidenceRecord] = []
@@ -159,6 +196,7 @@ def build_context_package(
         policy=policy,
         selected_records=selected_records_tuple,
         reproducibility=batch.reproducibility,
+        planner_decision=effective_decision,
     )
 
     return ContextPackage(
@@ -181,6 +219,54 @@ def build_context_package(
         stop_reason=stop_reason,
         warnings=tuple(warnings_list),
         reproducibility=batch.reproducibility,
+        planner_decision=effective_decision,
+        budget_used=effective_budget_used,
+    )
+
+
+def build_blocked_context_package(
+    query: str,
+    policy: RetrievalPolicy,
+    decision: PlannerDecision,
+    warnings: tuple[str, ...] = (),
+) -> ContextPackage:
+    """Build an empty immutable ContextPackage when retrieval is blocked by planner or budget."""
+    normalized_query, query_hash, orig_length = normalize_query(query)
+    package_id = _derive_package_id(
+        query_hash=query_hash,
+        policy=policy,
+        selected_records=(),
+        reproducibility=(),
+        planner_decision=decision,
+    )
+    budget_used = (
+        ("estimated_external_cost_microusd", 0),
+        ("retrieval_calls", 0),
+        ("wall_clock_ms", 0),
+        ("web_calls", 0),
+    )
+    return ContextPackage(
+        package_id=package_id,
+        query_hash=query_hash,
+        query_length=orig_length,
+        normalized_query=normalized_query,
+        execution_profile=policy.execution_profile,
+        effective_policy=policy,
+        evidence=(),
+        context_text="",
+        max_context_chars=policy.max_context_chars,
+        max_estimated_tokens=policy.max_estimated_tokens,
+        context_chars=0,
+        estimated_tokens=0,
+        retrieval_calls=0,
+        web_calls=0,
+        retrieval_route="blocked",
+        timings_ms=(("total", 0.0),),
+        stop_reason=StopReason.BUDGET_EXCEEDED,
+        warnings=warnings,
+        reproducibility=(),
+        planner_decision=decision,
+        budget_used=budget_used,
     )
 
 
@@ -190,6 +276,7 @@ def _derive_package_id(
     policy: RetrievalPolicy,
     selected_records: tuple[EvidenceRecord, ...],
     reproducibility: tuple[tuple[str, str], ...],
+    planner_decision: PlannerDecision | None = None,
 ) -> str:
     """Derive deterministic package identity strictly from stable inputs."""
     evidence_fingerprints: list[str] = []
@@ -212,6 +299,16 @@ def _derive_package_id(
     if policy.web is not None:
         identity_parts.append(
             f"web={policy.web.allow_external_query},{policy.web.max_search_results}"
+        )
+
+    b = policy.budget
+    identity_parts.append(
+        f"budget={b.max_retrieval_calls},{b.max_web_calls},{b.max_wall_clock_ms},{b.max_estimated_external_cost_microusd}"
+    )
+
+    if planner_decision is not None:
+        identity_parts.append(
+            f"planner={planner_decision.planner_id}:{planner_decision.planner_version}:{planner_decision.route.value}:{planner_decision.selected_source_id}"
         )
 
     digest = hashlib.sha256(":".join(identity_parts).encode("utf-8")).hexdigest()

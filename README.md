@@ -222,7 +222,7 @@ Benchmark outputs are saved as immutable JSON manifests and Markdown leaderboard
 ## Project Status & Experimental Scope
 
 - **Production Baseline (`main`)**: `main` remains EvidenceOps—a complete, local-first, evidence-grounded RAG application. Current EvidenceOps on `main` does not provide web retrieval or cloud-provider middleware.
-- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: LiteBridge is being incubated on a separate branch (`experiment/litebridge-bridge`). Its public product boundary is a provider-neutral context package. Phase L3 provides optional, opt-in web search snippet retrieval backed by Tavily Basic Search. Direct arbitrary web page fetching is intentionally deferred to a future dedicated security-hardening milestone. Default execution remains 100% local-only with zero network calls and zero API keys required. Phase L4 (`Planner and Budget Policy`) is unblocked. External LLM provider adapters (Phase L5) remain deferred. LiteBridge is not yet available as an end-user CLI, API, or dashboard feature in EvidenceOps.
+- **Experimental Middleware Branch (`experiment/litebridge-bridge`)**: LiteBridge is being incubated on a separate branch (`experiment/litebridge-bridge`). Its public product boundary is a provider-neutral context package. Phase L4 adds a deterministic, cost-aware single-action routing planner and hard budget enforcement with zero LLM generation calls. Web retrieval operates snippet-only with explicit opt-in. Default execution remains 100% local-only with zero network calls and zero API keys required. Phase L5 (`External LLM Provider Adapters`) is unblocked. LiteBridge is not yet available as an end-user CLI, API, or dashboard feature in EvidenceOps.
 
 ---
 

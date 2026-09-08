@@ -867,15 +867,20 @@ Exit gate: Registered web search is bounded, explicitly opted into, URL-cited, m
 
 Direct arbitrary web page fetching (`WEB_PAGE_EXCERPT`, page fetcher) is excluded from active LiteBridge runtime and deferred to a future dedicated security-hardening milestone. A Time-of-Check to Time-of-Use (TOCTOU) DNS-rebinding residual risk exists because Python HTTP client libraries (`httpx`/`httpcore`) do not offer a stable, version-public API to decouple socket IP connection from TLS SNI / certificate validation. Direct page retrieval remains excluded until an approved security design provides robust SSRF and DNS-rebinding controls without unsupported private transport hooks.
 
-### Phase L4: Planner and budget policy
+### Phase L4: Deterministic Planner and Budget Policy
 
-- implement heuristic source/action planner;
-- integrate query feature extraction;
-- planner output must select abstract source/route actions, not EvidenceOps classes or vendor-specific clients;
-- implement bounded decomposition and reformulation;
-- add retrieval, web, token, cost, and latency budgets.
+- implement deterministic, explainable single-action routing planner (`DeterministicPlanner`);
+- selects exactly one registered source (`LOCAL`, `WEB`) or `BLOCKED` based on policy, cues, and budgets;
+- integrate query feature extraction (freshness cues, explicit temporal years, local technical reference cues);
+- planner output selects abstract route actions, never EvidenceOps classes or vendor-specific clients;
+- deliberately defers query decomposition, multi-hop execution, and multi-source fusion to future phases;
+- hard call and estimated-cost budgets (`max_retrieval_calls`, `max_web_calls`, `max_estimated_external_cost_microusd`);
+- bounded web timeout clamped against wall-clock budget;
+- post-execution wall-clock reporting for synchronous local retrieval (emits `StopReason.BUDGET_EXCEEDED` and warning);
+- budget usage charges external cost only for actual web calls (`descriptor.estimated_external_cost_microusd * actual_web_calls`, cache hit charges 0);
+- zero LLM planner, zero agent loops, zero retries, and complete generator independence.
 
-Exit gate: planner decisions are deterministic, explainable, bounded, and decoupled from backend implementation classes.
+Exit gate: planner decisions are deterministic, explainable, single-action, bounded, and decoupled from backend implementation classes.
 
 ### Phase L5: External LLM provider adapters
 

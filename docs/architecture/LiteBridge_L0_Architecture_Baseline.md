@@ -82,10 +82,10 @@ This section documents the planned public LiteBridge contracts before implementa
 - **Generator-Independent:** Yes.
 
 ### 4. `BudgetPolicy`
-- **Purpose:** Defines hard cost, token, latency, and call budgets for a LiteBridge execution run.
+- **Purpose:** Defines hard call and estimated external cost budgets, bounded web timeouts, and post-execution wall-clock limits for a LiteBridge execution run. Context character and token limits remain strictly owned by `RetrievalPolicy` to maintain a single authority.
 - **Owning Phase:** Phase L4
-- **Required Invariant:** Enforces hard mathematical stops: `max_retrieval_calls`, `max_web_calls`, `max_context_chars`, `max_wall_clock_seconds`.
-- **Forbidden Content:** Infinite or negative budgets.
+- **Required Invariant:** Enforces hard mathematical stops: `max_retrieval_calls`, `max_web_calls`, `max_wall_clock_ms`, `max_estimated_external_cost_microusd`. Charges external cost only for actual web calls (`descriptor.estimated_external_cost_microusd * actual_web_calls`).
+- **Forbidden Content:** Infinite or negative budgets; duplicate context/token budgets (owned exclusively by `RetrievalPolicy`).
 - **Generator-Independent:** Yes.
 
 ### 5. `ContextPackage`
@@ -271,6 +271,14 @@ No connector or provider may alter LiteBridge core contracts to accommodate vend
 
 ### 8. Architecture Rescope Amendment: Snippet-Only Web Retrieval (Phase L3)
 Phase L3 provides opt-in, provider-neutral web search snippet retrieval only (initially backed by Tavily Basic Search). Arbitrary direct web page fetching has been intentionally deferred to a future dedicated security-hardening milestone because Python HTTP clients (`httpx`/`httpcore`) lack a stable, version-public mechanism to decouple socket IP connection from TLS SNI validation without accessing private library implementation details. Active Phase L3 contains zero arbitrary outbound URL connection capabilities; its sole external network operation is bounded communication with the configured search provider API endpoint under explicit `ExecutionProfile.HYBRID` opt-in. Phase L4 is eligible only after snippet-only L3 verification passes.
+
+### 9. Architecture Rescope Amendment: Deterministic Single-Action Planner and Budget Policy (Phase L4)
+Phase L4 implements a deterministic, explainable, single-action routing planner (`DeterministicPlanner`) and hard budget guard (`BudgetGuard`). LiteBridge deliberately defers query decomposition, multi-hop iterative execution, and multi-source fusion to future phases to avoid introducing unpredictable pseudo-agents or expensive unbounded retrieval cycles. The planner selects exactly one registered source action (`LOCAL`, `WEB`) or emits `BLOCKED` based on query cues, execution profile, and configured budgets. Retrieval limits are enforced as follows:
+- **Hard Preflight Budgets:** `max_retrieval_calls`, `max_web_calls`, and `max_estimated_external_cost_microusd` are evaluated before execution. Zero allowed retrieval calls or budget shortfalls block execution immediately.
+- **Bounded Web Timeout:** Web search requests clamp timeout to `budget.max_wall_clock_ms`.
+- **Post-Execution Wall-Clock Reporting:** Synchronous local retrieval reports wall-clock budget exceeded post-execution (`StopReason.BUDGET_EXCEEDED` plus a sanitized fixed warning).
+- **Accurate Cost Accounting:** Budget usage charges estimated external cost only for actual web calls (`descriptor.estimated_external_cost_microusd * actual_web_calls`). In-memory cache hits incur 0 external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
+- **Separation of Authorities:** `RetrievalPolicy` owns context/token limits (`max_context_chars`, `max_estimated_tokens`), while `BudgetPolicy` exclusively owns execution calls, cost, and wall-clock ceilings.
 
 
 ---

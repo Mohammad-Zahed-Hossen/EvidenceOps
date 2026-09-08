@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     litebridge_web_max_results: int = Field(default=5, ge=1, le=5)
     litebridge_web_cache_ttl_seconds: int = Field(default=300, gt=0, le=86400)
     litebridge_web_cache_max_entries: int = Field(default=64, gt=0, le=1024)
+    litebridge_tavily_search_estimated_cost_microusd: int = Field(default=8000, ge=0, le=1_000_000)
 
     @field_validator("qdrant_url", "ollama_base_url", "otel_exporter_otlp_endpoint")
     @classmethod

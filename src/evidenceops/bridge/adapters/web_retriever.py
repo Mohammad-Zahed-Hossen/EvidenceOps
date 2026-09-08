@@ -64,7 +64,9 @@ class WebRetrieverAdapter(EvidenceRetriever):
         effective_results = min(
             policy.web.max_search_results,
             self._max_configured_results,
+            policy.max_evidence_items,
         )
+        effective_timeout_ms = min(self._timeout_ms, policy.budget.max_wall_clock_ms)
 
         # Check cache
         if self._cache is not None:
@@ -80,6 +82,17 @@ class WebRetrieverAdapter(EvidenceRetriever):
                     reproducibility=self._reproducibility,
                 )
 
+        if policy.budget.max_web_calls == 0:
+            return RetrievalBatch(
+                candidates=(),
+                retrieval_calls=1,
+                web_calls=0,
+                retrieval_route="web_budget_blocked",
+                timings_ms=(("web_retrieval", 0.0),),
+                warnings=("Web call budget is exhausted (max_web_calls=0).",),
+                reproducibility=self._reproducibility,
+            )
+
         t0 = time.perf_counter()
         warnings: list[str] = []
         web_calls = 0
@@ -88,7 +101,7 @@ class WebRetrieverAdapter(EvidenceRetriever):
         hits = self._search_provider.search(
             query,
             max_results=effective_results,
-            timeout_ms=self._timeout_ms,
+            timeout_ms=effective_timeout_ms,
         )
         web_calls += 1
 
