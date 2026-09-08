@@ -6,6 +6,7 @@ import hashlib
 import math
 
 from evidenceops.bridge.contracts import (
+    CompressionReport,
     ContextPackage,
     EvidenceRecord,
     PlannerDecision,
@@ -59,6 +60,14 @@ def render_evidence_block(citation_id: str, evidence: EvidenceRecord) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def render_context_text(records: tuple[EvidenceRecord, ...]) -> str:
+    """Render complete context text with untrusted header and ordered evidence blocks."""
+    if not records:
+        return ""
+    blocks = [render_evidence_block(r.citation_id, r) for r in records]
+    return f"{UNTRUSTED_HEADER}\n\n" + "\n\n".join(blocks)
 
 
 def build_context_package(
@@ -277,11 +286,13 @@ def _derive_package_id(
     selected_records: tuple[EvidenceRecord, ...],
     reproducibility: tuple[tuple[str, str], ...],
     planner_decision: PlannerDecision | None = None,
+    compression_report: CompressionReport | None = None,
 ) -> str:
     """Derive deterministic package identity strictly from stable inputs."""
     evidence_fingerprints: list[str] = []
     for r in selected_records:
-        fp = r.evidence_id
+        excerpt_hash = hashlib.sha256(r.excerpt.encode("utf-8")).hexdigest()[:16]
+        fp = f"{r.evidence_id}:{r.citation_id}:{excerpt_hash}"
         if r.canonical_url:
             fp += f"|url={r.canonical_url}"
         evidence_fingerprints.append(fp)
@@ -308,7 +319,22 @@ def _derive_package_id(
 
     if planner_decision is not None:
         identity_parts.append(
-            f"planner={planner_decision.planner_id}:{planner_decision.planner_version}:{planner_decision.route.value}:{planner_decision.selected_source_id}"
+            f"planner={planner_decision.planner_id}:{planner_decision.planner_version}:"
+            f"{planner_decision.route.value}:{planner_decision.selected_source_id}"
+        )
+
+    if compression_report is not None:
+        cr = compression_report
+        trace_fps = [
+            f"{t.evidence_id}:{t.citation_id}:{t.action.value}:{t.retained_chars}:"
+            f"{t.duplicate_of_evidence_id or ''}"
+            for t in cr.trace
+        ]
+        identity_parts.append(
+            f"compression={cr.source_package_id}:{cr.strategy.value}:{cr.outcome.value}:"
+            f"{cr.target_max_context_chars}:{cr.target_max_estimated_tokens}:{cr.target_met}:"
+            f"{cr.compressed_context_chars}:{cr.compressed_estimated_tokens}:"
+            f"{cr.token_reduction_basis_points}:{','.join(trace_fps)}"
         )
 
     digest = hashlib.sha256(":".join(identity_parts).encode("utf-8")).hexdigest()

@@ -280,22 +280,23 @@ Phase L4 implements a deterministic, explainable, single-action routing planner 
 - **Accurate Cost Accounting:** Budget usage charges estimated external cost only for actual web calls (`descriptor.estimated_external_cost_microusd * actual_web_calls`). In-memory cache hits incur 0 external cost (`web_calls = 0`, `estimated_external_cost_microusd = 0`).
 - **Separation of Authorities:** `RetrievalPolicy` owns context/token limits (`max_context_chars`, `max_estimated_tokens`), while `BudgetPolicy` exclusively owns execution calls, cost, and wall-clock ceilings.
 
+### 10. Architecture Amendment: Optional Provider-Neutral Generation Adapters (Phase L5)
+Phase L5 introduces optional answer generation (`answer = bridge.answer(context_package, generation_policy)`) decoupled from context retrieval. `prepare_context()` remains 100% generator-independent. All generation providers are disabled by default. Hosted providers enforce privacy boundaries against `LOCAL_DOCUMENT` evidence unless caller grants explicit per-call export consent. Answers are subject to strict syntactic citation validation with fail-closed abstentions on malformed or unknown citations.
+
+### 11. Architecture Amendment: Deterministic Extractive Context Compression (Phase L6)
+Phase L6 implements a deterministic, extractive context compression layer (`compressed_package = bridge.compress_context(context_package, compression_policy)`). Key architectural invariants:
+- **Extractive-Only Scope:** Complete sentence selection or whole-item retention/dropping. Zero abstractive summarization, zero token cuts mid-sentence, zero rephrasing, and zero LLM calls.
+- **Generator & Retrieval Independence:** Zero retrieval calls, zero planner calls, zero budget calculations, and zero generation provider invocations.
+- **Conservative Deduplication:** Exact retrieval duplicates are dropped only when both `allow_evidence_drop=True` and `deduplicate_exact_retrieval_copies=True` are explicitly configured. Defaults are strictly `False`.
+- **Target Context Evaluation:** Character and token limits are evaluated against the final rendered context (including untrusted wrappers, headers, and closing citation markers).
+- **Integer Arithmetic:** Basis points are computed using integer arithmetic `(original_tokens - compressed_tokens) * 10_000 // original_tokens`.
+- **Citation Preservation:** Retained evidence retains original citation identifiers (`[C1]`, `[C3]`) without renumbering.
+- **Preserved Retrieval Metadata:** Original retrieval `stop_reason`, `planner_decision`, `budget_used`, and call counts are immutable and preserved verbatim. Unmet compression targets are recorded as `CompressionOutcome.TARGET_UNACHIEVABLE`.
 
 ---
 
 ## H. Resume Guide
 
 ```text
-Next approved implementation phase: L1 — Generator-independent context mode.
+Next approved implementation phase: L7 — API, SDK, and MCP Interfaces.
 ```
-
-### Updated Phase L1 Implementation Plan (Under Core-Port-Adapter Boundary):
-1. Create `src/evidenceops/bridge/` package namespace (deferred until L1 execution).
-2. Define LiteBridge-owned runtime Pydantic contracts (`ContextPackage`, `RetrievalPolicy`, `EvidenceRecord`) in `contracts.py`.
-3. Define LiteBridge-owned provider-neutral retrieval protocol (`EvidenceRetriever`) and candidate types in `ports.py`.
-4. Define sanitized LiteBridge error hierarchy in `errors.py`.
-5. Implement isolated `EvidenceOpsLocalRetrieverAdapter` in `adapters/evidenceops_local.py` translating `LocalDocumentationService` results into LiteBridge-neutral candidates.
-6. Implement `prepare_context(query, policy)` facade in `service.py` that executes bounded retrieval via `EvidenceRetriever` port and packages evidence into `ContextPackage` without invoking an LLM.
-7. Wire default composition in `factory.py`.
-8. Implement unit tests and fake-retriever contract tests proving that LiteBridge core executes cleanly without EvidenceOps runtime services or LLM generation calls.
-9. Verify that zero LLM generation calls or provider imports occur when invoking `prepare_context()`.

@@ -6,12 +6,14 @@ import time
 
 from evidenceops.bridge.budget import BudgetGuard
 from evidenceops.bridge.citation_validator import validate_citations
+from evidenceops.bridge.compressor import compress_context_package
 from evidenceops.bridge.context_builder import (
     build_blocked_context_package,
     build_context_package,
     normalize_query,
 )
 from evidenceops.bridge.contracts import (
+    CompressionPolicy,
     ContextPackage,
     ExecutionProfile,
     GenerationAbstentionReason,
@@ -312,6 +314,24 @@ class LiteBridge:
             )
 
         return package
+
+    def compress_context(
+        self,
+        context_package: ContextPackage,
+        compression_policy: CompressionPolicy | None = None,
+    ) -> ContextPackage:
+        """Deterministically compress a ContextPackage via extractive selection.
+
+        When compression_policy is None, returns the input package unchanged.
+        """
+        if not isinstance(context_package, ContextPackage):
+            raise LiteBridgeValidationError("context_package must be a valid ContextPackage")
+        if compression_policy is None:
+            return context_package
+        if not isinstance(compression_policy, CompressionPolicy):
+            raise LiteBridgeValidationError("compression_policy must be a valid CompressionPolicy")
+
+        return compress_context_package(context_package, compression_policy)
 
     def answer(
         self,

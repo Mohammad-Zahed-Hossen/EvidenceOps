@@ -88,6 +88,8 @@ def test_core_modules_have_zero_forbidden_imports() -> None:
         bridge_dir / "budget.py",
         bridge_dir / "generation_registry.py",
         bridge_dir / "citation_validator.py",
+        bridge_dir / "compressor.py",
+        bridge_dir / "quality_controls.py",
     ]
 
     for file_path in core_files:
@@ -481,4 +483,39 @@ def test_prepare_context_never_touches_generation_registry() -> None:
     mock_gen_registry.resolve.assert_not_called()
     mock_gen_registry.get_capability.assert_not_called()
     mock_gen_registry.list_capabilities.assert_not_called()
+    mock_gen_registry.has_provider.assert_not_called()
+
+
+def test_compress_context_never_touches_retrieval_planning_or_generation() -> None:
+    """Verify compress_context operates without touching retrieval or generation."""
+    from unittest.mock import MagicMock
+
+    from evidenceops.bridge.contracts import CompressionPolicy
+    from evidenceops.bridge.generation_registry import GenerationProviderRegistry
+    from evidenceops.bridge.source_registry import SourceRegistry
+
+    mock_source_registry = MagicMock(spec=SourceRegistry)
+    mock_gen_registry = MagicMock(spec=GenerationProviderRegistry)
+
+    # Create dummy package with evidence
+    retriever = ExplodingFakeRetriever()
+    bridge_for_setup = LiteBridge(retriever=retriever)
+    pkg = bridge_for_setup.prepare_context("How does compression stay pure?")
+
+    # Now create bridge with mocked source and gen registries
+    bridge = LiteBridge(
+        source_registry=mock_source_registry,
+        generation_registry=mock_gen_registry,
+    )
+
+    policy = CompressionPolicy(target_max_context_chars=1000)
+    compressed = bridge.compress_context(pkg, policy)
+
+    assert compressed.compression_report is not None
+
+    # Verify zero calls to source_registry and zero calls to generation_registry
+    mock_source_registry.resolve.assert_not_called()
+    mock_source_registry.get_descriptor.assert_not_called()
+    mock_gen_registry.resolve.assert_not_called()
+    mock_gen_registry.get_capability.assert_not_called()
     mock_gen_registry.has_provider.assert_not_called()

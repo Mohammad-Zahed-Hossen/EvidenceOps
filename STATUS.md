@@ -42,45 +42,37 @@ Awaiting user instructions for Git operations or portfolio presentation.
 
 ## LiteBridge Experimental Track
 
-### Status: Complete and verified — optional generation adapters and syntactic citation gating (Phase L5)
+### Status: Complete and verified — deterministic extractive context compression and quality controls (Phase L6)
 
 LiteBridge is an additive, model-agnostic retrieval and context-preparation middleware layer being developed on a dedicated experimental branch under strict Core-Port-Adapter separation.
 
 - **Branch Name:** `experiment/litebridge-bridge`
-- **Current Baseline:** Phase L5 (Optional Generation Adapters and Syntactic Citation Gating).
-- **Phase L5 Completion Status:**
-  - **Generator-Independent Core Maintained**: `prepare_context()` remains 100% generator-independent with zero provider calls or imports. `answer()` consumes an immutable, already-built `ContextPackage`.
-  - **Zero Vendor SDK Dependencies**: No vendor SDKs added to dependencies. All 5 generation adapters (`OllamaGenerationAdapter`, `OpenAICompatibleLocalAdapter`, `OpenAIGenerationAdapter`, `AnthropicGenerationAdapter`, `GeminiGenerationAdapter`) use standard-library typing and internal adapter-owned `httpx.Client(trust_env=False, follow_redirects=False)`.
-  - **Strict Local Endpoint Guardrails**: Enforces HTTP-only, literal `127.0.0.1` / `[::1]` or loopback-resolved `localhost`, zero credentials, zero query/fragments, and zero unexpected subpaths via `validate_loopback_url`.
-  - **Disabled by Default & Nonblank Validation**: All generation providers are disabled by default. Enabling any provider requires a nonblank model name (and API key for authenticated endpoints).
-  - **Privacy Boundary & Per-Call Consent**: Any `LOCAL_DOCUMENT` evidence marks the package private. Hosted providers refuse private evidence with `POLICY_BLOCKED` and `PRIVATE_EVIDENCE_EXPORT_NOT_ALLOWED` unless `allow_private_evidence_export=True` is explicitly passed in `GenerationPolicy`.
-  - **Syntactic Citation Validation**: Strictly validates that cited tokens exist in `context_package.evidence` without claiming semantic verification. Strict parser scans all citation-like tokens (`\[[cC][^\]]*\]`); any malformed (`[CX]`, `[C1 ]`, `[C0]`, `[c1]`) or unknown (`[C999]`) token immediately fails closed to `INVALID_CITATIONS` with fixed abstention text.
-  - **Deterministic Answer Identity**: Derived deterministically from package ID, provider ID, model ID, normalized policy, final answer text, status, and cited IDs (excluding timings and usage).
-  - **Sanitized Failure Boundaries**: `answer()` returns structured `GroundedAnswer` abstentions without leaking raw exception text, URLs, paths, or secrets.
+- **Current Baseline:** Phase L6 (Deterministic Extractive Context Compression and Quality Controls).
+- **Phase L6 Completion Status:**
+  - **Deterministic Extractive Compression**: `compress_context()` operates exclusively via complete sentence selection or whole-item retention/dropping. Zero abstractive summarization, zero token cuts mid-sentence, zero rephrasing, and zero LLM calls.
+  - **Strict Generator & Retrieval Independence**: `compress_context()` consumes an already-built `ContextPackage` without invoking retrieval, planning, budget computation, or generation. Proven by AST/import audits and exploding mock tests.
+  - **Conservative Deduplication Policy**: Exact retrieval duplicate copies (`source_id`, `source_kind`, `document_id`, `chunk_id`, exact normalized excerpt) are only dropped when callers explicitly configure both `allow_evidence_drop=True` AND `deduplicate_exact_retrieval_copies=True`. Defaults are strictly `False`, preserving all evidence.
+  - **Final Rendered Context Target Evaluation**: Targets are measured against the full rendered context string (including `UNTRUSTED_CONTENT` wrapper boundaries, headers, citation tags, and closing markers), preventing false budget claims.
+  - **Integer Arithmetic for Basis Points**: `(original_tokens - compressed_tokens) * 10_000 // original_tokens` ensures deterministic ratio reporting without floating-point drift.
+  - **Citation & Provenance Invariants**: Retained evidence keeps original citation IDs (`[C1]`, `[C3]`) without renumbering. Downstream L5 answers citing dropped citations fail closed with `INVALID_CITATIONS`.
+  - **Preserved Retrieval Metadata**: Original retrieval `stop_reason`, `planner_decision`, `budget_used`, and call counters are preserved verbatim. Unmet compression targets are recorded as `CompressionOutcome.TARGET_UNACHIEVABLE`.
+  - **Ordered Boundary Concatenation Check**: Quality verification enforces that compressed text is an ordered, non-overlapping sequence of original complete sentences.
 - **Deliverables:**
-  - `src/evidenceops/bridge/contracts.py`: Added `ProviderLocation`, `GenerationStatus`, `GenerationAbstentionReason`, `GenerationPolicy`, `ProviderCapability`, `GenerationUsage`, `GroundedAnswer`, and `derive_answer_id(...)`.
-  - `src/evidenceops/bridge/ports.py`: Added `GenerationRequest` (with `query: str`), `GenerationResponse`, and `@runtime_checkable class GenerationProvider(Protocol)`.
-  - `src/evidenceops/bridge/errors.py`: Added provider error classes.
-  - `src/evidenceops/bridge/citation_validator.py`: Pure syntactic citation token extractor and validator.
-  - `src/evidenceops/bridge/generation_registry.py`: Pure provider registry decoupled from EvidenceOps internals.
-  - `src/evidenceops/bridge/adapters/loopback.py`: Reusable strict loopback HTTP endpoint validator.
-  - `src/evidenceops/bridge/adapters/ollama_generation.py`: Native `/api/chat` Ollama generation adapter.
-  - `src/evidenceops/bridge/adapters/openai_compatible_local.py`: Local OpenAI-compatible generation adapter.
-  - `src/evidenceops/bridge/adapters/openai_generation.py`: Hosted OpenAI generation adapter.
-  - `src/evidenceops/bridge/adapters/anthropic_generation.py`: Hosted Anthropic generation adapter.
-  - `src/evidenceops/bridge/adapters/gemini_generation.py`: Hosted Gemini generation adapter.
-  - `src/evidenceops/bridge/service.py`: Added `LiteBridge.answer(...)` with all privacy, abstention, and citation gating.
-  - `src/evidenceops/bridge/factory.py`: Wired optional generation providers (disabled by default).
-  - `src/evidenceops/settings.py` & `.env.example`: Added Phase L5 generation configuration settings.
+  - `src/evidenceops/bridge/contracts.py`: Added `CompressionStrategy`, `CompressionOutcome`, `CompressionAction`, `CompressionPolicy`, `CompressionTraceEntry`, `CompressionReport`, and updated `ContextPackage`.
+  - `src/evidenceops/bridge/context_builder.py`: Added `render_context_text(...)` and incorporated stable compression fields into deterministic `_derive_package_id(...)`.
+  - `src/evidenceops/bridge/compressor.py`: Deterministic extractive compressor with conservative sentence splitting and adversarial boundary handling.
+  - `src/evidenceops/bridge/quality_controls.py`: Comprehensive quality verification proving non-empty evidence, provenance preservation, non-renumbered citations, non-blank excerpts, ordered boundary concatenation, wrapper boundaries, and unaltered retrieval metadata.
+  - `src/evidenceops/bridge/service.py`: Added `LiteBridge.compress_context(...)` facade method.
+  - `src/evidenceops/bridge/__init__.py`: Exported public L6 contracts and functions.
 - **Verification Results:**
-  - Focused bridge tests: 184 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
-  - Full test suite: 693 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
-  - Code quality: Ruff check and ruff format pass with zero errors (228 files).
-  - Type checking: Mypy passes with zero issues (110 source files).
-  - AST audit: Proves core and retrieval modules have zero LLM/generation imports, and generation adapters use zero vendor SDKs.
+  - Focused bridge tests: 198 passed, 0 failures (`uv run pytest tests/unit/bridge/ -ra -q`).
+  - Full test suite: 707 passed, 1 skipped, 0 failures (`uv run pytest -ra -q`).
+  - Code quality: Ruff check and ruff format pass with zero errors (233 files).
+  - Type checking: Mypy passes with zero issues (112 source files).
+  - AST audit: Proves zero LLM/planner/retrieval imports or invocations in compression modules.
 - **Known Limitations & Deferred Milestones:**
-  - Context compression, dynamic chunk pruning, and quality metrics are deferred to Phase L6.
-  - Multi-hop retrieval and multi-source evidence fusion are deferred to Phase L7.
+  - Public API, SDK packaging, and MCP interfaces are planned for Phase L7.
+  - Multi-hop retrieval and multi-source evidence fusion are deferred to future phases.
   - Direct web page retrieval remains a Deferred Security Milestone.
 - **Next Phase:**
-  `L6 — Context Compression and Quality Controls` (UNBLOCKED).
+  `L7 — API, SDK, and MCP Interfaces` (UNBLOCKED).

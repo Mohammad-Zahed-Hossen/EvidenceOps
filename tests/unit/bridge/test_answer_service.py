@@ -124,6 +124,9 @@ def _make_package(
         features=features,
         effective_budget=policy.budget,
     )
+    from evidenceops.bridge.context_builder import render_context_text
+
+    rendered = render_context_text(evidence)
     return ContextPackage(
         package_id="pkg_test",
         query_hash="hash_test",
@@ -132,9 +135,11 @@ def _make_package(
         execution_profile=ExecutionProfile.LOCAL_ONLY,
         effective_policy=policy,
         evidence=evidence,
-        context_text="[C1]\nContent:\nExcerpt text 1\n[END C1]",
+        context_text=rendered,
         max_context_chars=1000,
         max_estimated_tokens=250,
+        context_chars=len(rendered),
+        estimated_tokens=len(rendered) // 4,
         retrieval_route="local",
         stop_reason=StopReason.SUCCESS if evidence else StopReason.NO_EVIDENCE,
         planner_decision=decision,
@@ -293,9 +298,51 @@ def test_context_package_never_mutated() -> None:
     provider = MockProvider("local_ollama", output_text="Answer [C1]")
     registry = GenerationProviderRegistry([provider])
     bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
-
     pkg = _make_package()
     original_dict = pkg.model_dump()
-
     _ = bridge.answer(pkg)
     assert pkg.model_dump() == original_dict
+
+
+def test_answer_generation_on_compressed_package_succeeds_for_retained_citation() -> None:
+    from evidenceops.bridge.contracts import CompressionPolicy
+
+    provider = MockProvider("local_ollama", output_text="Answer citing retained [C1]")
+    registry = GenerationProviderRegistry([provider])
+    bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
+
+    # Make package with 2 evidence records (chars = 195)
+    pkg = _make_package(evidence_kinds=(SourceKind.LOCAL_DOCUMENT, SourceKind.LOCAL_DOCUMENT))
+    # Compress with allow_evidence_drop=True and a small target (150) to drop C2
+    policy = CompressionPolicy(target_max_context_chars=150, allow_evidence_drop=True)
+    compressed = bridge.compress_context(pkg, policy)
+
+    assert len(compressed.evidence) == 1
+    assert compressed.evidence[0].citation_id == "C1"
+
+    # Answer citing retained C1 succeeds
+    answer = bridge.answer(compressed)
+    assert answer.status == GenerationStatus.SUCCESS
+    assert answer.citation_valid is True
+    assert answer.cited_evidence_ids == ("ev_1",)
+
+
+def test_answer_generation_on_compressed_package_fails_closed_for_dropped_citation() -> None:
+    from evidenceops.bridge.contracts import CompressionPolicy
+
+    provider = MockProvider("local_ollama", output_text="Answer citing dropped [C2]")
+    registry = GenerationProviderRegistry([provider])
+    bridge = LiteBridge(retriever=MockRetriever(), generation_registry=registry)
+
+    pkg = _make_package(evidence_kinds=(SourceKind.LOCAL_DOCUMENT, SourceKind.LOCAL_DOCUMENT))
+    policy = CompressionPolicy(target_max_context_chars=150, allow_evidence_drop=True)
+    compressed = bridge.compress_context(pkg, policy)
+
+    assert len(compressed.evidence) == 1
+    assert compressed.evidence[0].citation_id == "C1"
+
+    # Answer citing dropped C2 fails closed because C2 is no longer in the package!
+    answer = bridge.answer(compressed)
+    assert answer.status == GenerationStatus.INVALID_CITATIONS
+    assert answer.citation_valid is False
+    assert answer.cited_evidence_ids == ()

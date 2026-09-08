@@ -8,6 +8,7 @@
 **Experimental branch:** `experiment/litebridge-bridge`
 
 ### Document Changelog
+- **Version 1.2 (2026-09-08):** Phase L6 deterministic extractive context compression and quality controls baseline. Extractive sentence/whole-item compression, final rendered context target checks, conservative deduplication, integer basis points, and citation preservation.
 - **Version 1.1 (2026-09-07):** Portability and anti-coupling architecture guardrails. Established core-port-adapter boundary, extraction gate, provider-neutral product claims, and prohibited core coupling to EvidenceOps internal models.
 - **Version 1.0 (2026-09-07):** Initial system specification baseline for Phase L0.
 

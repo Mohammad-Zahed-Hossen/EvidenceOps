@@ -405,6 +405,7 @@ class ContextPackage(BaseModel):
     reproducibility: tuple[tuple[str, str], ...] = Field(default_factory=tuple)
     planner_decision: PlannerDecision
     budget_used: tuple[tuple[str, int], ...] = Field(default_factory=tuple)
+    compression_report: CompressionReport | None = None
 
     @field_validator("budget_used", mode="before")
     @classmethod
@@ -433,6 +434,111 @@ class ContextPackage(BaseModel):
                         f"budget_used value for '{k}' must be a non-negative int, got {v}"
                     )
         return self
+
+
+class CompressionStrategy(StrEnum):
+    """Supported compression strategies in LiteBridge."""
+
+    EXTRACTIVE = "extractive"
+
+
+class CompressionOutcome(StrEnum):
+    """Outcomes of a context compression operation."""
+
+    NOT_REQUESTED = "not_requested"
+    NO_REDUCTION = "no_reduction"
+    REDUCED = "reduced"
+    TARGET_UNACHIEVABLE = "target_unachievable"
+    QUALITY_GUARD_BLOCKED = "quality_guard_blocked"
+
+
+class CompressionAction(StrEnum):
+    """Per-evidence actions taken during compression."""
+
+    KEPT_WHOLE = "kept_whole"
+    EXTRACTED = "extracted"
+    DROPPED_DUPLICATE = "dropped_duplicate"
+    DROPPED_FOR_TARGET = "dropped_for_target"
+
+
+class CompressionPolicy(BaseModel):
+    """Explicit, immutable policy governing context compression."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    strategy: Literal["extractive"] = "extractive"
+    target_max_context_chars: int | None = Field(default=None, ge=100, le=24000)
+    target_max_estimated_tokens: int | None = Field(default=None, ge=25, le=6000)
+    max_sentences_per_evidence: int = Field(default=3, ge=1, le=8)
+    deduplicate_exact_retrieval_copies: bool = False
+    allow_evidence_drop: bool = False
+
+    @model_validator(mode="after")
+    def _validate_targets(self) -> CompressionPolicy:
+        if self.target_max_context_chars is None and self.target_max_estimated_tokens is None:
+            raise LiteBridgeValidationError(
+                "CompressionPolicy requires at least one target: "
+                "target_max_context_chars or target_max_estimated_tokens"
+            )
+        return self
+
+
+class CompressionTraceEntry(BaseModel):
+    """Deterministic trace entry describing the action applied to a single evidence record."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    evidence_id: str = Field(min_length=1)
+    citation_id: str = Field(min_length=1)
+    action: CompressionAction
+    original_chars: int = Field(ge=0)
+    retained_chars: int = Field(ge=0)
+    original_sentence_count: int = Field(ge=0)
+    retained_sentence_count: int = Field(ge=0)
+    duplicate_of_evidence_id: str | None = None
+    reason: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _validate_duplicate_link(self) -> CompressionTraceEntry:
+        if self.action == CompressionAction.DROPPED_DUPLICATE:
+            if not self.duplicate_of_evidence_id:
+                raise ValueError(
+                    "duplicate_of_evidence_id must be populated when action is DROPPED_DUPLICATE"
+                )
+        elif self.duplicate_of_evidence_id is not None:
+            raise ValueError(
+                "duplicate_of_evidence_id must be None unless action is DROPPED_DUPLICATE"
+            )
+        return self
+
+
+class CompressionReport(BaseModel):
+    """Immutable report of a context compression operation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_package_id: str = Field(min_length=1)
+    strategy: CompressionStrategy
+    outcome: CompressionOutcome
+    target_max_context_chars: int | None = None
+    target_max_estimated_tokens: int | None = None
+    target_met: bool
+    original_context_chars: int = Field(ge=0)
+    compressed_context_chars: int = Field(ge=0)
+    original_estimated_tokens: int = Field(ge=0)
+    compressed_estimated_tokens: int = Field(ge=0)
+    chars_removed: int = Field(ge=0)
+    estimated_tokens_removed: int = Field(ge=0)
+    token_reduction_basis_points: int = Field(ge=0, le=10000)
+    trace: tuple[CompressionTraceEntry, ...] = Field(default_factory=tuple)
+    warnings: tuple[str, ...] = Field(default_factory=tuple)
+
+    @field_validator("trace", "warnings", mode="before")
+    @classmethod
+    def _coerce_tuples(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return tuple(v)
+        return v
 
 
 class ProviderLocation(StrEnum):

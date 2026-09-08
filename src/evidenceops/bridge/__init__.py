@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from evidenceops.bridge.contracts import (
+    CompressionAction,
+    CompressionOutcome,
+    CompressionPolicy,
+    CompressionReport,
+    CompressionStrategy,
     ContextPackage,
     EvidenceRecord,
     ExecutionProfile,
@@ -28,6 +33,11 @@ from evidenceops.bridge.service import LiteBridge
 from evidenceops.bridge.source_registry import SourceRegistry
 
 __all__ = [
+    "CompressionAction",
+    "CompressionOutcome",
+    "CompressionPolicy",
+    "CompressionReport",
+    "CompressionStrategy",
     "ContextPackage",
     "EvidenceRecord",
     "ExecutionProfile",
